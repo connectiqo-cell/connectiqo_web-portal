@@ -201,7 +201,7 @@ export default function ForgotPasswordPage() {
 
           {step === 3 && (
             <form onSubmit={handleSavePassword} noValidate className="flex flex-col gap-4">
-              <AuthTextField
+              <AuthTextField 
                 icon={Lock}
                 type={showPassword ? "text" : "password"}
                 placeholder="New Password"

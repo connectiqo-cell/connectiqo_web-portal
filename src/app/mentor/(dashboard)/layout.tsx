@@ -1,6 +1,6 @@
 "use client";
 
-import { Award, Calendar, LayoutDashboard, Wallet } from "lucide-react";
+import { Award, Calendar, LayoutDashboard, Video, Wallet } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: ROUTES.mentorProfileDashboard, label: "Profile", icon: LayoutDashboard },
   { href: ROUTES.mentorSchedule, label: "Availability", icon: Calendar },
   { href: ROUTES.mentorSessions, label: "Sessions", icon: Calendar },
+  { href: ROUTES.mentorVideos, label: "Videos", icon: Video },
   { href: ROUTES.mentorEarnings, label: "Earnings", icon: Wallet },
   { href: ROUTES.payoutSetup, label: "Payout", icon: Award },
 ];

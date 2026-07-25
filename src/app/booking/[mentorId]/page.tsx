@@ -46,5 +46,6 @@ export default async function BookingPage({ params }: PageProps) {
 
       <BookingFlow mentorId={mentorId} mentor={mentor} />
     </main>
+    
   );
 }

@@ -42,6 +42,12 @@ export const reportApi = {
       throw new Error("Report details must be 1,000 characters or less.");
     }
 
+    if (contextType !== "profile" && !contextId) {
+      throw new Error("Report context ID is required for this type of report.");
+    }
+
+    
+
     const supabase = createClient();
     try {
       const {

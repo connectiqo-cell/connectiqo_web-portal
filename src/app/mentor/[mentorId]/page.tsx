@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ReportUserModal } from "@/components/ReportUserModal";
+import { MentorVideoLibrary } from "@/components/mentor/MentorVideoLibrary";
 import { ReviewCard } from "@/components/mentor/ReviewCard";
 import { mentorApi } from "@/lib/api/mentorApi";
 import { reviewsApi } from "@/lib/api/reviewsApi";
@@ -97,6 +98,8 @@ export default async function MentorProfilePage({ params }: PageProps) {
       >
         Book a session
       </Link>
+
+      <MentorVideoLibrary mentorId={mentorId} mentorName={name} unlockPrice={mentor.unlock_price ?? null} />
 
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">

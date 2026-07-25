@@ -28,6 +28,7 @@ export const ROUTES = {
   mentorSessions: "/mentor/sessions",
   mentorEarnings: "/mentor/earnings",
   mentorSchedule: "/mentor/schedule",
+  mentorVideos: "/mentor/videos",
 
   // Shared / modal-equivalent routes
   mentorProfile: (mentorId: string) => `/mentor/${mentorId}`,
