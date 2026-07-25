@@ -1,26 +1,142 @@
 @import "tailwindcss";
 
+/*
+ * Cosmic theme tokens, ported from connectfront/src/theme/colorSchemes.js.
+ * Dark is the brand default; light is the "Light Cosmic" variant.
+ * Screen/component-specific tokens (meeting chrome, tab bar gradients) are
+ * added when those UI areas are built rather than ported wholesale here.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-void: #000008;
+  --color-dark: #02010c;
+  --color-light: #050514;
+  --color-nebula: #0a0518;
+
+  --color-accent-primary: #f0d875;
+  --color-accent-secondary: #5eead4;
+  --color-accent-success: #34d399;
+  --color-accent-warning: #fbbf24;
+  --color-accent-error: #f87171;
+  --color-accent-info: #38bdf8;
+  /** "Nebula" link/CTA accent — ported from buttons.nebulaGradient[0] in colorSchemes.js. */
+  --color-accent-link: #a78bfa;
+
+  --color-text-primary: #f0f0fc;
+  --color-text-secondary: #b8b8d4;
+  --color-text-muted: #8888a8;
+  --color-text-disabled: #545470;
+  --color-text-on-accent: #060412;
+
+  --color-surface-panel: #161432;
+  --color-surface-sheet: #0f0e2a;
+  --color-surface-chip: rgba(255, 255, 255, 0.05);
+  --color-surface-chip-strong: rgba(255, 255, 255, 0.06);
+
+  --color-border-light: rgba(167, 139, 250, 0.22);
+  --color-border-default: rgba(94, 234, 212, 0.28);
+  --color-border-strong: rgba(240, 216, 117, 0.45);
+  --color-border-accent: #5eead4;
+
+  --color-status-pending: #fbbf24;
+  --color-status-approved: #34d399;
+  --color-status-rejected: #f87171;
+  --color-status-active: #34d399;
+  --color-status-inactive: #6b7280;
+  --color-status-available: #34d399;
+  --color-status-unavailable: #f87171;
+
+  --gradient-button-primary: linear-gradient(135deg, #f0d875, #5eead4);
+
+  /** Video tile / camera-off canvas — always dark, even in light theme. */
+  --color-meeting-canvas: #02010c;
+}
+
+:root[data-theme="light"] {
+  --color-void: #f8f9ff;
+  --color-dark: #eeecff;
+  --color-light: #ffffff;
+  --color-nebula: #f0eeff;
+
+  --color-accent-primary: #6d4aff;
+  --color-accent-secondary: #7c3aed;
+  --color-accent-success: #10b981;
+  --color-accent-warning: #f59e0b;
+  --color-accent-error: #ef4444;
+  --color-accent-info: #6366f1;
+  --color-accent-link: #6d4aff;
+
+  --color-text-primary: #12102a;
+  --color-text-secondary: #4f4c6b;
+  --color-text-muted: #6f6c8a;
+  --color-text-disabled: #a8a5bc;
+  --color-text-on-accent: #ffffff;
+
+  --color-surface-panel: #ffffff;
+  --color-surface-sheet: #f3f0ff;
+  --color-surface-chip: #f0eeff;
+  --color-surface-chip-strong: #eeecff;
+
+  --color-border-light: rgba(109, 74, 255, 0.1);
+  --color-border-default: rgba(109, 74, 255, 0.22);
+  --color-border-strong: rgba(109, 74, 255, 0.4);
+  --color-border-accent: #6d4aff;
+
+  --color-status-pending: #d97706;
+  --color-status-approved: #10b981;
+  --color-status-rejected: #ef4444;
+  --color-status-active: #10b981;
+  --color-status-inactive: #9b98b3;
+  --color-status-available: #10b981;
+  --color-status-unavailable: #ef4444;
+
+  --gradient-button-primary: linear-gradient(135deg, #6d4aff, #8b5cf6);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-void: var(--color-void);
+  --color-dark: var(--color-dark);
+  --color-light: var(--color-light);
+  --color-nebula: var(--color-nebula);
+
+  --color-accent-primary: var(--color-accent-primary);
+  --color-accent-secondary: var(--color-accent-secondary);
+  --color-accent-success: var(--color-accent-success);
+  --color-accent-warning: var(--color-accent-warning);
+  --color-accent-error: var(--color-accent-error);
+  --color-accent-info: var(--color-accent-info);
+  --color-accent-link: var(--color-accent-link);
+
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-disabled: var(--color-text-disabled);
+  --color-text-on-accent: var(--color-text-on-accent);
+
+  --color-surface-panel: var(--color-surface-panel);
+  --color-surface-sheet: var(--color-surface-sheet);
+  --color-surface-chip: var(--color-surface-chip);
+  --color-surface-chip-strong: var(--color-surface-chip-strong);
+
+  --color-border-light: var(--color-border-light);
+  --color-border-default: var(--color-border-default);
+  --color-border-strong: var(--color-border-strong);
+  --color-border-accent: var(--color-border-accent);
+
+  --color-status-pending: var(--color-status-pending);
+  --color-status-approved: var(--color-status-approved);
+  --color-status-rejected: var(--color-status-rejected);
+  --color-status-active: var(--color-status-active);
+  --color-status-inactive: var(--color-status-inactive);
+  --color-status-available: var(--color-status-available);
+  --color-status-unavailable: var(--color-status-unavailable);
+
+  --color-meeting-canvas: var(--color-meeting-canvas);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-void);
+  color: var(--color-text-primary);
 }
