@@ -157,7 +157,7 @@ export default function ForgotPasswordPage() {
           ) : null}
 
           {step === 1 && (
-            <form onSubmit={handleSendOtp} className="flex flex-col gap-4">
+            <form onSubmit={handleSendOtp} noValidate className="flex flex-col gap-4">
               <AuthTextField
                 icon={MailCheck}
                 type="email"
@@ -174,7 +174,7 @@ export default function ForgotPasswordPage() {
           )}
 
           {step === 2 && (
-            <form onSubmit={handleVerifyOtp} className="flex flex-col gap-4">
+            <form onSubmit={handleVerifyOtp} noValidate className="flex flex-col gap-4">
               <input
                 placeholder="Enter code"
                 value={otp}
@@ -200,7 +200,7 @@ export default function ForgotPasswordPage() {
           )}
 
           {step === 3 && (
-            <form onSubmit={handleSavePassword} className="flex flex-col gap-4">
+            <form onSubmit={handleSavePassword} noValidate className="flex flex-col gap-4">
               <AuthTextField
                 icon={Lock}
                 type={showPassword ? "text" : "password"}

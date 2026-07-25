@@ -62,7 +62,7 @@ function LoginForm() {
         <p className="text-sm text-text-secondary">Sign in to continue</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
         {loginError ? (
           <div className="flex items-center gap-2 rounded-xl border border-accent-error/35 bg-accent-error/10 px-3.5 py-2.5 text-sm text-accent-error">
             <AlertCircle size={18} className="shrink-0" />
