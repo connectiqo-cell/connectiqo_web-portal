@@ -1,0 +1,58 @@
+import { CalendarClock } from "lucide-react";
+import Link from "next/link";
+
+import type { BookingRow } from "@/lib/api/bookingApi";
+import type { ProposalWithBooking } from "@/lib/api/rescheduleApi";
+import { rescheduleReasonLabel } from "@/lib/api/rescheduleApi";
+import { ROUTES } from "@/lib/routes";
+
+/** Shown in place of a regular BookingListItem for bookings in the reschedule_pending state. */
+export function RescheduleBanner({
+  booking,
+  variant,
+  proposal,
+}: {
+  booking: BookingRow;
+  variant: "mentor" | "learner";
+  /** Learner only: the mentor's pending proposal for this booking, if one exists yet. */
+  proposal?: ProposalWithBooking | null;
+}) {
+  const isMentorView = variant === "mentor";
+  const otherParty = isMentorView ? booking.learner_profile : booking.profiles;
+  const otherName = otherParty?.name || (isMentorView ? "Learner" : "Mentor");
+  const reasonLabel = rescheduleReasonLabel(booking.reschedule_reason, variant);
+
+  return (
+    <div className="flex flex-col gap-2 rounded-2xl border border-accent-warning/40 bg-accent-warning/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center gap-3">
+        <CalendarClock size={18} className="shrink-0 text-accent-warning" />
+        <div className="flex flex-col gap-0.5">
+          <span className="text-sm font-semibold text-text-primary">
+            {isMentorView ? `${otherName} — Reschedule needed` : "Reschedule needed"}
+          </span>
+          <span className="text-xs text-text-muted">{reasonLabel}</span>
+        </div>
+      </div>
+
+      {isMentorView ? (
+        <Link
+          href={ROUTES.rescheduleRequest(booking.id)}
+          className="shrink-0 rounded-full bg-accent-warning/20 px-3.5 py-1.5 text-xs font-semibold text-accent-warning"
+        >
+          Propose time
+        </Link>
+      ) : proposal ? (
+        <Link
+          href={ROUTES.rescheduleResponse(proposal.id)}
+          className="shrink-0 rounded-full bg-accent-warning/20 px-3.5 py-1.5 text-xs font-semibold text-accent-warning"
+        >
+          Review proposal
+        </Link>
+      ) : (
+        <span className="shrink-0 rounded-full bg-surface-chip px-3.5 py-1.5 text-xs font-semibold text-text-muted">
+          Waiting for {otherName}
+        </span>
+      )}
+    </div>
+  );
+}

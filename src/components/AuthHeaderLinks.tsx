@@ -15,10 +15,12 @@ export function AuthHeaderLinks() {
 
   if (!user) {
     return (
+      
       <div className="flex items-center gap-3 text-sm font-semibold">
         <Link href={ROUTES.login} className="text-text-secondary hover:text-text-primary">
           Sign in
         </Link>
+    
         <Link
           href={ROUTES.signup}
           className="rounded-full px-4 py-1.5 text-text-on-accent"
@@ -26,6 +28,8 @@ export function AuthHeaderLinks() {
         >
           Sign up
         </Link>
+
+
       </div>
     );
   }
@@ -33,6 +37,12 @@ export function AuthHeaderLinks() {
   return (
     <div className="flex items-center gap-3 text-sm">
       <NotificationBell />
+      <Link href={ROUTES.videos} className="font-medium text-text-secondary hover:text-text-primary">
+        Videos
+      </Link>
+      <Link href={ROUTES.recommended} className="font-medium text-text-secondary hover:text-text-primary">
+        For You
+      </Link>
       <Link href={ROUTES.bookings} className="font-medium text-text-secondary hover:text-text-primary">
         My Bookings
       </Link>

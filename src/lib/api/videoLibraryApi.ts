@@ -19,6 +19,11 @@ export interface MentorVideo {
   profiles?: { id: string; name: string | null; avatar_url: string | null } | null;
 }
 
+export type PublicVideo = MentorVideo & {
+  profiles: { id: string; name: string | null; avatar_url: string | null } | null;
+  mentor_profiles: { specialization: string | null; unlock_price: number | null };
+};
+
 export interface CreateVideoOrderResponse {
   orderId: string;
   amount: number;
@@ -169,6 +174,62 @@ export const videoLibraryApi = {
       }
       const { error } = await supabase.from("mentor_videos").delete().eq("id", id);
       if (error) throw error;
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  /** All mentors' public videos, newest first — powers the cross-mentor /videos browse page. */
+  getAllPublicVideos: async ({
+    page = 0,
+    pageSize = 20,
+  }: { page?: number; pageSize?: number } = {}): Promise<PublicVideo[]> => {
+    const supabase = createClient();
+    try {
+      const from = page * pageSize;
+      const to = from + pageSize - 1;
+
+      const { data: videos, error } = await supabase
+        .from("mentor_videos")
+        .select(
+          "id, mentor_id, title, description, video_url, thumbnail_url, is_free, position, created_at, profiles:mentor_id (id, name, avatar_url)",
+        )
+        .order("created_at", { ascending: false })
+        .range(from, to);
+      if (error) throw error;
+      if (!videos?.length) return [];
+
+      const mentorIds = [...new Set(videos.map((v) => v.mentor_id))];
+      const { data: mentorProfiles } = await supabase
+        .from("mentor_profiles")
+        .select("id, specialization, unlock_price")
+        .in("id", mentorIds);
+
+      const profileMap = new Map((mentorProfiles || []).map((mp) => [mp.id, mp]));
+
+      return (videos as unknown as MentorVideo[]).map((v) => ({
+        ...v,
+        profiles: v.profiles ?? null,
+        mentor_profiles: profileMap.get(v.mentor_id) || { specialization: "", unlock_price: null },
+      })) as PublicVideo[];
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  /** Learner's active (non-expired) unlocks, keyed by mentor id. */
+  getLearnerUnlocks: async (learnerId: string): Promise<Map<string, { expiresAt: string | null }>> => {
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase
+        .from("learner_unlocks")
+        .select("mentor_id, expires_at")
+        .eq("learner_id", learnerId)
+        .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
+      if (error) throw error;
+      const map = new Map<string, { expiresAt: string | null }>();
+      (data || []).forEach((u) => map.set(u.mentor_id, { expiresAt: u.expires_at }));
+      return map;
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
     }

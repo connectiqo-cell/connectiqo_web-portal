@@ -11,6 +11,8 @@ export interface BookingRow {
   mentor_id: string;
   learner_id: string;
   slot_id: string;
+  reschedule_reason?: string | null;
+  reschedule_deadline?: string | null;
   profiles: { id: string; name: string | null; avatar_url: string | null } | null;
   learner_profile?: { id: string; name: string | null; avatar_url: string | null } | null;
   availability_slots: { date: string; start_time: string; end_time: string } | null;
@@ -305,6 +307,52 @@ export const bookingApi = {
           (b): b is RecordedSession =>
             !!b.recording_playback_url && b.recording_playback_url !== RECORDING_URL_PLACEHOLDER,
         );
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  /**
+   * Completed bookings whose recording was requested but hasn't resolved to a
+   * playback URL yet (VideoSDK processes recordings async, and the call-end
+   * poll can miss it). The recordings page re-attempts these on view.
+   */
+  getPendingRecordedSessions: async (userId: string): Promise<(BookingRow & { meeting_id: string })[]> => {
+    const supabase = createClient();
+    try {
+      const { data: bookings, error } = await supabase
+        .from("bookings")
+        .select(
+          `*,
+           profiles:mentor_id ( id, name, avatar_url ),
+           learner_profile:profiles!learner_id ( id, name, avatar_url ),
+           availability_slots ( date, start_time, end_time )`,
+        )
+        .or(`learner_id.eq.${userId},mentor_id.eq.${userId}`)
+        .eq("status", "completed")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+
+      const rows = (bookings as unknown as BookingRow[]) || [];
+      if (!rows.length) return [];
+
+      const { data: recordings } = await supabase
+        .from("recordings")
+        .select("booking_id, meeting_id, recording_url, recording_playback_url")
+        .in(
+          "booking_id",
+          rows.map((b) => b.id),
+        );
+
+      const recMap = new Map((recordings || []).map((r) => [r.booking_id as string, r]));
+
+      return rows.flatMap((booking) => {
+        const rec = recMap.get(booking.id);
+        if (!rec?.meeting_id) return [];
+        const resolved = rec.recording_playback_url || rec.recording_url;
+        if (resolved && resolved !== RECORDING_URL_PLACEHOLDER) return [];
+        return [{ ...booking, meeting_id: rec.meeting_id as string }];
+      });
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
     }

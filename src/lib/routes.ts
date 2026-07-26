@@ -22,6 +22,7 @@ export const ROUTES = {
   category: (category: string) => `/category/${encodeURIComponent(category)}`,
   recommended: "/recommended",
   bookings: "/bookings",
+  videos: "/videos",
 
   // Mentor
   mentorProfileDashboard: "/mentor/profile",
@@ -29,6 +30,7 @@ export const ROUTES = {
   mentorEarnings: "/mentor/earnings",
   mentorSchedule: "/mentor/schedule",
   mentorVideos: "/mentor/videos",
+  rescheduleRequest: (bookingId: string) => `/mentor/reschedule/${bookingId}`,
 
   // Shared / modal-equivalent routes
   mentorProfile: (mentorId: string) => `/mentor/${mentorId}`,
@@ -36,6 +38,7 @@ export const ROUTES = {
   booking: (mentorId: string) => `/booking/${mentorId}`,
   call: (bookingId: string) => `/call/${bookingId}`,
   review: (bookingId: string) => `/review/${bookingId}`,
+  rescheduleResponse: (requestId: string) => `/reschedule/${requestId}`,
 
   transactions: "/transactions",
   settings: "/settings",

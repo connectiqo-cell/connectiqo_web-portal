@@ -4,6 +4,7 @@ import {
   Bell,
   Calendar,
   CalendarCheck,
+  CalendarClock,
   CalendarX,
   CheckCircle2,
   GraduationCap,
@@ -33,10 +34,14 @@ const STATUS_ICON: Record<string, typeof Bell> = {
   rejected: XCircle,
   completed: CheckCircle2,
   cancelled: CalendarX,
+  reschedule_pending: CalendarClock,
 };
 
 function destinationFor(n: Notification): string {
   if (n.role === "learner" && n.status === "completed") return ROUTES.review(n.bookingId);
+  if (n.role === "mentor" && n.status === "reschedule_pending") {
+    return ROUTES.rescheduleRequest(n.bookingId);
+  }
   if (n.role === "mentor") return ROUTES.mentorSessions;
   return ROUTES.bookings;
 }

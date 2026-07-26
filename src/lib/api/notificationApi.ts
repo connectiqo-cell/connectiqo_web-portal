@@ -46,6 +46,11 @@ const STATUS_MESSAGES: Record<
       body: (name) => `Your session with ${name} was cancelled.`,
       accent: "error",
     },
+    reschedule_pending: {
+      title: "Reschedule needed",
+      body: (name) => `Your session with ${name} needs a new time.`,
+      accent: "gold",
+    },
   },
   mentor: {
     pending: {
@@ -72,6 +77,11 @@ const STATUS_MESSAGES: Record<
       title: "Session declined",
       body: (name) => `You declined ${name}'s booking request.`,
       accent: "muted",
+    },
+    reschedule_pending: {
+      title: "Reschedule needed",
+      body: (name) => `Propose a new time for your session with ${name}.`,
+      accent: "gold",
     },
   },
 };

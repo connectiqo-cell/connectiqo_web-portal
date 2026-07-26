@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { bookingApi, type BookingRow } from "@/lib/api/bookingApi";
 import { createVideoMeeting, getVideoSdkToken } from "@/lib/api/videoCallApi";
 import { createClient } from "@/lib/supabase/client";
+import { isBookingSessionPast } from "@/lib/utils/bookingSession";
 
 /**
  * Resolves everything needed to join a call for a booking: the booking row,
@@ -22,6 +23,7 @@ export function useCallSetup(bookingId: string) {
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState("");
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   const isHost = Boolean(user?.id && booking?.mentor_id && user.id === booking.mentor_id);
   const isParticipant = Boolean(
@@ -81,6 +83,17 @@ export function useCallSetup(bookingId: string) {
     };
   }, [booking, meetingId, isHost, bookingId]);
 
+  // Learner-side: once the booked slot's end time passes without the mentor
+  // ever starting the room, offer a reschedule instead of waiting forever.
+  useEffect(() => {
+    if (!booking || meetingId || isHost) return;
+
+    const check = () => setSessionExpired(isBookingSessionPast(booking));
+    check();
+    const id = setInterval(check, 15000);
+    return () => clearInterval(id);
+  }, [booking, meetingId, isHost]);
+
   const startSession = useCallback(async () => {
     if (!token || !isHost || meetingId) return;
     setStarting(true);
@@ -96,5 +109,16 @@ export function useCallSetup(bookingId: string) {
     }
   }, [token, isHost, meetingId, bookingId]);
 
-  return { loading, error, booking, isHost, isParticipant, token, meetingId, starting, startSession };
+  return {
+    loading,
+    error,
+    booking,
+    isHost,
+    isParticipant,
+    token,
+    meetingId,
+    starting,
+    startSession,
+    sessionExpired,
+  };
 }

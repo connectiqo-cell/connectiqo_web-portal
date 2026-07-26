@@ -1,11 +1,13 @@
 "use client";
 
-import { Loader2, Video } from "lucide-react";
+import { CalendarClock, Loader2, TimerOff, Video } from "lucide-react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { use, useEffect } from "react";
+import { use, useEffect, useState } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { rescheduleApi } from "@/lib/api/rescheduleApi";
 import { useCallSetup } from "@/lib/hooks/useCallSetup";
 import { ROUTES } from "@/lib/routes";
 
@@ -28,8 +30,35 @@ export default function CallPage({ params }: PageProps) {
   const { bookingId } = use(params);
   const router = useRouter();
   const { user, profile, loading: authLoading } = useAuth();
-  const { loading, error, booking, isHost, isParticipant, token, meetingId, starting, startSession } =
-    useCallSetup(bookingId);
+  const {
+    loading,
+    error,
+    booking,
+    isHost,
+    isParticipant,
+    token,
+    meetingId,
+    starting,
+    startSession,
+    sessionExpired,
+  } = useCallSetup(bookingId);
+
+  const [requestingReschedule, setRequestingReschedule] = useState(false);
+  const [rescheduleRequested, setRescheduleRequested] = useState(false);
+  const [rescheduleError, setRescheduleError] = useState("");
+
+  const handleRequestReschedule = async () => {
+    setRequestingReschedule(true);
+    setRescheduleError("");
+    try {
+      await rescheduleApi.markForReschedule(bookingId, "mentor_noshow");
+      setRescheduleRequested(true);
+    } catch (err) {
+      setRescheduleError((err as Error)?.message || "Failed to request reschedule");
+    } finally {
+      setRequestingReschedule(false);
+    }
+  };
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -89,6 +118,51 @@ export default function CallPage({ params }: PageProps) {
               {starting ? "Starting…" : "Start session"}
             </button>
           </>
+        )
+         : sessionExpired ? (
+          rescheduleRequested ? (
+            <div className="flex flex-col items-center gap-3">
+              <CalendarClock size={32} className="text-accent-success" />
+              <p className="text-sm font-semibold text-text-primary">Reschedule requested</p>
+              <p className="text-sm text-text-secondary">
+                {otherUserName} has been notified and will propose a new time within 7 days.
+              </p>
+
+              <Link
+                href={ROUTES.bookings}
+                className="mt-1 rounded-full px-5 py-2.5 text-sm font-semibold text-text-on-accent"
+                style={{ backgroundImage: "var(--gradient-button-primary)" }}
+              >
+                Back to bookings
+              </Link>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-3">
+              <TimerOff size={32} className="text-accent-error" />
+              <p className="text-sm font-semibold text-text-primary">Session window closed</p>
+              <p className="text-sm text-text-secondary">
+                {otherUserName} didn&apos;t join within the session window. You can request a free
+                reschedule.
+              </p>
+              {rescheduleError ? <p className="text-sm text-accent-error">{rescheduleError}</p> : null}
+              <button
+                type="button"
+                onClick={handleRequestReschedule}
+                disabled={requestingReschedule}
+                className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-full text-sm font-semibold text-text-on-accent disabled:opacity-60"
+                style={{ backgroundImage: "var(--gradient-button-primary)" }}
+              >
+                {requestingReschedule ? <Loader2 size={16} className="animate-spin" /> : null}
+                {requestingReschedule ? "Sending request…" : "Request reschedule"}
+              </button>
+              <Link
+                href={ROUTES.bookings}
+                className="text-sm font-semibold text-text-secondary hover:text-text-primary"
+              >
+                Back to bookings
+              </Link>
+            </div>
+          )
         ) : (
           <div className="flex flex-col items-center gap-3">
             <Loader2 size={20} className="animate-spin text-text-muted" />
@@ -108,6 +182,8 @@ export default function CallPage({ params }: PageProps) {
         token={token!}
         name={profile?.name || "Guest"}
         bookingId={bookingId}
+        mentorId={booking!.mentor_id}
+        learnerId={booking!.learner_id}
         isHost={isHost}
         recordingRequested={Boolean(booking?.recording_requested)}
         otherUserName={otherUserName}

@@ -114,6 +114,36 @@ export const mentorApi = {
     }
   },
 
+  /** Learner: mentors matching any of their onboarding interests, ranked by rating. */
+  getRecommendedMentors: async (
+    supabase: SupabaseClient,
+    interests: string[],
+    page = 0,
+    pageSize = 12,
+  ): Promise<MentorProfileRow[]> => {
+    try {
+      const list = (interests || []).map((c) => String(c).trim()).filter(Boolean);
+      if (!list.length) return [];
+
+      const from = page * pageSize;
+      const to = from + pageSize - 1;
+      const orFilter = list.map((interest) => buildCategoryMatchOrFilter(interest)).join(",");
+
+      const { data, error } = await supabase
+        .from("mentor_profiles")
+        .select(MENTOR_SELECT)
+        .or(orFilter)
+        .order("rating", { ascending: false })
+        .range(from, to);
+      if (error) throw error;
+      return ((data as unknown as MentorProfileRow[]) || []).filter((mentor) =>
+        list.some((interest) => mentorHasCategory(mentor.category, interest)),
+      );
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
   getMentorsByCategoryName: async (
     supabase: SupabaseClient,
     category: string,

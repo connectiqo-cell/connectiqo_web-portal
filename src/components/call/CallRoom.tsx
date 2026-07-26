@@ -8,15 +8,70 @@ import { useEffect, useRef, useState } from "react";
 import { CallControls } from "@/components/call/CallControls";
 import { ParticipantTile } from "@/components/call/ParticipantTile";
 import { bookingApi } from "@/lib/api/bookingApi";
+import { recordingsApi } from "@/lib/api/recordingsApi";
+import { fetchRecordingUrl } from "@/lib/api/videoCallApi";
 import { ROUTES } from "@/lib/routes";
+
+const RECORDING_POLL_ATTEMPTS = 6;
+const RECORDING_POLL_DELAY_MS = 5000;
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Fire-and-forget: VideoSDK processes recordings asynchronously after the
+ * call ends, so the file isn't available immediately. Polls with a fixed
+ * delay and saves the playback URL once found — never blocks the host's
+ * navigation away from the call.
+ */
+async function pollAndSaveRecording({
+  bookingId,
+  mentorId,
+  learnerId,
+  meetingId,
+  token,
+}: {
+  bookingId: string;
+  mentorId: string;
+  learnerId: string;
+  meetingId: string;
+  token: string;
+}) {
+  for (let attempt = 1; attempt <= RECORDING_POLL_ATTEMPTS; attempt += 1) {
+    const recordingUrl = await fetchRecordingUrl({ meetingId, token }).catch(() => null);
+    if (recordingUrl) {
+      await recordingsApi
+        .updateRecordingUrls({
+          bookingId,
+          recordingUrl,
+          recordingPlaybackUrl: recordingUrl,
+          mentorId,
+          learnerId,
+          meetingId,
+        })
+        .catch((err) => console.warn("Recording URL save failed:", err));
+      return;
+    }
+    await sleep(RECORDING_POLL_DELAY_MS);
+  }
+}
 
 export function CallRoom({
   bookingId,
+  mentorId,
+  learnerId,
+  meetingId,
+  token,
   isHost,
   recordingRequested,
   otherUserName,
 }: {
   bookingId: string;
+  mentorId: string;
+  learnerId: string;
+  meetingId: string;
+  token: string;
   isHost: boolean;
   recordingRequested: boolean;
   otherUserName: string;
@@ -53,8 +108,11 @@ export function CallRoom({
     ) {
       recordingStartedRef.current = true;
       startRecording().catch((err) => console.warn("startRecording failed:", err));
+      recordingsApi
+        .upsertSessionForBooking({ bookingId, mentorId, learnerId, meetingId })
+        .catch((err) => console.warn("Recording session row not created:", err));
     }
-  }, [participantCount, isHost, recordingRequested, startRecording]);
+  }, [participantCount, isHost, recordingRequested, startRecording, bookingId, mentorId, learnerId, meetingId]);
 
   const handleLeave = async () => {
     if (leavingRef.current) return;
@@ -73,6 +131,12 @@ export function CallRoom({
       if (isHost) await bookingApi.clearMeetingId(bookingId);
     } catch (err) {
       console.warn("Post-call cleanup failed:", err);
+    }
+
+    if (isHost && recordingRequested && bothJoinedRef.current && recordingStartedRef.current) {
+      pollAndSaveRecording({ bookingId, mentorId, learnerId, meetingId, token }).catch((err) =>
+        console.warn("Recording poll failed:", err),
+      );
     }
 
     router.push(ROUTES.bookings);

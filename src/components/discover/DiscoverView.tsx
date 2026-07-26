@@ -21,12 +21,14 @@ export function DiscoverView({ grouped }: { grouped: Record<string, MentorProfil
       setResults(null);
       setSearching(false);
     } else {
+      
       setSearching(true);
     }
   };
   
 
   useEffect(() => {
+
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (!query.trim()) return;
 

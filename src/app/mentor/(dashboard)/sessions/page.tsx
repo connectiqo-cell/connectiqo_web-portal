@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { BookingListItem } from "@/components/booking/BookingListItem";
+import { RescheduleBanner } from "@/components/booking/RescheduleBanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { bookingApi, type BookingRow } from "@/lib/api/bookingApi";
 import { useBookingsRealtime } from "@/lib/hooks/useBookingsRealtime";
@@ -42,8 +43,10 @@ export default function MentorSessionsPage() {
 
   useBookingsRealtime(user?.id, loadSessions);
 
-  const activeUpcoming = upcoming.filter((b) => !isBookingSessionPast(b));
-  const expired = upcoming.filter((b) => isBookingSessionPast(b));
+  const reschedulePending = upcoming.filter((b) => b.status === "reschedule_pending");
+  const regularUpcoming = upcoming.filter((b) => b.status !== "reschedule_pending");
+  const activeUpcoming = regularUpcoming.filter((b) => !isBookingSessionPast(b));
+  const expired = regularUpcoming.filter((b) => isBookingSessionPast(b));
 
   return (
     <div className="flex flex-col gap-6">
@@ -70,10 +73,13 @@ export default function MentorSessionsPage() {
         <p className="py-8 text-center text-sm text-text-muted">Loading sessions…</p>
       ) : tab === "upcoming" ? (
         <div className="flex flex-col gap-3">
-          {activeUpcoming.length === 0 && expired.length === 0 ? (
+          {reschedulePending.length === 0 && activeUpcoming.length === 0 && expired.length === 0 ? (
             <p className="py-8 text-center text-sm text-text-muted">No upcoming sessions.</p>
           ) : (
             <>
+              {reschedulePending.map((booking) => (
+                <RescheduleBanner key={booking.id} booking={booking} variant="mentor" />
+              ))}
               {activeUpcoming.map((booking) => (
                 <BookingListItem key={booking.id} booking={booking} variant="mentor" />
               ))}

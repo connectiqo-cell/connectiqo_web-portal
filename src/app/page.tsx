@@ -1,4 +1,4 @@
-import { Compass } from "lucide-react";
+import { Compass, PlayCircle } from "lucide-react";
 import Link from "next/link";
 
 import { AuthHeaderLinks } from "@/components/AuthHeaderLinks";
@@ -24,18 +24,26 @@ export default function Home() {
           1-on-1 Live Mentorship
         </h1>
         <p className="max-w-xl text-lg text-text-secondary">
-          Sign up, browse expert mentors by category, and check out a mentor&apos;s profile and
-          reviews — all backed by the same Supabase project as the mobile app. Booking and live
-          video calling land in the next phase.
+          Book live 1-on-1 video sessions with expert mentors, or unlock a mentor&apos;s video
+          library — all backed by the same Supabase project as the mobile app.
         </p>
-        <Link
-          href={ROUTES.discover}
-          className="flex w-fit items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-text-on-accent"
-          style={{ backgroundImage: "var(--gradient-button-primary)" }}
-        >
-          <Compass size={16} />
-          Discover mentors
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href={ROUTES.discover}
+            className="flex w-fit items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-text-on-accent"
+            style={{ backgroundImage: "var(--gradient-button-primary)" }}
+          >
+            <Compass size={16} />
+            Discover mentors
+          </Link>
+          <Link
+            href={ROUTES.videos}
+            className="flex w-fit items-center gap-2 rounded-full border border-border-light px-5 py-2.5 text-sm font-semibold text-text-secondary hover:text-text-primary"
+          >
+            <PlayCircle size={16} />
+            Browse videos
+          </Link>
+        </div>
       </div>
 
       <div className="flex flex-col gap-3">

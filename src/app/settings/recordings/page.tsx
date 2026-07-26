@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { bookingApi, type RecordedSession } from "@/lib/api/bookingApi";
+import { recordingsApi } from "@/lib/api/recordingsApi";
+import { fetchRecordingUrl, getVideoSdkToken } from "@/lib/api/videoCallApi";
 import { ROUTES } from "@/lib/routes";
 import { normalizeRecordingUrl } from "@/lib/utils/recordingUrl";
 
@@ -27,10 +29,43 @@ export default function RecordedSessionsPage() {
     (async () => {
       try {
         const rows = await bookingApi.getRecordedSessions(user.id);
-        if (!cancelled) setSessions(rows);
+        if (cancelled) return;
+        setSessions(rows);
+        setLoading(false);
+
+        // Best-effort: recordings the call-end poll missed (VideoSDK still
+        // processing) get one more try when the learner opens this page.
+        const pending = await bookingApi.getPendingRecordedSessions(user.id).catch(() => []);
+        if (cancelled || !pending.length) return;
+
+        const token = await getVideoSdkToken().catch(() => null);
+        if (cancelled || !token) return;
+
+        const healed = await Promise.all(
+          pending.map(async (booking) => {
+            const recordingUrl = await fetchRecordingUrl({ meetingId: booking.meeting_id, token }).catch(
+              () => null,
+            );
+            if (!recordingUrl) return null;
+            await recordingsApi
+              .updateRecordingUrls({
+                bookingId: booking.id,
+                recordingUrl,
+                recordingPlaybackUrl: recordingUrl,
+                mentorId: booking.mentor_id,
+                learnerId: booking.learner_id,
+                meetingId: booking.meeting_id,
+              })
+              .catch(() => {});
+            return { ...booking, recording_playback_url: recordingUrl } as RecordedSession;
+          }),
+        );
+        const newlyResolved = healed.filter((s): s is RecordedSession => Boolean(s));
+        if (!cancelled && newlyResolved.length) {
+          setSessions((prev) => [...prev, ...newlyResolved]);
+        }
       } catch (err) {
         if (!cancelled) setError((err as Error)?.message || "Could not load recordings");
-      } finally {
         if (!cancelled) setLoading(false);
       }
     })();

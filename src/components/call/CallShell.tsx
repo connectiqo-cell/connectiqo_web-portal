@@ -12,6 +12,8 @@ export function CallShell({
   token,
   name,
   bookingId,
+  mentorId,
+  learnerId,
   isHost,
   recordingRequested,
   otherUserName,
@@ -20,6 +22,8 @@ export function CallShell({
   token: string;
   name: string;
   bookingId: string;
+  mentorId: string;
+  learnerId: string;
   isHost: boolean;
   recordingRequested: boolean;
   otherUserName: string;
@@ -37,6 +41,10 @@ export function CallShell({
     >
       <CallRoom
         bookingId={bookingId}
+        mentorId={mentorId}
+        learnerId={learnerId}
+        meetingId={meetingId}
+        token={token}
         isHost={isHost}
         recordingRequested={recordingRequested}
         otherUserName={otherUserName}

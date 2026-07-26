@@ -4,8 +4,10 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { BookingListItem } from "@/components/booking/BookingListItem";
+import { RescheduleBanner } from "@/components/booking/RescheduleBanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { bookingApi, type BookingRow } from "@/lib/api/bookingApi";
+import { rescheduleApi, type ProposalWithBooking } from "@/lib/api/rescheduleApi";
 import { reviewsApi } from "@/lib/api/reviewsApi";
 import { ROUTES } from "@/lib/routes";
 import { isBookingSessionPast } from "@/lib/utils/bookingSession";
@@ -21,6 +23,7 @@ export default function BookingsPage() {
   const [upcoming, setUpcoming] = useState<BookingRow[]>([]);
   const [history, setHistory] = useState<BookingRow[]>([]);
   const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set());
+  const [proposals, setProposals] = useState<ProposalWithBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -32,12 +35,14 @@ export default function BookingsPage() {
     if (!user) return;
     setLoading(true);
     try {
-      const [up, hist] = await Promise.all([
+      const [up, hist, pendingProposals] = await Promise.all([
         bookingApi.getUpcomingBookingsByLearner(user.id),
         bookingApi.getBookingHistoryByLearner(user.id),
+        rescheduleApi.getProposalsForLearner(user.id),
       ]);
       setUpcoming(up);
       setHistory(hist);
+      setProposals(pendingProposals);
 
       const completedIds = hist.filter((b) => b.status === "completed").map((b) => b.id);
       setReviewedIds(await reviewsApi.getReviewedBookingIds(completedIds));
@@ -66,8 +71,11 @@ export default function BookingsPage() {
     }
   };
 
-  const activeUpcoming = upcoming.filter((b) => !isBookingSessionPast(b));
-  const expired = upcoming.filter((b) => isBookingSessionPast(b));
+  const reschedulePending = upcoming.filter((b) => b.status === "reschedule_pending");
+  const regularUpcoming = upcoming.filter((b) => b.status !== "reschedule_pending");
+  const activeUpcoming = regularUpcoming.filter((b) => !isBookingSessionPast(b));
+  const expired = regularUpcoming.filter((b) => isBookingSessionPast(b));
+  const proposalByBookingId = new Map(proposals.map((p) => [p.booking_id, p]));
 
   if (!user) return null;
 
@@ -98,12 +106,20 @@ export default function BookingsPage() {
         <p className="py-8 text-center text-sm text-text-muted">Loading bookings…</p>
       ) : tab === "upcoming" ? (
         <div className="flex flex-col gap-3">
-          {activeUpcoming.length === 0 && expired.length === 0 ? (
+          {reschedulePending.length === 0 && activeUpcoming.length === 0 && expired.length === 0 ? (
             <p className="py-8 text-center text-sm text-text-muted">
               No upcoming sessions. Go book one!
             </p>
           ) : (
             <>
+              {reschedulePending.map((booking) => (
+                <RescheduleBanner
+                  key={booking.id}
+                  booking={booking}
+                  variant="learner"
+                  proposal={proposalByBookingId.get(booking.id) || null}
+                />
+              ))}
               {activeUpcoming.map((booking) => (
                 <BookingListItem key={booking.id} booking={booking} onCancel={handleCancel} />
               ))}

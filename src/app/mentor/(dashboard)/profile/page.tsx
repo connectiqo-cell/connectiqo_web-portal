@@ -28,6 +28,7 @@ export default function MentorProfileDashboardPage() {
       try {
         const data = await profileApi.getMentorProfile(user.id);
         if (cancelled) return;
+        
         setProfile(data);
         setSpecialization(data.specialization || "");
         setCategory(data.category || "");
