@@ -53,6 +53,7 @@ set up a dedicated Supabase branch/project for tests first.
    ```
 2. **Create a Vercel project** from that repo (vercel.com → New Project →
    import the GitHub repo). Vercel auto-detects Next.js — no build config
+   
    needed.
 3. **Set environment variables in Vercel** (Project → Settings →
    Environment Variables) — same names as `.env.local.example`, real values.
