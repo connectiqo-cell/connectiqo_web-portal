@@ -11,6 +11,7 @@ export interface BookingRow {
   mentor_id: string;
   learner_id: string;
   slot_id: string;
+  slot_ids?: string[] | null;
   reschedule_reason?: string | null;
   reschedule_deadline?: string | null;
   profiles: { id: string; name: string | null; avatar_url: string | null } | null;
@@ -21,6 +22,46 @@ export interface BookingRow {
 export type RecordedSession = BookingRow & { recording_playback_url: string };
 
 const RECORDING_URL_PLACEHOLDER = "pending";
+
+/**
+ * Continuous multi-slot bookings store all inventory IDs in slot_ids but join
+ * only the primary slot. Expand availability_slots start/end to the full
+ * continuous span so timers and UI treat it as one meeting.
+ */
+async function enrichBookingTimeSpans(
+  supabase: ReturnType<typeof createClient>,
+  bookings: BookingRow[],
+): Promise<BookingRow[]> {
+  const needIds = new Set<string>();
+  bookings.forEach((b) => {
+    if (b.slot_ids && b.slot_ids.length > 1) b.slot_ids.forEach((id) => needIds.add(id));
+  });
+  if (!needIds.size) return bookings;
+
+  const { data: slots } = await supabase
+    .from("availability_slots")
+    .select("id, date, start_time, end_time")
+    .in("id", [...needIds]);
+  if (!slots?.length) return bookings;
+
+  const byId = new Map(slots.map((s) => [s.id as string, s]));
+  return bookings.map((b) => {
+    if (!b.slot_ids || b.slot_ids.length < 2) return b;
+    const block = b.slot_ids.map((id) => byId.get(id)).filter((s): s is NonNullable<typeof s> => Boolean(s));
+    if (block.length < 2) return b;
+    block.sort((a, c) => String(a.start_time).localeCompare(String(c.start_time)));
+    const first = block[0];
+    const last = block[block.length - 1];
+    return {
+      ...b,
+      availability_slots: {
+        date: first.date as string,
+        start_time: first.start_time as string,
+        end_time: last.end_time as string,
+      },
+    };
+  });
+}
 
 /**
  * Ported (learner-facing subset) from connectfront/src/api/bookingApi.js.
@@ -41,7 +82,8 @@ export const bookingApi = {
         .eq("id", bookingId)
         .single();
       if (error) throw error;
-      return data as unknown as BookingRow;
+      const [enriched] = await enrichBookingTimeSpans(supabase, [data as unknown as BookingRow]);
+      return enriched;
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
     }
@@ -50,11 +92,20 @@ export const bookingApi = {
   setMeetingId: async ({ bookingId, meetingId }: { bookingId: string; meetingId: string }) => {
     const supabase = createClient();
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("bookings")
         .update({ meeting_id: meetingId })
-        .eq("id", bookingId);
+        .eq("id", bookingId)
+        .select("id")
+        .maybeSingle();
       if (error) throw error;
+      // A stale/expired session silently downgrades this request to the `anon`
+      // role, which has no UPDATE policy on `bookings` — Postgres/PostgREST
+      // then returns a clean 204 with zero rows affected and no `error`.
+      // Without checking `data`, that looks identical to a real success:
+      // the host proceeds into the call while meeting_id never gets persisted,
+      // leaving the other participant waiting forever with no visible failure.
+      if (!data) throw new Error("Could not save the session — please sign in again and retry.");
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
     }
@@ -138,7 +189,7 @@ export const bookingApi = {
         .eq("learner_id", learnerId)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data as unknown as BookingRow[]) || [];
+      return enrichBookingTimeSpans(supabase, (data as unknown as BookingRow[]) || []);
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
     }
@@ -156,7 +207,7 @@ export const bookingApi = {
         .eq("mentor_id", mentorId)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data as unknown as BookingRow[]) || [];
+      return enrichBookingTimeSpans(supabase, (data as unknown as BookingRow[]) || []);
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
     }
@@ -173,7 +224,7 @@ export const bookingApi = {
         .eq("learner_id", learnerId)
         .in("status", ["pending", "confirmed", "reschedule_pending"]);
       if (error) throw error;
-      const rows = (data as unknown as BookingRow[]) || [];
+      const rows = await enrichBookingTimeSpans(supabase, (data as unknown as BookingRow[]) || []);
       return rows.sort((a, b) => {
         const da = `${a.availability_slots?.date ?? ""} ${a.availability_slots?.start_time ?? ""}`;
         const db = `${b.availability_slots?.date ?? ""} ${b.availability_slots?.start_time ?? ""}`;
@@ -204,7 +255,7 @@ export const bookingApi = {
         .order("start_time", { referencedTable: "availability_slots", ascending: false })
         .range(from, to);
       if (error) throw error;
-      return (data as unknown as BookingRow[]) || [];
+      return enrichBookingTimeSpans(supabase, (data as unknown as BookingRow[]) || []);
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
     }
@@ -221,7 +272,7 @@ export const bookingApi = {
         .eq("mentor_id", mentorId)
         .in("status", ["pending", "confirmed", "reschedule_pending"]);
       if (error) throw error;
-      const rows = (data as unknown as BookingRow[]) || [];
+      const rows = await enrichBookingTimeSpans(supabase, (data as unknown as BookingRow[]) || []);
       return rows.sort((a, b) => {
         const da = `${a.availability_slots?.date ?? ""} ${a.availability_slots?.start_time ?? ""}`;
         const db = `${b.availability_slots?.date ?? ""} ${b.availability_slots?.start_time ?? ""}`;
@@ -252,7 +303,7 @@ export const bookingApi = {
         .order("start_time", { referencedTable: "availability_slots", ascending: false })
         .range(from, to);
       if (error) throw error;
-      return (data as unknown as BookingRow[]) || [];
+      return enrichBookingTimeSpans(supabase, (data as unknown as BookingRow[]) || []);
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
     }
@@ -280,7 +331,7 @@ export const bookingApi = {
         .order("created_at", { ascending: false });
       if (error) throw error;
 
-      const rows = (bookings as unknown as BookingRow[]) || [];
+      const rows = await enrichBookingTimeSpans(supabase, (bookings as unknown as BookingRow[]) || []);
       if (!rows.length) return [];
 
       const { data: recordings } = await supabase
@@ -362,11 +413,13 @@ export const bookingApi = {
     const supabase = createClient();
     try {
       const booking = await bookingApi.getBooking(bookingId);
+      const slotIds =
+        booking.slot_ids && booking.slot_ids.length ? booking.slot_ids : [booking.slot_id];
 
       await supabase
         .from("availability_slots")
         .update({ is_booked: false })
-        .eq("id", booking.slot_id);
+        .in("id", slotIds);
 
       const { data, error } = await supabase
         .from("bookings")

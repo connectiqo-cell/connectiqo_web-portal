@@ -20,6 +20,7 @@ export function MentorVideoLibrary({
 }) {
   const router = useRouter();
   const { user, profile } = useAuth();
+  const isOwnProfile = user?.id === mentorId;
 
   const [videos, setVideos] = useState<MentorVideo[]>([]);
   const [unlocked, setUnlocked] = useState(false);
@@ -35,7 +36,7 @@ export function MentorVideoLibrary({
       if (cancelled) return;
       setVideos(rows);
 
-      if (user) {
+      if (user && user.id !== mentorId) {
         const isUnlocked = await videoLibraryApi
           .checkUnlocked({ learnerId: user.id, mentorId })
           .catch(() => false);
@@ -49,6 +50,9 @@ export function MentorVideoLibrary({
   }, [mentorId, user]);
 
   const handleUnlock = async () => {
+    // A mentor viewing their own profile already has full access — never
+    // let them pay themselves for their own video library.
+    if (isOwnProfile) return;
     if (!user) {
       router.push(`${ROUTES.login}?next=${encodeURIComponent(ROUTES.mentorProfile(mentorId))}`);
       return;
@@ -85,15 +89,65 @@ export function MentorVideoLibrary({
 
   if (loading || videos.length === 0) return null;
 
-  const hasLockedVideos = videos.some((v) => !v.is_free);
+  const memberVideos = videos.filter((v) => !v.is_free);
+  const previewVideos = videos.filter((v) => v.is_free);
+  const hasLockedVideos = memberVideos.length > 0;
+
+  const renderGrid = (list: MentorVideo[]) => (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      {list.map((video) => {
+        const canPlay = video.is_free || unlocked || isOwnProfile;
+        const isPlaying = playingId === video.id;
+
+        return (
+          <div key={video.id} className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => (canPlay ? setPlayingId(isPlaying ? null : video.id) : handleUnlock())}
+              className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl bg-meeting-canvas"
+            >
+              {isPlaying && canPlay ? (
+                <video src={video.video_url} controls autoPlay className="h-full w-full object-cover" />
+              ) : (
+                <>
+                  {video.thumbnail_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
+                    <img
+                      src={video.thumbnail_url}
+                      alt={video.title}
+                      className="h-full w-full object-cover opacity-80"
+                    />
+                  ) : (
+                    <VideoIcon size={24} className="text-text-muted" />
+                  )}
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/30">
+                    {canPlay ? (
+                      <Play size={22} className="fill-white text-white" />
+                    ) : (
+                      <Lock size={20} className="text-white" />
+                    )}
+                  </span>
+                </>
+              )}
+            </button>
+            <p className="truncate text-xs font-medium text-text-secondary">{video.title}</p>
+          </div>
+        );
+      })}
+    </div>
+  );
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
           Videos ({videos.length})
         </h2>
-        {!unlocked && hasLockedVideos && unlockPrice ? (
+        {isOwnProfile ? (
+          <span className="rounded-full border border-border-light bg-surface-chip px-3 py-1 text-xs font-semibold text-text-secondary">
+            Your channel
+          </span>
+        ) : !unlocked && hasLockedVideos && unlockPrice ? (
           <button
             type="button"
             onClick={handleUnlock}
@@ -108,47 +162,23 @@ export function MentorVideoLibrary({
 
       {error ? <p className="text-sm text-accent-error">{error}</p> : null}
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {videos.map((video) => {
-          const canPlay = video.is_free || unlocked;
-          const isPlaying = playingId === video.id;
+      {memberVideos.length > 0 ? (
+        <div className="flex flex-col gap-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+            Members Only
+          </h3>
+          {renderGrid(memberVideos)}
+        </div>
+      ) : null}
 
-          return (
-            <div key={video.id} className="flex flex-col gap-2">
-              <button
-                type="button"
-                onClick={() => (canPlay ? setPlayingId(isPlaying ? null : video.id) : handleUnlock())}
-                className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl bg-meeting-canvas"
-              >
-                {isPlaying && canPlay ? (
-                  <video src={video.video_url} controls autoPlay className="h-full w-full object-cover" />
-                ) : (
-                  <>
-                    {video.thumbnail_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-                      <img
-                        src={video.thumbnail_url}
-                        alt={video.title}
-                        className="h-full w-full object-cover opacity-80"
-                      />
-                    ) : (
-                      <VideoIcon size={24} className="text-text-muted" />
-                    )}
-                    <span className="absolute inset-0 flex items-center justify-center bg-black/30">
-                      {canPlay ? (
-                        <Play size={22} className="fill-white text-white" />
-                      ) : (
-                        <Lock size={20} className="text-white" />
-                      )}
-                    </span>
-                  </>
-                )}
-              </button>
-              <p className="truncate text-xs font-medium text-text-secondary">{video.title}</p>
-            </div>
-          );
-        })}
-      </div>
+      {previewVideos.length > 0 ? (
+        <div className="flex flex-col gap-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+            Free Preview Videos
+          </h3>
+          {renderGrid(previewVideos)}
+        </div>
+      ) : null}
     </div>
   );
 }

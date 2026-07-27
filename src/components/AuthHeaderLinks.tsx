@@ -13,6 +13,8 @@ export function AuthHeaderLinks() {
 
   if (loading) return null;
 
+  
+
   if (!user) {
     return (
       
@@ -53,8 +55,13 @@ export function AuthHeaderLinks() {
         Mentor Dashboard
       </Link>
       <Link href={ROUTES.settings} className="font-medium text-text-secondary hover:text-text-primary">
-        {profile?.name || user.email}
+        Settings
       </Link>
+      {profile?.is_admin ? (
+        <Link href={ROUTES.admin} className="font-medium text-text-secondary hover:text-text-primary">
+          Admin
+        </Link>
+      ) : null}
       <button
         type="button"
         onClick={() => signOut().then(() => router.push(ROUTES.home))}

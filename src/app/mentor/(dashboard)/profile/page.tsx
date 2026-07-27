@@ -54,8 +54,8 @@ export default function MentorProfileDashboardPage() {
     try {
       await profileApi.updateMentorProfile({
         userId: user.id,
-        specialization,
-        bio,
+        specialization: specialization.trim(),
+        bio: bio.trim(),
         category,
         experienceYears: Number(experienceYears) || 0,
         pricePerHour: Number(pricePerHour) || 0,

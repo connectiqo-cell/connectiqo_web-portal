@@ -52,6 +52,7 @@ function LoginForm() {
       setLoginError((error as Error)?.message || "Something went wrong. Please try again.");
       setLoading(false);
     }
+
   };
 
   return (
@@ -96,6 +97,7 @@ function LoginForm() {
             setPassword(e.target.value);
             if (loginError) setLoginError("");
           }}
+
           disabled={loading}
           rightSlot={
             <button
@@ -107,6 +109,7 @@ function LoginForm() {
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
+            
           }
         />
 

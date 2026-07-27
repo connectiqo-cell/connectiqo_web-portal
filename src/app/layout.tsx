@@ -2,6 +2,7 @@ import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
+import { FrozenAccountNotice } from "@/components/FrozenAccountNotice";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
@@ -16,10 +17,12 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
+
   title: "Connectiqo — Live 1-on-1 Mentorship",
   description:
     "Book live 1-on-1 video mentorship sessions with expert mentors on Connectiqo.",
@@ -58,10 +61,11 @@ export default function RootLayout({
             <NotificationProvider>
               {children}
               <SiteFooter />
+              <FrozenAccountNotice />
             </NotificationProvider>
           </AuthProvider>
         </ThemeProvider>
-        <Analytics />
+        <Analytics debug={false} />
       </body>
     </html>
   );

@@ -1,12 +1,17 @@
 "use client";
 
-import { User } from "lucide-react";
+import { Camera, Check, Plus, Trash2, User } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { CameraCaptureModal } from "@/components/CameraCaptureModal";
 import { useAuth } from "@/contexts/AuthContext";
+import { fetchActiveCategories } from "@/lib/api/contentApi";
 import { profileApi } from "@/lib/api/profileApi";
+import { MENTOR_CATEGORIES } from "@/lib/constants/mentorCategories";
 import { ROUTES } from "@/lib/routes";
+import { toggleMentorCategory } from "@/lib/utils/mentorCategories";
 
 export default function EditProfilePage() {
   const router = useRouter();
@@ -20,6 +25,15 @@ export default function EditProfilePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
+
+  const isLearner = profile?.role !== "mentor";
+  const [categories, setCategories] = useState<string[]>([...MENTOR_CATEGORIES]);
+  const [interests, setInterests] = useState<string[]>([]);
+  const [interestsLoaded, setInterestsLoaded] = useState(false);
+  const [savingInterests, setSavingInterests] = useState(false);
+  const [interestsSaved, setInterestsSaved] = useState(false);
+  const [interestsError, setInterestsError] = useState("");
 
   useEffect(() => {
     if (!authLoading && !user) router.replace(ROUTES.login);
@@ -36,9 +50,46 @@ export default function EditProfilePage() {
     });
   }, [profile]);
 
-  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !user) return;
+  useEffect(() => {
+    if (!user || !isLearner) return;
+    let cancelled = false;
+    (async () => {
+      const [rows, learnerProfile] = await Promise.all([
+        fetchActiveCategories().catch(() => []),
+        profileApi.getLearnerProfile(user.id).catch(() => null),
+      ]);
+      if (cancelled) return;
+      if (rows.length) setCategories(rows.map((r) => r.name));
+      setInterests(learnerProfile?.interests || []);
+      setInterestsLoaded(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, isLearner]);
+
+  const handleToggleInterest = (category: string) => {
+    setInterests((prev) => toggleMentorCategory(prev, category));
+  };
+
+  const handleSaveInterests = async () => {
+    if (!user) return;
+    setSavingInterests(true);
+    setInterestsError("");
+    setInterestsSaved(false);
+    try {
+      await profileApi.updateLearnerProfile({ userId: user.id, interests });
+      setInterestsSaved(true);
+      setTimeout(() => setInterestsSaved(false), 2500);
+    } catch (err) {
+      setInterestsError((err as Error)?.message || "Could not save interests");
+    } finally {  
+      setSavingInterests(false);
+    }
+  };
+
+  const uploadAvatarFile = async (file: File) => {
+    if (!user) return;
     setUploading(true);
     setError("");
     try {
@@ -47,6 +98,33 @@ export default function EditProfilePage() {
       refreshProfile();
     } catch (err) {
       setError((err as Error)?.message || "Could not upload photo");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    await uploadAvatarFile(file);
+  };
+
+  const handleCameraCapture = async (file: File) => {
+    setShowCamera(false);
+    await uploadAvatarFile(file);
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!user) return;
+    if (!window.confirm("Remove your profile photo?")) return;
+    setUploading(true);
+    setError("");
+    try {
+      await profileApi.removeAvatar({ userId: user.id });
+      setAvatarUrl(null);
+      refreshProfile();
+    } catch (err) {
+      setError((err as Error)?.message || "Could not remove photo");
     } finally {
       setUploading(false);
     }
@@ -89,15 +167,35 @@ export default function EditProfilePage() {
             <User size={28} className="text-text-muted" />
           )}
         </button>
-        <div>
+        <div className="flex flex-col items-start gap-1.5">
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
             className="text-sm font-semibold text-accent-link disabled:opacity-60"
           >
-            {uploading ? "Uploading…" : "Change photo"}
+            {uploading ? "Uploading…" : "Upload from device"}
           </button>
+          <button
+            type="button"
+            onClick={() => setShowCamera(true)}
+            disabled={uploading}
+            className="flex items-center gap-1.5 text-sm font-semibold text-text-secondary hover:text-text-primary disabled:opacity-60"
+          >
+            <Camera size={14} />
+            Take a photo
+          </button>
+          {avatarUrl ? (
+            <button
+              type="button"
+              onClick={handleRemoveAvatar}
+              disabled={uploading}
+              className="flex items-center gap-1.5 text-sm font-semibold text-accent-error hover:opacity-80 disabled:opacity-60"
+            >
+              <Trash2 size={14} />
+              Remove photo
+            </button>
+          ) : null}
           <input
             ref={fileInputRef}
             type="file"
@@ -142,6 +240,91 @@ export default function EditProfilePage() {
       >
         {saving ? "Saving…" : "Save changes"}
       </button>
+
+      {isLearner ? (
+        <div className="flex flex-col gap-3 border-t border-border-light pt-6">
+          <div>
+            <h2 className="text-sm font-semibold text-text-primary">Interests</h2>
+            <p className="mt-0.5 text-xs text-text-muted">
+              Add or remove categories to fine-tune your &quot;Recommended for you&quot; feed.
+            </p>
+          </div>
+
+          {!interestsLoaded ? (
+            <p className="text-sm text-text-muted">Loading…</p>
+          ) : (
+            <>
+              <div className="flex flex-wrap gap-2">
+                {interests.map((category) => (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => handleToggleInterest(category)}
+                    className="flex items-center gap-1.5 rounded-full border border-accent-link/50 bg-accent-link/15 px-3 py-1.5 text-xs font-semibold text-accent-link"
+                  >
+                    <Check size={12} />
+                    {category}
+                  </button>
+                ))}
+                {interests.length === 0 ? (
+                  <p className="text-xs text-text-muted">No interests selected yet.</p>
+                ) : null}
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+                  Add more
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {categories
+                    .filter((c) => !interests.some((i) => i.toLowerCase() === c.toLowerCase()))
+                    .map((category) => (
+                      <button
+                        key={category}
+                        type="button"
+                        onClick={() => handleToggleInterest(category)}
+                        className="flex items-center gap-1.5 rounded-full border border-border-light px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary"
+                      >
+                        <Plus size={12} />
+                        {category}
+                      </button>
+                    ))}
+                </div>
+              </div>
+
+              {interestsError ? <p className="text-sm text-accent-error">{interestsError}</p> : null}
+              {interestsSaved ? <p className="text-sm text-accent-success">Saved.</p> : null}
+
+              <button
+                type="button"
+                onClick={handleSaveInterests}
+                disabled={savingInterests}
+                className="flex h-11 w-fit items-center justify-center rounded-full border border-border-light px-6 text-sm font-semibold text-text-secondary disabled:opacity-60"
+              >
+                {savingInterests ? "Saving…" : "Save interests"}
+              </button>
+            </>
+          )}
+        </div>
+      ) : null}
+
+      {showCamera ? (
+        <CameraCaptureModal onCapture={handleCameraCapture} onClose={() => setShowCamera(false)} />
+      ) : null}
+
+      <div className="flex flex-col gap-1.5 border-t border-border-light pt-6">
+        <h2 className="text-sm font-semibold text-accent-error">Danger zone</h2>
+        <p className="text-xs text-text-muted">
+          Permanently delete your account and all associated data. This can&apos;t be undone.
+        </p>
+        <Link
+          href={ROUTES.account}
+          className="mt-1.5 flex w-fit items-center gap-1.5 text-sm font-semibold text-accent-error hover:opacity-80"
+        >
+          <Trash2 size={14} />
+          Delete account
+        </Link>
+      </div>
     </main>
   );
 }

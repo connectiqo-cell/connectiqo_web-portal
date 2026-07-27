@@ -15,10 +15,12 @@ import { ROUTES } from "@/lib/routes";
 // it must never be evaluated during SSR.
 const CallShell = dynamic(() => import("@/components/call/CallShell").then((m) => m.CallShell), {
   ssr: false,
-  loading: () => (
+    loading: () => (
     <div className="flex flex-1 items-center justify-center">
       <Loader2 size={28} className="animate-spin text-text-muted" />
     </div>
+
+    
   ),
 });
 
@@ -94,7 +96,7 @@ export default function CallPage({ params }: PageProps) {
     ? booking?.learner_profile?.name || "Learner"
     : booking?.profiles?.name || "Mentor";
 
-  if (!meetingId) {
+  if (!meetingId || !token) {
     return (
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
         <Video size={40} className="text-accent-primary" />
@@ -179,14 +181,16 @@ export default function CallPage({ params }: PageProps) {
     <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-4 px-4 py-6">
       <CallShell
         meetingId={meetingId}
-        token={token!}
+        token={token}
+
         name={profile?.name || "Guest"}
         bookingId={bookingId}
         mentorId={booking!.mentor_id}
         learnerId={booking!.learner_id}
         isHost={isHost}
-        recordingRequested={Boolean(booking?.recording_requested)}
         otherUserName={otherUserName}
+        slot={booking?.availability_slots}
+
       />
     </main>
   );

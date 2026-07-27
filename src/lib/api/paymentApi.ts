@@ -29,11 +29,13 @@ export interface CreateOrderResponse {
   totalAmount: number;
   platformFeePercent: number;
   gstPercent: number;
+  slotCount: number;
 }
 
 export interface VerifyAndBookResponse {
   success: boolean;
   bookingId: string;
+  bookingIds: string[];
 }
 
 export interface TransactionRow {
@@ -51,11 +53,15 @@ export interface TransactionRow {
 
 /** Ported (subset used by booking/checkout) from connectfront/src/api/paymentApi.js. */
 export const paymentApi = {
-  /** Step 1: create a Razorpay order — amounts are calculated server-side. */
+  /**
+   * Step 1: create a Razorpay order — amounts are calculated server-side.
+   * `slotIds` covers single or continuous multi-slot (same-day) checkout;
+   * the function validates the block is contiguous and prices per slot.
+   */
   createOrder: async (params: {
     mentorId: string;
     learnerId: string;
-    slotId: string;
+    slotIds: string[];
     message?: string;
     recordingRequested: boolean;
   }): Promise<CreateOrderResponse> => {
@@ -73,7 +79,7 @@ export const paymentApi = {
     razorpaySignature: string;
     mentorId: string;
     learnerId: string;
-    slotId: string;
+    slotIds: string[];
     message?: string;
     recordingRequested: boolean;
   }): Promise<VerifyAndBookResponse> => {

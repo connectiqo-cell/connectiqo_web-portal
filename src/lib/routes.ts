@@ -29,8 +29,13 @@ export const ROUTES = {
   mentorSessions: "/mentor/sessions",
   mentorEarnings: "/mentor/earnings",
   mentorSchedule: "/mentor/schedule",
+  mentorAvailability: "/mentor/availability",
   mentorVideos: "/mentor/videos",
   rescheduleRequest: (bookingId: string) => `/mentor/reschedule/${bookingId}`,
+
+  // Admin
+  admin: "/admin",
+  adminUsers: "/admin/users",
 
   // Shared / modal-equivalent routes
   mentorProfile: (mentorId: string) => `/mentor/${mentorId}`,
@@ -46,5 +51,6 @@ export const ROUTES = {
   editProfile: "/settings/profile",
   payoutSetup: "/settings/payout",
   recordings: "/settings/recordings",
+  wallet: "/settings/wallet",
   notifications: "/notifications",
 } as const;

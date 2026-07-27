@@ -24,8 +24,11 @@ export interface Profile {
   username: string;
   avatar_url?: string | null;
   is_frozen?: boolean;
+  is_admin?: boolean;
   created_at?: string;
 }
+
+
 
 function withTimeout<T>(promise: Promise<T>, ms: number, label = "Operation"): Promise<T> {
   return Promise.race([
@@ -45,6 +48,8 @@ interface AuthContextValue {
   refreshProfile: () => void;
   pendingPasswordReset: boolean;
   setPendingPasswordReset: (value: boolean) => void;
+  frozenNotice: boolean;
+  clearFrozenNotice: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -57,7 +62,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [pendingPasswordReset, setPendingPasswordReset] = useState(false);
+  const [frozenNotice, setFrozenNotice] = useState(false);
   const cancelledRef = useRef(false);
+  const clearFrozenNotice = useCallback(() => setFrozenNotice(false), []);
 
   const recoverProfile = useCallback(
     async (userId: string) => {
@@ -130,9 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSession(null);
           setUser(null);
           setProfile(null);
-          window.alert(
-            "This account has been frozen by an administrator. Contact support if you believe this is a mistake.",
-          );
+          setFrozenNotice(true);
           setLoading(false);
           return;
         } else {
@@ -244,8 +249,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshProfile,
       pendingPasswordReset,
       setPendingPasswordReset,
+      frozenNotice,
+      clearFrozenNotice,
     }),
-    [session, user, profile, loading, signOut, refreshProfile, pendingPasswordReset],
+    [
+      session,
+      user,
+      profile,
+      loading,
+      signOut,
+      refreshProfile,
+      pendingPasswordReset,
+      frozenNotice,
+      clearFrozenNotice,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

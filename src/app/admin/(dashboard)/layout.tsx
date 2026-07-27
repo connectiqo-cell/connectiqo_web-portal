@@ -1,6 +1,6 @@
 "use client";
 
-import { Award, Calendar, LayoutDashboard, Video, Wallet } from "lucide-react";
+import { LayoutGrid, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -9,35 +9,33 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ROUTES } from "@/lib/routes";
 
 const NAV_ITEMS = [
-  { href: ROUTES.mentorProfileDashboard, label: "Profile", icon: LayoutDashboard },
-  { href: ROUTES.mentorAvailability, label: "Availability", icon: Calendar },
-  { href: ROUTES.mentorSchedule, label: "Schedule", icon: Calendar },
-  { href: ROUTES.mentorSessions, label: "Sessions", icon: Calendar },
-  { href: ROUTES.mentorVideos, label: "Videos", icon: Video },
-  { href: ROUTES.mentorEarnings, label: "Earnings", icon: Wallet },
-  { href: ROUTES.payoutSetup, label: "Payout", icon: Award },
+  { href: ROUTES.admin, label: "Categories", icon: LayoutGrid },
+  { href: ROUTES.adminUsers, label: "Users", icon: Users },
 ];
 
-export default function MentorDashboardLayout({ children }: { children: React.ReactNode }) {
+export default function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (loading) return;
+    if (!user) {
       router.replace(`${ROUTES.login}?next=${encodeURIComponent(pathname)}`);
+      return;
     }
-  }, [loading, user, router, pathname]);
+    if (profile && !profile.is_admin) {
+      router.replace(ROUTES.home);
+    }
+  }, [loading, user, profile, router, pathname]);
 
-  if (!user) return null;
+  if (!user || !profile?.is_admin) return null;
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-10">
       <div>
-        <h1 className="text-2xl font-bold text-text-primary">Mentor Dashboard</h1>
-        <p className="mt-1 text-sm text-text-secondary">
-          Manage your profile, availability, sessions, and earnings.
-        </p>
+        <h1 className="text-2xl font-bold text-text-primary">Admin</h1>
+        <p className="mt-1 text-sm text-text-secondary">Manage categories and user accounts.</p>
       </div>
 
       <nav className="flex gap-1 overflow-x-auto border-b border-border-light">

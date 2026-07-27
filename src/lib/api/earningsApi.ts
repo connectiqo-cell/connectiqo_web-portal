@@ -69,6 +69,76 @@ export const earningsApi = {
     }
   },
 
+  /** Last 4 weeks of credited earnings, grouped by week-of-month — powers the Month chart. */
+  getEarningsByMonth: async (mentorId: string): Promise<{ label: string; amount: number }[]> => {
+    const supabase = createClient();
+    try {
+      const today = new Date();
+      const start = new Date(today);
+      start.setDate(today.getDate() - 27);
+      const startStr = start.toISOString().split("T")[0];
+
+      const { data, error } = await supabase
+        .from("earnings")
+        .select("amount, created_at")
+        .eq("mentor_id", mentorId)
+        .neq("status", "pending")
+        .gte("created_at", startStr);
+      if (error) throw error;
+
+      const buckets = [0, 0, 0, 0];
+      (data || []).forEach((earning) => {
+        const day = new Date(earning.created_at);
+        const daysAgo = Math.floor((today.getTime() - day.getTime()) / 86400000);
+        const idx = Math.min(3, Math.max(0, 3 - Math.floor(daysAgo / 7)));
+        buckets[idx] += parseFloat(String(earning.amount));
+      });
+
+      return buckets.map((amount, i) => ({ label: `W${i + 1}`, amount }));
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  /** Last 12 months of credited earnings, grouped by month — powers the Year chart. */
+  getEarningsByYear: async (mentorId: string): Promise<{ label: string; amount: number }[]> => {
+    const supabase = createClient();
+    try {
+      const today = new Date();
+      const start = new Date(today.getFullYear(), today.getMonth() - 11, 1);
+      const startStr = start.toISOString().split("T")[0];
+
+      const { data, error } = await supabase
+        .from("earnings")
+        .select("amount, created_at")
+        .eq("mentor_id", mentorId)
+        .neq("status", "pending")
+        .gte("created_at", startStr);
+      if (error) throw error;
+
+      const months: { key: string; label: string; amount: number }[] = [];
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+        months.push({
+          key: `${d.getFullYear()}-${d.getMonth()}`,
+          label: d.toLocaleDateString("en-IN", { month: "short" }),
+          amount: 0,
+        });
+      }
+      const byKey = new Map(months.map((m) => [m.key, m]));
+      (data || []).forEach((earning) => {
+        const d = new Date(earning.created_at);
+        const key = `${d.getFullYear()}-${d.getMonth()}`;
+        const bucket = byKey.get(key);
+        if (bucket) bucket.amount += parseFloat(String(earning.amount));
+      });
+
+      return months.map(({ label, amount }) => ({ label, amount }));
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
   getTotalEarnings: async (mentorId: string): Promise<number> => {
     const supabase = createClient();
     try {

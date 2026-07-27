@@ -46,6 +46,7 @@ export default function RecordedSessionsPage() {
             const recordingUrl = await fetchRecordingUrl({ meetingId: booking.meeting_id, token }).catch(
               () => null,
             );
+            
             if (!recordingUrl) return null;
             await recordingsApi
               .updateRecordingUrls({

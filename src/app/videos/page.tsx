@@ -22,7 +22,7 @@ export default function VideosDiscoveryPage() {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    (async () => {  
       try {
         const [rows, unlockMap] = await Promise.all([
           videoLibraryApi.getAllPublicVideos({ page: 0, pageSize: PAGE_SIZE }),

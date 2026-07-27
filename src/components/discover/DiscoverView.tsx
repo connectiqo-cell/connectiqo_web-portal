@@ -15,15 +15,18 @@ export function DiscoverView({ grouped }: { grouped: Record<string, MentorProfil
   const [searching, setSearching] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  console.log("DiscoverView rendered", { query, results, searching });
+
   const handleQueryChange = (value: string) => {
     setQuery(value);
     if (!value.trim()) {
       setResults(null);
       setSearching(false);
     } else {
-      
+
       setSearching(true);
     }
+
   };
   
 
@@ -68,6 +71,7 @@ export function DiscoverView({ grouped }: { grouped: Record<string, MentorProfil
                 <MentorCard mentor={mentor} />
               </div>
             ))}
+            
           </div>
           {!searching && results?.length === 0 ? (
             <p className="py-8 text-center text-sm text-text-muted">

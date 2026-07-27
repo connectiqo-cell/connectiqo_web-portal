@@ -191,6 +191,24 @@ export const profileApi = {
     }
   },
 
+  /** Clears the profile photo — best-effort storage cleanup, DB pointer is the source of truth. */
+  removeAvatar: async ({ userId }: { userId: string }): Promise<void> => {
+    const supabase = createClient();
+    try {
+      const { error } = await supabase.from("profiles").update({ avatar_url: null }).eq("id", userId);
+      if (error) throw error;
+
+      // Best-effort: the extension isn't known here, so try the common ones.
+      // A failed/missing removal is harmless — avatar_url is already cleared.
+      await supabase.storage
+        .from("connectiqo_avatar")
+        .remove(["jpg", "jpeg", "png", "webp"].map((ext) => `${userId}/avatar.${ext}`))
+        .catch(() => undefined);
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
   updateMentorProfile: async ({
     userId,
     specialization,

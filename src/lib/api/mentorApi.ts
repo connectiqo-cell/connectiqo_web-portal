@@ -25,7 +25,6 @@ export interface MentorProfileRow {
   profiles: {
     id: string;
     name: string | null;
-    email?: string | null;
     avatar_url: string | null;
     username?: string | null;
   } | null;
@@ -43,7 +42,6 @@ const MENTOR_SELECT = `
   profiles:id (
     id,
     name,
-    email,
     avatar_url,
     username
   )
@@ -65,7 +63,7 @@ export const mentorApi = {
         .select(
           `id, specialization, bio, experience_years, price_per_hour, rating, total_sessions,
            unlock_price, cover_image_url,
-           profiles:id ( id, name, email, avatar_url, username )`,
+           profiles:id ( id, name, avatar_url, username )`,
         )
         .eq("id", mentorId)
         .single();
@@ -73,6 +71,23 @@ export const mentorApi = {
       return data as unknown as MentorProfileRow;
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  /** Count of learners with an active (non-expired) video-library subscription. */
+  getMentorActiveSubscriberCount: async (
+    supabase: SupabaseClient,
+    mentorId: string,
+  ): Promise<number> => {
+    try {
+      const { data, error } = await supabase.rpc("mentor_active_subscriber_count", {
+        p_mentor_id: mentorId,
+      });
+      if (error) throw error;
+      const n = Number(data);
+      return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
+    } catch {
+      return 0;
     }
   },
 

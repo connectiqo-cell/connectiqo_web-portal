@@ -20,6 +20,13 @@ function statusLabelFor(booking: BookingRow): string {
   return booking.status;
 }
 
+function formatTime(time: string) {
+  const [h, min] = time.split(":").map(Number);
+  const period = h >= 12 ? "PM" : "AM";
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${hour12}:${String(min).padStart(2, "0")} ${period}`;
+}
+
 function formatDateTime(date?: string, time?: string) {
   if (!date) return "";
   const [y, m, d] = date.split("-").map(Number);
@@ -29,10 +36,7 @@ function formatDateTime(date?: string, time?: string) {
     day: "numeric",
   });
   if (!time) return label;
-  const [h, min] = time.split(":").map(Number);
-  const period = h >= 12 ? "PM" : "AM";
-  const hour12 = h % 12 === 0 ? 12 : h % 12;
-  return `${label} · ${hour12}:${String(min).padStart(2, "0")} ${period}`;
+  return `${label} · ${formatTime(time)}`;
 }
 
 export function BookingListItem({
@@ -85,10 +89,7 @@ export function BookingListItem({
             {booking.availability_slots?.start_time ? (
               <span className="flex items-center gap-1">
                 <Clock size={12} />
-                {formatDateTime(undefined, booking.availability_slots.start_time).replace(
-                  "· ",
-                  "",
-                )}
+                {formatTime(booking.availability_slots.start_time)}
               </span>
             ) : null}
           </div>

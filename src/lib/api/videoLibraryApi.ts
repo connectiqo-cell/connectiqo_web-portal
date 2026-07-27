@@ -217,6 +217,38 @@ export const videoLibraryApi = {
     }
   },
 
+  /** Learner's active (non-expired) unlocks with mentor profile details, for the Settings page. */
+  getLearnerActiveSubscriptions: async (
+    learnerId: string,
+  ): Promise<
+    Array<{
+      mentor_id: string;
+      expires_at: string | null;
+      unlocked_at: string;
+      profiles: { id: string; name: string | null; avatar_url: string | null } | null;
+    }>
+  > => {
+    const supabase = createClient();
+    try {
+      const iso = new Date().toISOString();
+      const { data, error } = await supabase
+        .from("learner_unlocks")
+        .select("mentor_id, expires_at, unlocked_at, profiles:mentor_id ( id, name, avatar_url )")
+        .eq("learner_id", learnerId)
+        .or(`expires_at.is.null,expires_at.gt.${iso}`)
+        .order("expires_at", { ascending: true, nullsFirst: false });
+      if (error) throw error;
+      return (data as unknown as Array<{
+        mentor_id: string;
+        expires_at: string | null;
+        unlocked_at: string;
+        profiles: { id: string; name: string | null; avatar_url: string | null } | null;
+      }>) || [];
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
   /** Learner's active (non-expired) unlocks, keyed by mentor id. */
   getLearnerUnlocks: async (learnerId: string): Promise<Map<string, { expiresAt: string | null }>> => {
     const supabase = createClient();

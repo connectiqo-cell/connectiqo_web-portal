@@ -10,6 +10,7 @@ import { availabilityApi, type AvailabilitySlot } from "@/lib/api/availabilityAp
 import type { MentorProfileRow } from "@/lib/api/mentorApi";
 import { paymentApi, type CreateOrderResponse } from "@/lib/api/paymentApi";
 import { ROUTES } from "@/lib/routes";
+import { areSlotsContiguous, slotDurationMinutes } from "@/lib/utils/contiguousSlots";
 import { openRazorpayCheckout } from "@/lib/utils/razorpayCheckout";
 
 type Step = "select" | "review" | "success";
@@ -30,6 +31,10 @@ function formatTime(time: string) {
   return `${hour12}:${String(m).padStart(2, "0")} ${period}`;
 }
 
+function isSameSlot(a: AvailabilitySlot, b: AvailabilitySlot) {
+  return a.id === b.id;
+}
+
 export function BookingFlow({
   mentorId,
   mentor,
@@ -43,7 +48,8 @@ export function BookingFlow({
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(true);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
+  const [selectedSlots, setSelectedSlots] = useState<AvailabilitySlot[]>([]);
+  const [selectError, setSelectError] = useState("");
   const [recordingRequested, setRecordingRequested] = useState<boolean | null>(null);
   const [message, setMessage] = useState("");
   const [step, setStep] = useState<Step>("select");
@@ -94,17 +100,49 @@ export function BookingFlow({
     [slots, activeDate],
   );
 
-  const canContinue = selectedSlotId != null && recordingRequested !== null;
+  const handleSelectDate = (date: string) => {
+    setSelectedDate(date);
+    setSelectedSlots([]);
+    setSelectError("");
+  };
+
+  const handleToggleSlot = (slot: AvailabilitySlot) => {
+    setSelectError("");
+    setSelectedSlots((prev) => {
+      const exists = prev.some((s) => isSameSlot(s, slot));
+      if (exists) {
+        const next = prev.filter((s) => !isSameSlot(s, slot));
+        if (!areSlotsContiguous(next)) {
+          setSelectError("Remove slots from either end of your continuous block.");
+          return prev;
+        }
+        return next;
+      }
+      const next = [...prev, slot].sort((a, b) => a.start_time.localeCompare(b.start_time));
+      if (!areSlotsContiguous(next)) {
+        setSelectError("Select continuous back-to-back slots only.");
+        return prev;
+      }
+      return next;
+    });
+  };
+
+  const totalMinutes = useMemo(
+    () => selectedSlots.reduce((sum, s) => sum + slotDurationMinutes(s.start_time, s.end_time), 0),
+    [selectedSlots],
+  );
+
+  const canContinue = selectedSlots.length > 0 && recordingRequested !== null;
 
   const handleContinue = async () => {
-    if (!canContinue || !user || !selectedSlotId) return;
+    if (!canContinue || !user || !selectedSlots.length) return;
     setError("");
     setSubmitting(true);
     try {
       const created = await paymentApi.createOrder({
         mentorId,
         learnerId: user.id,
-        slotId: selectedSlotId,
+        slotIds: selectedSlots.map((s) => s.id),
         message: message.trim() || undefined,
         recordingRequested: recordingRequested!,
       });
@@ -118,7 +156,7 @@ export function BookingFlow({
   };
 
   const handlePay = async () => {
-    if (!order || !user || !selectedSlotId) return;
+    if (!order || !user || !selectedSlots.length) return;
     setError("");
     setSubmitting(true);
     try {
@@ -137,7 +175,7 @@ export function BookingFlow({
         razorpaySignature: result.razorpay_signature,
         mentorId,
         learnerId: user.id,
-        slotId: selectedSlotId,
+        slotIds: selectedSlots.map((s) => s.id),
         message: message.trim() || undefined,
         recordingRequested: recordingRequested!,
       });
@@ -193,7 +231,11 @@ export function BookingFlow({
             Order summary
           </h2>
           <div className="flex justify-between text-sm">
-            <span className="text-text-secondary">Session with {mentor.profiles?.name}</span>
+            <span className="text-text-secondary">
+              {order.slotCount > 1
+                ? `Continuous session with ${mentor.profiles?.name} (${order.slotCount} slots, ${totalMinutes} min)`
+                : `Session with ${mentor.profiles?.name}`}
+            </span>
             <span className="text-text-primary">₹{order.mentorAmount.toFixed(0)}</span>
           </div>
           <div className="flex justify-between text-sm">
@@ -253,10 +295,7 @@ export function BookingFlow({
               <button
                 key={date}
                 type="button"
-                onClick={() => {
-                  setSelectedDate(date);
-                  setSelectedSlotId(null);
-                }}
+                onClick={() => handleSelectDate(date)}
                 className={`shrink-0 rounded-xl border px-4 py-2 text-sm font-medium transition-colors ${
                   activeDate === date
                     ? "border-accent-link/50 bg-accent-link/15 text-accent-link"
@@ -272,26 +311,44 @@ export function BookingFlow({
 
       {activeDate ? (
         <div className="flex flex-col gap-3">
-          <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-text-muted">
-            <Clock size={16} />
-            Choose a time
-          </h2>
-          <div className="flex flex-wrap gap-2">
-            {slotsForDate.map((slot) => (
-              <button
-                key={slot.id}
-                type="button"
-                onClick={() => setSelectedSlotId(slot.id)}
-                className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                  selectedSlotId === slot.id
-                    ? "border-accent-link/50 bg-accent-link/15 text-accent-link"
-                    : "border-border-light text-text-secondary hover:text-text-primary"
-                }`}
-              >
-                {formatTime(slot.start_time)}
-              </button>
-            ))}
+          <div className="flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-text-muted">
+              <Clock size={16} />
+              Choose a time
+            </h2>
+            {selectedSlots.length > 0 ? (
+              <span className="text-xs font-medium text-accent-link">
+                {selectedSlots.length > 1
+                  ? `${formatTime(selectedSlots[0].start_time)} – ${formatTime(
+                      selectedSlots[selectedSlots.length - 1].end_time,
+                    )} · ${totalMinutes} min`
+                  : `${totalMinutes} min`}
+              </span>
+            ) : null}
           </div>
+          <p className="text-xs text-text-muted">
+            Tap multiple back-to-back slots to book one longer, continuous session.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {slotsForDate.map((slot) => {
+              const selected = selectedSlots.some((s) => isSameSlot(s, slot));
+              return (
+                <button
+                  key={slot.id}
+                  type="button"
+                  onClick={() => handleToggleSlot(slot)}
+                  className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                    selected
+                      ? "border-accent-link/50 bg-accent-link/15 text-accent-link"
+                      : "border-border-light text-text-secondary hover:text-text-primary"
+                  }`}
+                >
+                  {formatTime(slot.start_time)}
+                </button>
+              );
+            })}
+          </div>
+          {selectError ? <p className="text-xs text-accent-error">{selectError}</p> : null}
         </div>
       ) : null}
 
@@ -350,7 +407,11 @@ export function BookingFlow({
         style={{ backgroundImage: "var(--gradient-button-primary)" }}
       >
         {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
-        {submitting ? "Preparing checkout…" : "Continue to payment"}
+        {submitting
+          ? "Preparing checkout…"
+          : selectedSlots.length > 1
+            ? "Continue to payment (continuous session)"
+            : "Continue to payment"}
       </button>
     </div>
   );

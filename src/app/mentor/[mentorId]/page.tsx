@@ -1,13 +1,15 @@
-import { Award, Clock, Star, User, Users } from "lucide-react";
+import { Award, Clock, Star, User, Users, UsersRound, Video as VideoIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ReportUserModal } from "@/components/ReportUserModal";
+import { MentorProfileCta } from "@/components/mentor/MentorProfileCta";
 import { MentorVideoLibrary } from "@/components/mentor/MentorVideoLibrary";
 import { ReviewCard } from "@/components/mentor/ReviewCard";
 import { mentorApi } from "@/lib/api/mentorApi";
 import { reviewsApi } from "@/lib/api/reviewsApi";
+import { videoLibraryApi } from "@/lib/api/videoLibraryApi";
 import { parseMentorCategories } from "@/lib/utils/mentorCategories";
 import { ROUTES } from "@/lib/routes";
 import { createPublicClient } from "@/lib/supabase/publicClient";
@@ -25,7 +27,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const name = mentor.profiles?.name || "Mentor";
   return {
     title: `${name} — ${mentor.specialization || "Mentor"} | Connectiqo`,
-    description: mentor.bio || `Book a live 1-on-1 session with ${name} on Connectiqo.`,
+    description: mentor.bio?.trim() || `Book a live 1-on-1 session with ${name} on Connectiqo.`,
   };
 }
 
@@ -38,13 +40,25 @@ export default async function MentorProfilePage({ params }: PageProps) {
   const mentor = await mentorApi.getMentorWithProfile(supabase, mentorId).catch(() => null);
   if (!mentor) notFound();
 
-  const reviews = await reviewsApi.getReviewsForMentor(supabase, mentorId).catch(() => []);
+  const [reviews, subscriberCount, videos] = await Promise.all([
+    reviewsApi.getReviewsForMentor(supabase, mentorId).catch(() => []),
+    mentorApi.getMentorActiveSubscriberCount(supabase, mentorId),
+    videoLibraryApi.getMentorVideos(mentorId).catch(() => []),
+  ]);
   const categories = parseMentorCategories(mentor.category);
   const name = mentor.profiles?.name || "Mentor";
   const avatarUrl = mentor.profiles?.avatar_url;
+  const username = mentor.profiles?.username;
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-12">
+      {mentor.cover_image_url ? (
+        <div className="-mx-6 -mt-6 h-40 w-[calc(100%+3rem)] overflow-hidden sm:-mt-12 sm:rounded-b-3xl">
+          {/* eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL */}
+          <img src={mentor.cover_image_url} alt="" className="h-full w-full object-cover" />
+        </div>
+      ) : null}
+
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
         <div className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-surface-panel">
           {avatarUrl ? (
@@ -57,6 +71,7 @@ export default async function MentorProfilePage({ params }: PageProps) {
 
         <div className="flex flex-1 flex-col gap-2">
           <h1 className="text-2xl font-bold text-text-primary">{name}</h1>
+          {username ? <p className="text-sm text-accent-link">@{username}</p> : null}
           <p className="text-text-secondary">{mentor.specialization || "Mentor"}</p>
           <div className="flex flex-wrap gap-1.5">
             {categories.map((c) => (
@@ -73,7 +88,9 @@ export default async function MentorProfilePage({ params }: PageProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+        <StatTile icon={UsersRound} label="Subscribers" value={String(subscriberCount)} />
+        <StatTile icon={VideoIcon} label="Videos" value={String(videos.length)} />
         <StatTile icon={Star} label="Rating" value={(mentor.rating ?? 0).toFixed(1)} />
         <StatTile icon={Users} label="Sessions" value={String(mentor.total_sessions ?? 0)} />
         <StatTile icon={Award} label="Experience" value={`${mentor.experience_years ?? 0} yrs`} />
@@ -84,20 +101,14 @@ export default async function MentorProfilePage({ params }: PageProps) {
         />
       </div>
 
-      {mentor.bio ? (
+      {mentor.bio?.trim() ? (
         <div className="flex flex-col gap-2">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">About</h2>
           <p className="whitespace-pre-line leading-relaxed text-text-secondary">{mentor.bio}</p>
         </div>
       ) : null}
 
-      <Link
-        href={ROUTES.booking(mentorId)}
-        className="flex h-12 w-full items-center justify-center rounded-full text-sm font-semibold text-text-on-accent sm:w-64"
-        style={{ backgroundImage: "var(--gradient-button-primary)" }}
-      >
-        Book a session
-      </Link>
+      <MentorProfileCta mentorId={mentorId} />
 
       <MentorVideoLibrary mentorId={mentorId} mentorName={name} unlockPrice={mentor.unlock_price ?? null} />
 
