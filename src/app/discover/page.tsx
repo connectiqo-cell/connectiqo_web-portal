@@ -13,7 +13,12 @@ export const metadata: Metadata = {
 
 export const revalidate = 300;
 
-export default async function DiscoverPage() {
+interface DiscoverPageProps {
+  searchParams: Promise<{ q?: string }>;
+}
+
+export default async function DiscoverPage({ searchParams }: DiscoverPageProps) {
+  const { q } = await searchParams;
   const supabase = createPublicClient();
   const grouped = await mentorApi.getMentorsByCategory(supabase).catch(() => ({}));
 
@@ -25,7 +30,7 @@ export default async function DiscoverPage() {
           Find an expert for a live 1-on-1 session, browsed by category.
         </p>
       </div>
-      <DiscoverView grouped={grouped} />
+      <DiscoverView grouped={grouped} initialQuery={q || ""} />
     </main>
   );
 }

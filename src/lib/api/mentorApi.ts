@@ -22,6 +22,13 @@ export interface MentorProfileRow {
   total_sessions: number | null;
   unlock_price?: number | null;
   cover_image_url?: string | null;
+  location?: string | null;
+  website?: string | null;
+  linkedin_url?: string | null;
+  twitter_url?: string | null;
+  instagram_url?: string | null;
+  youtube_url?: string | null;
+  skills?: string[] | null;
   profiles: {
     id: string;
     name: string | null;
@@ -30,7 +37,14 @@ export interface MentorProfileRow {
   } | null;
 }
 
-const MENTOR_SELECT = `
+export interface PlatformStats {
+  mentorCount: number;
+  sessionCount: number;
+  userCount: number;
+  averageRating: number;
+}
+
+export const MENTOR_SELECT = `
   id,
   category,
   specialization,
@@ -62,7 +76,7 @@ export const mentorApi = {
         .from("mentor_profiles")
         .select(
           `id, specialization, bio, experience_years, price_per_hour, rating, total_sessions,
-           unlock_price, cover_image_url,
+           unlock_price, cover_image_url, location, website, linkedin_url, twitter_url, instagram_url, youtube_url, skills,
            profiles:id ( id, name, avatar_url, username )`,
         )
         .eq("id", mentorId)
@@ -126,6 +140,51 @@ export const mentorApi = {
       return grouped;
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  /** Top-rated mentors for homepage "Trending Creators"-style rails. */
+  getTrendingMentors: async (
+    supabase: SupabaseClient,
+    limit = 8,
+  ): Promise<MentorProfileRow[]> => {
+    try {
+      const { data, error } = await supabase
+        .from("mentor_profiles")
+        .select(MENTOR_SELECT)
+        .order("rating", { ascending: false })
+        .order("total_sessions", { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return (data as unknown as MentorProfileRow[]) || [];
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  /** Homepage stats bar — best-effort counts, defaults to zeros on failure. */
+  getPlatformStats: async (supabase: SupabaseClient): Promise<PlatformStats> => {
+    try {
+      const [mentorsRes, bookingsRes, profilesRes, ratingsRes] = await Promise.all([
+        supabase.from("mentor_profiles").select("id", { count: "exact", head: true }),
+        supabase.from("bookings").select("id", { count: "exact", head: true }),
+        supabase.from("profiles").select("id", { count: "exact", head: true }),
+        supabase.from("mentor_profiles").select("rating").gt("rating", 0),
+      ]);
+
+      const ratings = ((ratingsRes.data as { rating: number }[] | null) || []).map((r) => r.rating);
+      const averageRating = ratings.length
+        ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length
+        : 0;
+
+      return {
+        mentorCount: mentorsRes.count || 0,
+        sessionCount: bookingsRes.count || 0,
+        userCount: profilesRes.count || 0,
+        averageRating,
+      };
+    } catch {
+      return { mentorCount: 0, sessionCount: 0, userCount: 0, averageRating: 0 };
     }
   },
 

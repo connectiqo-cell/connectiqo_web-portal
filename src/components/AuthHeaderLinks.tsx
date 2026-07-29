@@ -11,27 +11,31 @@ export function AuthHeaderLinks() {
   const router = useRouter();
   const { user, profile, loading, signOut } = useAuth();
 
-  if (loading) return null;
-
-  
+  if (loading) {
+    return (
+      <div className="flex items-center gap-3">
+        <span className="h-8 w-16 animate-pulse rounded-full bg-surface-chip" />
+        <span className="h-8 w-20 animate-pulse rounded-full bg-surface-chip" />
+      </div>
+    );
+  }
 
   if (!user) {
     return (
-      
-      <div className="flex items-center gap-3 text-sm font-semibold">
-        <Link href={ROUTES.login} className="text-text-secondary hover:text-text-primary">
-          Sign in
+      <div className="flex shrink-0 items-center gap-2 whitespace-nowrap text-sm font-semibold sm:gap-3">
+        <Link
+          href={ROUTES.login}
+          className="shrink-0 rounded-full border border-border-light px-4 py-1.5 text-text-secondary hover:border-border-default hover:text-text-primary"
+        >
+          Login
         </Link>
-    
         <Link
           href={ROUTES.signup}
-          className="rounded-full px-4 py-1.5 text-text-on-accent"
+          className="shrink-0 rounded-full px-4 py-1.5 text-text-on-accent"
           style={{ backgroundImage: "var(--gradient-button-primary)" }}
         >
-          Sign up
+          Sign Up
         </Link>
-
-
       </div>
     );
   }

@@ -46,3 +46,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Docker & deployment
+.env.docker
+docker-compose.override.yml
+.dockerignore
+
+# Backup and temporary files
+*.tar.gz
+backup/
+.backup/
+
+# Caddy data (generated)
+caddy_data/
+caddy_config/

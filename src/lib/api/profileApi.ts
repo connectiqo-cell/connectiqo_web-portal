@@ -12,6 +12,13 @@ export interface MentorProfileFields {
   unlock_price: number | null;
   category: string | null;
   cover_image_url: string | null;
+  location: string | null;
+  website: string | null;
+  linkedin_url: string | null;
+  twitter_url: string | null;
+  instagram_url: string | null;
+  youtube_url: string | null;
+  skills: string[] | null;
 }
 
 /**
@@ -123,7 +130,7 @@ export const profileApi = {
       const { data, error } = await supabase
         .from("mentor_profiles")
         .select(
-          "id, specialization, bio, experience_years, price_per_hour, rating, total_sessions, unlock_price, category, cover_image_url",
+          "id, specialization, bio, experience_years, price_per_hour, rating, total_sessions, unlock_price, category, cover_image_url, location, website, linkedin_url, twitter_url, instagram_url, youtube_url, skills",
         )
         .eq("id", mentorId)
         .single();
@@ -216,6 +223,13 @@ export const profileApi = {
     experienceYears,
     pricePerHour,
     category,
+    location,
+    website,
+    linkedinUrl,
+    twitterUrl,
+    instagramUrl,
+    youtubeUrl,
+    skills,
   }: {
     userId: string;
     specialization?: string;
@@ -223,6 +237,13 @@ export const profileApi = {
     experienceYears?: number;
     pricePerHour?: number;
     category?: string;
+    location?: string;
+    website?: string;
+    linkedinUrl?: string;
+    twitterUrl?: string;
+    instagramUrl?: string;
+    youtubeUrl?: string;
+    skills?: string[];
   }) => {
     const supabase = createClient();
     try {
@@ -236,6 +257,13 @@ export const profileApi = {
             experience_years: experienceYears ?? 0,
             price_per_hour: pricePerHour ?? 0,
             ...(category !== undefined ? { category: category || "" } : {}),
+            ...(location !== undefined ? { location: location || null } : {}),
+            ...(website !== undefined ? { website: website || null } : {}),
+            ...(linkedinUrl !== undefined ? { linkedin_url: linkedinUrl || null } : {}),
+            ...(twitterUrl !== undefined ? { twitter_url: twitterUrl || null } : {}),
+            ...(instagramUrl !== undefined ? { instagram_url: instagramUrl || null } : {}),
+            ...(youtubeUrl !== undefined ? { youtube_url: youtubeUrl || null } : {}),
+            ...(skills !== undefined ? { skills } : {}),
           },
           { onConflict: "id" },
         )

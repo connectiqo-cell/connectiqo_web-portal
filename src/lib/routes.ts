@@ -23,6 +23,7 @@ export const ROUTES = {
   recommended: "/recommended",
   bookings: "/bookings",
   videos: "/videos",
+  bookmarks: "/bookmarks",
 
   // Mentor
   mentorProfileDashboard: "/mentor/profile",
@@ -49,6 +50,7 @@ export const ROUTES = {
   settings: "/settings",
   account: "/settings/account",
   editProfile: "/settings/profile",
+  editProfileForm: "/settings/profile/edit",
   payoutSetup: "/settings/payout",
   recordings: "/settings/recordings",
   wallet: "/settings/wallet",

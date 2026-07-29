@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { FrozenAccountNotice } from "@/components/FrozenAccountNotice";
-import { SiteFooter } from "@/components/SiteFooter";
+import { AppShell } from "@/components/layout/AppShell";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
@@ -59,8 +59,7 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <NotificationProvider>
-              {children}
-              <SiteFooter />
+              <AppShell>{children}</AppShell>
               <FrozenAccountNotice />
             </NotificationProvider>
           </AuthProvider>

@@ -1,6 +1,10 @@
-import { Calendar, Clock, Star, User, Video } from "lucide-react";
-import Link from "next/link";
+"use client";
 
+import { Calendar, Clock, Download, MoreVertical, Play, Star, User, Video } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+
+import { ReportUserModal } from "@/components/ReportUserModal";
 import type { BookingRow } from "@/lib/api/bookingApi";
 import { ROUTES } from "@/lib/routes";
 import { isExpiredBooking } from "@/lib/utils/bookingSession";
@@ -39,11 +43,48 @@ function formatDateTime(date?: string, time?: string) {
   return `${label} · ${formatTime(time)}`;
 }
 
+function MoreMenu({ otherPartyId, bookingId }: { otherPartyId?: string; bookingId: string }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [open]);
+
+  if (!otherPartyId) return null;
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="More options"
+        className="flex h-7 w-7 items-center justify-center rounded-full text-text-muted hover:bg-surface-chip hover:text-text-primary"
+      >
+        <MoreVertical size={16} />
+      </button>
+      {open ? (
+        <div className="absolute right-0 top-9 z-10 w-40 rounded-xl border border-border-light bg-surface-panel p-1.5 shadow-lg">
+          <div className="px-2 py-1.5">
+            <ReportUserModal reportedUserId={otherPartyId} contextType="booking" contextId={bookingId} />
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function BookingListItem({
   booking,
   variant = "learner",
   onCancel,
   reviewed,
+  recordingUrl,
 }: {
   booking: BookingRow;
   /** "learner" shows the mentor's identity (default); "mentor" shows the learner's. */
@@ -51,6 +92,8 @@ export function BookingListItem({
   onCancel?: (bookingId: string) => void;
   /** When known, shows a "Rate" CTA for completed learner bookings without a review yet. */
   reviewed?: boolean;
+  /** Playback URL for a recorded session, if one exists. */
+  recordingUrl?: string;
 }) {
   const label = statusLabelFor(booking);
   const canCancel = onCancel && (booking.status === "pending" || booking.status === "confirmed") && label === "Booked";
@@ -96,7 +139,7 @@ export function BookingListItem({
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_STYLES[label] || "bg-surface-chip text-text-secondary"}`}>
           {label}
         </span>
@@ -108,6 +151,27 @@ export function BookingListItem({
             <Video size={12} />
             Join
           </Link>
+        ) : null}
+        {recordingUrl ? (
+          <>
+            <a
+              href={recordingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 rounded-full border border-border-light px-2.5 py-1 text-xs font-semibold text-text-secondary hover:text-text-primary"
+            >
+              <Play size={12} />
+              Replay
+            </a>
+            <a
+              href={recordingUrl}
+              download
+              className="flex items-center gap-1 rounded-full border border-border-light px-2.5 py-1 text-xs font-semibold text-text-secondary hover:text-text-primary"
+            >
+              <Download size={12} />
+              Download
+            </a>
+          </>
         ) : null}
         {canReview ? (
           <Link
@@ -127,6 +191,7 @@ export function BookingListItem({
             Cancel
           </button>
         ) : null}
+        <MoreMenu otherPartyId={otherParty?.id} bookingId={booking.id} />
       </div>
     </div>
   );

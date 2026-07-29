@@ -1,32 +1,25 @@
 "use client";
 
 import {
-  ArrowRight,
   Bell,
-  Calendar,
+  Camera,
   CreditCard,
-  FileText,
-  HelpCircle,
   Landmark,
   PlayCircle,
   Share2,
   ShieldCheck,
+  Trash2,
   User,
-  Video,
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNotifications } from "@/contexts/NotificationContext";
 import { paymentApi } from "@/lib/api/paymentApi";
 import { videoLibraryApi } from "@/lib/api/videoLibraryApi";
 import { ROUTES } from "@/lib/routes";
-
-const SUPPORT_EMAIL = "contact@connectiqo.com";
 
 interface Subscription {
   mentor_id: string;
@@ -36,65 +29,10 @@ interface Subscription {
 
 function SectionHeader({ title, subtitle }: { title: string; subtitle: string }) {
   return (
-    <div className="mt-2 flex flex-col gap-0.5">
-      <h2 className="text-sm font-bold text-text-primary">{title}</h2>
+    <div className="flex flex-col gap-0.5">
+      <h3 className="text-sm font-bold text-text-primary">{title}</h3>
       <p className="text-xs text-text-muted">{subtitle}</p>
     </div>
-  );
-}
-
-function MenuLink({
-  href,
-  onClick,
-  icon: Icon,
-  label,
-  subtitle,
-  badge,
-  destructive,
-}: {
-  href?: string;
-  onClick?: () => void;
-  icon: typeof User;
-  label: string;
-  subtitle: string;
-  badge?: number;
-  destructive?: boolean;
-}) {
-  const content = (
-    <>
-      <Icon size={18} className={destructive ? "text-accent-error" : "text-accent-link"} />
-      <div className="flex-1">
-        <p className={`text-sm font-semibold ${destructive ? "text-accent-error" : "text-text-primary"}`}>
-          {label}
-        </p>
-        <p className="text-xs text-text-muted">{subtitle}</p>
-      </div>
-      {badge ? (
-        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-link px-1.5 text-[11px] font-bold text-text-on-accent">
-          {badge > 99 ? "99+" : badge}
-        </span>
-      ) : null}
-      <ArrowRight size={16} className={destructive ? "text-accent-error" : "text-text-muted"} />
-    </>
-  );
-
-  const className = `flex items-center gap-3 rounded-xl border px-4 py-3.5 text-left transition-colors ${
-    destructive
-      ? "border-accent-error/30 bg-accent-error/5 hover:border-accent-error/50"
-      : "border-border-light bg-surface-panel hover:border-border-default"
-  }`;
-
-  if (href) {
-    return (
-      <Link href={href} className={className}>
-        {content}
-      </Link>
-    );
-  }
-  return (
-    <button type="button" onClick={onClick} className={className}>
-      {content}
-    </button>
   );
 }
 
@@ -106,7 +44,6 @@ function formatExpiry(expiresAt: string | null) {
 export default function SettingsHubPage() {
   const router = useRouter();
   const { user, profile, loading } = useAuth();
-  const { unreadCount } = useNotifications();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [subsLoading, setSubsLoading] = useState(true);
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
@@ -163,224 +100,301 @@ export default function SettingsHubPage() {
   const roleLabel =
     profile?.role === "mentor" ? "Mentor" : profile?.role === "learner" ? "Learner" : "Mentor & Learner";
 
-  const handleShare = async () => {
-    const shareData = {
-      title: "Connectiqo",
-      text: "Join me on Connectiqo — connect with mentors, book sessions, and learn together.",
-      url: typeof window !== "undefined" ? window.location.origin : undefined,
-    };
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
-        window.alert("Link copied to clipboard!");
-      }
-    } catch {
-      // user dismissed the share sheet — nothing to do
-    }
-  };
-
   if (!user) return null;
 
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-6 px-6 py-12">
+    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-12">
       <div>
         <h1 className="text-2xl font-bold text-text-primary">Settings</h1>
         <p className="mt-1 text-sm text-text-secondary">Manage your account and preferences</p>
       </div>
 
-      <div className="flex flex-col gap-4 rounded-2xl border border-border-light bg-surface-panel p-5">
-        <div className="flex items-center gap-3">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
-            {profile?.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-              <img src={profile.avatar_url} alt={profile.name} className="h-full w-full object-cover" />
-            ) : (
-              <User size={22} className="text-text-muted" />
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold text-text-primary">{profile?.name || "User"}</p>
-            {profile?.username ? (
-              <p className="truncate text-xs text-accent-link">@{profile.username}</p>
-            ) : null}
-            <p className="truncate text-xs text-text-muted">{profile?.email}</p>
-            <span className="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-surface-chip px-2 py-0.5 text-[10px] font-semibold text-text-secondary">
-              {roleLabel}
-            </span>
-          </div>
-          <Link
-            href={ROUTES.editProfile}
-            className="shrink-0 rounded-full border border-border-light px-3 py-1.5 text-xs font-semibold text-text-secondary hover:text-text-primary"
-          >
-            Edit
-          </Link>
-        </div>
-
-        <div className="flex items-center border-t border-border-light pt-3.5">
-          <div className="flex flex-1 flex-col items-center gap-0.5">
-            <span className="text-sm font-bold text-text-primary">
-              {subsLoading ? "…" : subscriptions.length}
-            </span>
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-text-muted">
-              Subscriptions
-            </span>
-          </div>
-          <div className="h-8 w-px bg-border-light" />
-          <div className="flex flex-1 flex-col items-center gap-0.5">
-            <span className="text-sm font-bold text-text-primary">{walletLabel}</span>
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-text-muted">
-              Wallet
-            </span>
-          </div>
-          <div className="h-8 w-px bg-border-light" />
-          <div className="flex flex-1 flex-col items-center gap-0.5">
-            <span className="text-sm font-bold text-text-primary">{memberSince}</span>
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-text-muted">
-              Member since
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <SectionHeader
-          title="Video subscriptions"
-          subtitle="Mentors whose video libraries you can access"
-        />
-        {subsLoading ? (
-          <p className="rounded-xl border border-border-light bg-surface-panel px-4 py-3.5 text-xs text-text-muted">
-            Checking subscriptions…
-          </p>
-        ) : subscriptions.length === 0 ? (
-          <Link
-            href={ROUTES.videos}
-            className="flex items-center gap-3 rounded-xl border border-border-light bg-surface-panel px-4 py-3.5 hover:border-border-default"
-          >
-            <PlayCircle size={18} className="text-accent-link" />
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-text-primary">No active subscriptions</p>
-              <p className="text-xs text-text-muted">Browse the video library to unlock one.</p>
+      <div className="grid gap-8 lg:grid-cols-[1fr_320px] lg:items-start">
+        {/* Left column */}
+        <div className="flex flex-col gap-6">
+          {/* Profile Card */}
+          <div className="flex flex-col gap-4 rounded-2xl border border-border-light bg-surface-panel p-5">
+          <div className="flex items-center gap-3">
+            <div className="group relative flex h-16 w-16 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border-4 border-accent-link bg-surface-chip">
+              {profile?.avatar_url ? (
+                // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
+                <img src={profile.avatar_url} alt={profile.name} className="h-full w-full object-cover" />
+              ) : (
+                <User size={28} className="text-text-muted" />
+              )}
+              <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none">
+                <Camera size={18} className="text-white" />
+              </div>
+              <div className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full border-1.5 border-white bg-accent-link text-white shadow-md">
+                <Camera size={11} />
+              </div>
             </div>
-            <ArrowRight size={16} className="text-text-muted" />
+            <div className="flex flex-1 flex-col">
+              <p className="text-sm font-bold text-text-primary">{profile?.name || "User"}</p>
+              {profile?.username ? (
+                <p className="text-xs text-accent-link">@{profile.username}</p>
+              ) : null}
+              <p className="text-xs text-text-muted">{profile?.email}</p>
+              <span className="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-surface-chip px-2 py-0.5 text-[10px] font-semibold text-accent-link">
+                {roleLabel}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center border-t border-border-light pt-3.5">
+            <div className="flex flex-1 flex-col items-center gap-0.5">
+              <span className="text-sm font-bold text-text-primary">
+                {subsLoading ? "…" : subscriptions.length}
+              </span>
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+                Subscriptions
+              </span>
+            </div>
+            <div className="h-8 w-px bg-border-light" />
+            <div className="flex flex-1 flex-col items-center gap-0.5">
+              <span className="text-sm font-bold text-text-primary">{walletLabel}</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+                Wallet
+              </span>
+            </div>
+            <div className="h-8 w-px bg-border-light" />
+            <div className="flex flex-1 flex-col items-center gap-0.5">
+              <span className="text-sm font-bold text-text-primary">{memberSince}</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+                Member since
+              </span>
+            </div>
+          </div>
+
+          <Link
+            href={ROUTES.editProfileForm}
+            className="flex items-center justify-center gap-2 rounded-xl border border-border-light px-4 py-3 text-sm font-semibold text-accent-link transition-colors hover:bg-surface-chip"
+          >
+            Edit Profile
           </Link>
-        ) : (
-          subscriptions.map((sub) => (
+        </div>
+
+        {/* Video subscriptions */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <SectionHeader
+              title="Video subscriptions"
+              subtitle="Mentors whose video libraries you can access"
+            />
             <Link
-              key={sub.mentor_id}
-              href={ROUTES.mentorProfile(sub.mentor_id)}
+              href={ROUTES.videos}
+              className="flex items-center gap-1 text-sm font-semibold text-accent-link hover:text-accent-secondary"
+            >
+              View all
+            </Link>
+          </div>
+          {subsLoading ? (
+            <p className="rounded-xl border border-border-light bg-surface-panel px-4 py-3.5 text-xs text-text-muted">
+              Checking subscriptions…
+            </p>
+          ) : subscriptions.length === 0 ? (
+            <Link
+              href={ROUTES.videos}
               className="flex items-center gap-3 rounded-xl border border-border-light bg-surface-panel px-4 py-3.5 hover:border-border-default"
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
-                {sub.profiles?.avatar_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-                  <img
-                    src={sub.profiles.avatar_url}
-                    alt={sub.profiles.name || "Mentor"}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <User size={16} className="text-text-muted" />
-                )}
-              </div>
+              <PlayCircle size={18} className="text-accent-link" />
               <div className="flex-1">
-                <p className="text-sm font-semibold text-text-primary">{sub.profiles?.name || "Mentor"}</p>
-                <p className="text-xs text-text-muted">{formatExpiry(sub.expires_at)}</p>
+                <p className="text-sm font-semibold text-text-primary">No active subscriptions</p>
+                <p className="text-xs text-text-muted">Browse the video library to unlock one.</p>
               </div>
-              <ArrowRight size={16} className="text-text-muted" />
             </Link>
-          ))
-        )}
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <SectionHeader title="Payments & earnings" subtitle="Wallet, payouts, and transaction history" />
-        <MenuLink
-          href={ROUTES.wallet}
-          icon={Wallet}
-          label="My Wallet"
-          subtitle={!walletLoading ? `Available balance: ${walletLabel}` : "View balance and withdraw earnings"}
-        />
-        <MenuLink
-          href={ROUTES.payoutSetup}
-          icon={Landmark}
-          label="Payout Setup"
-          subtitle="Configure UPI for mentor withdrawals"
-        />
-        <MenuLink
-          href={ROUTES.transactions}
-          icon={CreditCard}
-          label="Transaction History"
-          subtitle="Sessions, subscriptions, and payouts"
-        />
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <SectionHeader title="Content & library" subtitle="Your videos and recorded sessions" />
-        <MenuLink
-          href={ROUTES.recordings}
-          icon={PlayCircle}
-          label="Recorded Sessions"
-          subtitle="Replay past live sessions"
-        />
-        <MenuLink
-          href={ROUTES.mentorVideos}
-          icon={Video}
-          label="My Videos"
-          subtitle="Manage your mentor video library"
-        />
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <SectionHeader title="Preferences" subtitle="Notifications, appearance, and bookings" />
-        <div className="flex items-center gap-3 rounded-xl border border-border-light bg-surface-panel px-4 py-3.5">
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-text-primary">Appearance</p>
-            <p className="text-xs text-text-muted">Switch between light and dark mode</p>
-          </div>
-          <ThemeToggle />
+          ) : (
+            <>
+              {subscriptions.map((sub) => (
+                <Link
+                  key={sub.mentor_id}
+                  href={ROUTES.mentorProfile(sub.mentor_id)}
+                  className="flex items-center gap-3 rounded-xl border border-border-light bg-surface-panel px-4 py-3.5 hover:border-border-default"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
+                    {sub.profiles?.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
+                      <img
+                        src={sub.profiles.avatar_url}
+                        alt={sub.profiles.name || "Mentor"}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <User size={16} className="text-text-muted" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-text-primary">{sub.profiles?.name || "Mentor"}</p>
+                    <p className="text-xs text-text-muted">{formatExpiry(sub.expires_at)}</p>
+                  </div>
+                </Link>
+              ))}
+              <Link
+                href={ROUTES.videos}
+                className="flex items-center justify-center gap-2 rounded-xl border border-border-light bg-surface-panel px-4 py-3 text-sm font-semibold text-accent-link transition-colors hover:border-border-default"
+              >
+                <PlayCircle size={18} />
+                Browse video library
+              </Link>
+            </>
+          )}
         </div>
-        <MenuLink
-          href={ROUTES.notifications}
-          icon={Bell}
-          label="Notifications"
-          subtitle="Session updates, bookings, and reminders"
-          badge={unreadCount}
-        />
-        <MenuLink
-          href={ROUTES.bookings}
-          icon={Calendar}
-          label="My Bookings"
-          subtitle="Upcoming and past sessions"
-        />
-      </div>
 
-      <div className="flex flex-col gap-2">
-        <SectionHeader title="Support & legal" subtitle="Help, policies, and sharing" />
-        <MenuLink
-          href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Connectiqo Support")}`}
-          icon={HelpCircle}
-          label="Help & Support"
-          subtitle={`Contact us at ${SUPPORT_EMAIL}`}
-        />
-        <MenuLink href={ROUTES.privacy} icon={ShieldCheck} label="Privacy Policy" subtitle="How we handle your data" />
-        <MenuLink href={ROUTES.terms} icon={FileText} label="Terms of Service" subtitle="Usage guidelines and policies" />
-        <MenuLink
-          onClick={handleShare}
-          icon={Share2}
-          label="Share Connectiqo"
-          subtitle="Invite friends to join the platform"
-        />
-      </div>
+        {/* Preferences */}
+        <div className="flex flex-col gap-3">
+          <SectionHeader title="Preferences" subtitle="Customize your app experience" />
+          <div className="flex flex-col gap-0 rounded-xl border border-border-light bg-surface-panel">
+            <button
+              type="button"
+              onClick={() => {}}
+              className="flex items-center justify-between px-4 py-3 text-left transition-colors hover:bg-surface-chip"
+            >
+              <div className="flex items-center gap-3">
+                <Bell size={18} className="text-accent-link" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-text-primary">Notification Settings</p>
+                  <p className="text-xs text-text-muted">Manage push and email notifications</p>
+                </div>
+              </div>
+            </button>
+            <div className="h-px bg-border-light" />
+            <button
+              type="button"
+              onClick={() => {}}
+              className="flex items-center justify-between px-4 py-3 text-left transition-colors hover:bg-surface-chip"
+            >
+              <div className="flex items-center gap-3">
+                <ShieldCheck size={18} className="text-accent-link" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-text-primary">Privacy Settings</p>
+                  <p className="text-xs text-text-muted">Manage your privacy and visibility</p>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+        </div>
 
-      <MenuLink
-        href={ROUTES.account}
-        icon={User}
-        label="Account & Sign out"
-        subtitle="Sign out or delete your account"
-        destructive
-      />
+        {/* Right sidebar */}
+        <aside className="flex flex-col gap-4">
+          <div className="rounded-xl border border-border-light bg-surface-panel p-4">
+            <SectionHeader title="Payments & Earnings" subtitle="Wallet, payouts, and transaction history" />
+            <div className="mt-3 flex flex-col gap-0">
+              <Link
+                href={ROUTES.wallet}
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
+              >
+                <Wallet size={16} className="shrink-0 text-accent-link" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-text-primary">My Wallet</p>
+                  <p className="text-xs text-text-muted">View balance and transaction history</p>
+                </div>
+              </Link>
+              <Link
+                href={ROUTES.payoutSetup}
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
+              >
+                <Landmark size={16} className="shrink-0 text-accent-link" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-text-primary">Payouts</p>
+                  <p className="text-xs text-text-muted">Manage bank accounts and payouts</p>
+                </div>
+              </Link>
+              <Link
+                href={ROUTES.mentorEarnings}
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
+              >
+                <CreditCard size={16} className="shrink-0 text-accent-link" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-text-primary">Earnings</p>
+                  <p className="text-xs text-text-muted">View your earning summary</p>
+                </div>
+              </Link>
+              <Link
+                href={ROUTES.transactions}
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
+              >
+                <CreditCard size={16} className="shrink-0 text-accent-link" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-text-primary">Transaction History</p>
+                  <p className="text-xs text-text-muted">All your wallet transactions</p>
+                </div>
+              </Link>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-border-light bg-surface-panel p-4">
+            <SectionHeader title="Account & Security" subtitle="Manage your account and security settings" />
+            <div className="mt-3 flex flex-col gap-0">
+              <Link
+                href={ROUTES.editProfileForm}
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
+              >
+                <User size={16} className="shrink-0 text-accent-link" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-text-primary">Personal Information</p>
+                  <p className="text-xs text-text-muted">Update your personal details</p>
+                </div>
+              </Link>
+              <button
+                type="button"
+                onClick={() => {}}
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
+              >
+                <ShieldCheck size={16} className="shrink-0 text-accent-link" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-text-primary">Change Password</p>
+                  <p className="text-xs text-text-muted">Update your password</p>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => {}}
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
+              >
+                <Bell size={16} className="shrink-0 text-accent-link" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-text-primary">Email Preferences</p>
+                  <p className="text-xs text-text-muted">Manage email notifications</p>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => {}}
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
+              >
+                <Share2 size={16} className="shrink-0 text-accent-link" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-text-primary">Share Connectiqo</p>
+                  <p className="text-xs text-text-muted">Invite friends to join</p>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => {}}
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
+              >
+                <ShieldCheck size={16} className="shrink-0 text-accent-link" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-text-primary">Two-Factor Authentication</p>
+                  <p className="text-xs text-text-muted">Add extra security to your account</p>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => {}}
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
+              >
+                <Trash2 size={16} className="shrink-0 text-red-500" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-red-500">Delete Account</p>
+                  <p className="text-xs text-text-muted">Permanently delete your account</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </aside>
+      </div>
     </main>
   );
 }

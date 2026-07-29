@@ -1,6 +1,6 @@
 "use client";
 
-import { Award, Calendar, LayoutDashboard, Video, Wallet } from "lucide-react";
+import { Calendar, LayoutDashboard, Wallet } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -10,13 +10,17 @@ import { ROUTES } from "@/lib/routes";
 
 const NAV_ITEMS = [
   { href: ROUTES.mentorProfileDashboard, label: "Profile", icon: LayoutDashboard },
-  { href: ROUTES.mentorAvailability, label: "Availability", icon: Calendar },
-  { href: ROUTES.mentorSchedule, label: "Schedule", icon: Calendar },
   { href: ROUTES.mentorSessions, label: "Sessions", icon: Calendar },
-  { href: ROUTES.mentorVideos, label: "Videos", icon: Video },
   { href: ROUTES.mentorEarnings, label: "Earnings", icon: Wallet },
-  { href: ROUTES.payoutSetup, label: "Payout", icon: Award },
+  { href: ROUTES.mentorSchedule, label: "Schedule", icon: Calendar },
 ];
+
+const PAGE_HEADERS: Record<string, { title: string; subtitle: string }> = {
+  [ROUTES.mentorProfileDashboard]: { title: "Profile", subtitle: "Manage your profile information" },
+  [ROUTES.mentorSessions]: { title: "Sessions", subtitle: "Track your teaching sessions" },
+  [ROUTES.mentorEarnings]: { title: "Earnings", subtitle: "Track your income and transactions" },
+  [ROUTES.mentorSchedule]: { title: "Schedule", subtitle: "Manage your availability" },
+};
 
 export default function MentorDashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -31,13 +35,13 @@ export default function MentorDashboardLayout({ children }: { children: React.Re
 
   if (!user) return null;
 
+  const header = PAGE_HEADERS[pathname] || PAGE_HEADERS[ROUTES.mentorProfileDashboard];
+
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-10">
       <div>
-        <h1 className="text-2xl font-bold text-text-primary">Mentor Dashboard</h1>
-        <p className="mt-1 text-sm text-text-secondary">
-          Manage your profile, availability, sessions, and earnings.
-        </p>
+        <h1 className="text-2xl font-bold text-text-primary">{header.title}</h1>
+        <p className="mt-1 text-sm text-text-secondary">{header.subtitle}</p>
       </div>
 
       <nav className="flex gap-1 overflow-x-auto border-b border-border-light">

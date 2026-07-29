@@ -1,330 +1,787 @@
 "use client";
 
-import { Camera, Check, Plus, Trash2, User } from "lucide-react";
+import {
+  AtSign,
+  Award,
+  Briefcase,
+  Calendar,
+  Camera,
+  CheckCircle2,
+  ChevronRight,
+  Clock,
+  Download,
+  Globe,
+  Mail,
+  MapPin,
+  Pencil,
+  Play,
+  Star,
+  User,
+  Users,
+  UsersRound,
+  Video as VideoIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-import { CameraCaptureModal } from "@/components/CameraCaptureModal";
+import { CountdownTimer } from "@/components/profile/CountdownTimer";
+import { ReviewCard } from "@/components/mentor/ReviewCard";
 import { useAuth } from "@/contexts/AuthContext";
-import { fetchActiveCategories } from "@/lib/api/contentApi";
+import { type BookingRow, type RecordedSession, bookingApi } from "@/lib/api/bookingApi";
+import { type MentorProfileRow, mentorApi } from "@/lib/api/mentorApi";
 import { profileApi } from "@/lib/api/profileApi";
-import { MENTOR_CATEGORIES } from "@/lib/constants/mentorCategories";
+import { type ReviewRow, reviewsApi } from "@/lib/api/reviewsApi";
+import { type MentorVideo, videoLibraryApi } from "@/lib/api/videoLibraryApi";
 import { ROUTES } from "@/lib/routes";
-import { toggleMentorCategory } from "@/lib/utils/mentorCategories";
+import { createClient } from "@/lib/supabase/client";
+import { isBookingSessionPast } from "@/lib/utils/bookingSession";
+import { parseMentorCategories } from "@/lib/utils/mentorCategories";
 
-export default function EditProfilePage() {
+function formatSlotLabel(booking: BookingRow): string {
+  const date = booking.availability_slots?.date;
+  const time = booking.availability_slots?.start_time;
+  if (!date) return "Time to be confirmed";
+  const [y, m, d] = date.split("-").map(Number);
+  const label = new Date(y, m - 1, d).toLocaleDateString("en-IN", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+  if (!time) return label;
+  const [h, min] = time.split(":").map(Number);
+  const period = h >= 12 ? "PM" : "AM";
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${label}, ${hour12}:${String(min).padStart(2, "0")} ${period}`;
+}
+
+function slotDate(booking: BookingRow): Date | null {
+  const date = booking.availability_slots?.date;
+  const time = booking.availability_slots?.start_time;
+  if (!date) return null;
+  return new Date(`${date}T${time || "00:00"}`);
+}
+
+function pickNextSession(
+  bookings: BookingRow[],
+  now: number,
+): { booking: BookingRow; date: Date } | null {
+  const withDates = bookings
+    .map((b) => ({ booking: b, date: slotDate(b) }))
+    .filter((x): x is { booking: BookingRow; date: Date } => !!x.date && x.date.getTime() > now)
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
+  return withDates[0] || null;
+}
+
+function durationLabel(booking: BookingRow): string {
+  const start = booking.availability_slots?.start_time;
+  const end = booking.availability_slots?.end_time;
+  if (!start || !end) return "—";
+  const [sh, sm] = start.split(":").map(Number);
+  const [eh, em] = end.split(":").map(Number);
+  const minutes = eh * 60 + em - (sh * 60 + sm);
+  if (minutes <= 0) return "—";
+  return minutes % 60 === 0 ? `${minutes / 60} hr` : `${minutes} min`;
+}
+
+function formatSeconds(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = Math.floor(totalSeconds % 60);
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function VideoDurationBadge({ src }: { src: string }) {
+  const [duration, setDuration] = useState<number | null>(null);
+
+  if (duration === null) {
+    return (
+      <video
+        preload="metadata"
+        src={`${src}#t=0.1`}
+        className="hidden"
+        onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+      />
+    );
+  }
+
+  return (
+    <span className="absolute bottom-1.5 right-1.5 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+      {formatSeconds(duration)}
+    </span>
+  );
+}
+
+export default function ProfileChannelPage() {
   const router = useRouter();
-  const { user, profile, loading: authLoading, refreshProfile } = useAuth();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user, profile, loading: authLoading } = useAuth();
+  const isMentor = profile?.role === "mentor" || profile?.role === "both";
 
-  const [name, setName] = useState("");
-  const [username, setUsername] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [saved, setSaved] = useState(false);
-  const [showCamera, setShowCamera] = useState(false);
-
-  const isLearner = profile?.role !== "mentor";
-  const [categories, setCategories] = useState<string[]>([...MENTOR_CATEGORIES]);
-  const [interests, setInterests] = useState<string[]>([]);
-  const [interestsLoaded, setInterestsLoaded] = useState(false);
-  const [savingInterests, setSavingInterests] = useState(false);
-  const [interestsSaved, setInterestsSaved] = useState(false);
-  const [interestsError, setInterestsError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [mentor, setMentor] = useState<MentorProfileRow | null>(null);
+  const [subscriberCount, setSubscriberCount] = useState(0);
+  const [videos, setVideos] = useState<MentorVideo[]>([]);
+  const [reviews, setReviews] = useState<ReviewRow[]>([]);
+  const [recentSessions, setRecentSessions] = useState<BookingRow[]>([]);
+  const [nextSession, setNextSession] = useState<{ booking: BookingRow; date: Date } | null>(null);
+  const [learnerBio, setLearnerBio] = useState<{ bio: string | null; interests: string[] } | null>(null);
+  const [recordings, setRecordings] = useState<RecordedSession[]>([]);
+  const videoScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace(ROUTES.login);
   }, [authLoading, user, router]);
 
   useEffect(() => {
-    if (!profile) return;
-    // Deferred to a microtask so this reacts to `profile` arriving/changing
-    // rather than setting state synchronously inside the effect body.
-    void Promise.resolve().then(() => {
-      setName(profile.name || "");
-      setUsername(profile.username || "");
-      setAvatarUrl(profile.avatar_url || null);
-    });
-  }, [profile]);
-
-  useEffect(() => {
-    if (!user || !isLearner) return;
+    if (!user || !profile) return;
     let cancelled = false;
     (async () => {
-      const [rows, learnerProfile] = await Promise.all([
-        fetchActiveCategories().catch(() => []),
-        profileApi.getLearnerProfile(user.id).catch(() => null),
-      ]);
-      if (cancelled) return;
-      if (rows.length) setCategories(rows.map((r) => r.name));
-      setInterests(learnerProfile?.interests || []);
-      setInterestsLoaded(true);
+      try {
+        const supabase = createClient();
+        if (isMentor) {
+          const [mentorRow, subs, vids, revs, hist, upc, recs] = await Promise.all([
+            mentorApi.getMentorWithProfile(supabase, user.id).catch(() => null),
+            mentorApi.getMentorActiveSubscriberCount(supabase, user.id).catch(() => 0),
+            videoLibraryApi.getMentorVideos(user.id).catch(() => []),
+            reviewsApi.getReviewsForMentor(supabase, user.id).catch(() => []),
+            bookingApi.getBookingHistoryByMentor(user.id, 0, 5).catch(() => []),
+            bookingApi.getUpcomingBookingsByMentor(user.id).catch(() => []),
+            bookingApi.getRecordedSessions(user.id).catch(() => []),
+          ]);
+          if (cancelled) return;
+          setMentor(mentorRow);
+          setSubscriberCount(subs);
+          setVideos(vids);
+          setReviews(revs);
+          setRecentSessions(hist);
+          setNextSession(pickNextSession(upc, Date.now()));
+          setRecordings(recs);
+        } else {
+          const [learnerProfile, hist, upc, recs] = await Promise.all([
+            profileApi.getLearnerProfile(user.id).catch(() => null),
+            bookingApi.getBookingHistoryByLearner(user.id).catch(() => []),
+            bookingApi.getUpcomingBookingsByLearner(user.id).catch(() => []),
+            bookingApi.getRecordedSessions(user.id).catch(() => []),
+          ]);
+          if (cancelled) return;
+          setLearnerBio(learnerProfile);
+          setRecentSessions(hist.slice(0, 5));
+          setNextSession(pickNextSession(upc, Date.now()));
+          setRecordings(recs);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     })();
     return () => {
       cancelled = true;
     };
-  }, [user, isLearner]);
+  }, [user, profile, isMentor]);
 
-  const handleToggleInterest = (category: string) => {
-    setInterests((prev) => toggleMentorCategory(prev, category));
-  };
+  const recordingByBooking = useMemo(
+    () => new Map(recordings.map((r) => [r.id, r.recording_playback_url])),
+    [recordings],
+  );
 
-  const handleSaveInterests = async () => {
-    if (!user) return;
-    setSavingInterests(true);
-    setInterestsError("");
-    setInterestsSaved(false);
-    try {
-      await profileApi.updateLearnerProfile({ userId: user.id, interests });
-      setInterestsSaved(true);
-      setTimeout(() => setInterestsSaved(false), 2500);
-    } catch (err) {
-      setInterestsError((err as Error)?.message || "Could not save interests");
-    } finally {  
-      setSavingInterests(false);
+  const ratingBreakdown = useMemo(() => {
+    const counts = [0, 0, 0, 0, 0]; // index 0 => 1 star ... index 4 => 5 star
+    for (const r of reviews) {
+      const idx = Math.min(5, Math.max(1, Math.round(r.rating))) - 1;
+      counts[idx] += 1;
     }
-  };
+    const average = reviews.length
+      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+      : 0;
+    return { counts, average };
+  }, [reviews]);
 
-  const uploadAvatarFile = async (file: File) => {
-    if (!user) return;
-    setUploading(true);
-    setError("");
-    try {
-      const url = await profileApi.uploadAvatar({ userId: user.id, file });
-      setAvatarUrl(url);
-      refreshProfile();
-    } catch (err) {
-      setError((err as Error)?.message || "Could not upload photo");
-    } finally {
-      setUploading(false);
-    }
-  };
+  const categories = mentor ? parseMentorCategories(mentor.category) : [];
 
-  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    await uploadAvatarFile(file);
-  };
+  const completionItems = isMentor
+    ? [
+        { label: "Add profile picture", done: !!profile?.avatar_url },
+        { label: "Add cover photo", done: !!mentor?.cover_image_url },
+        { label: "Add about you", done: !!mentor?.bio?.trim() },
+        { label: "Add skills", done: (mentor?.skills?.length ?? 0) > 0 },
+        {
+          label: "Add social links",
+          done: !!(mentor?.linkedin_url || mentor?.twitter_url || mentor?.instagram_url || mentor?.youtube_url),
+        },
+      ]
+    : [
+        { label: "Add profile picture", done: !!profile?.avatar_url },
+        { label: "Add about you", done: !!learnerBio?.bio?.trim() },
+        { label: "Pick your interests", done: (learnerBio?.interests?.length ?? 0) > 0 },
+      ];
+  const completionPct = Math.round(
+    (completionItems.filter((i) => i.done).length / completionItems.length) * 100,
+  );
 
-  const handleCameraCapture = async (file: File) => {
-    setShowCamera(false);
-    await uploadAvatarFile(file);
-  };
-
-  const handleRemoveAvatar = async () => {
-    if (!user) return;
-    if (!window.confirm("Remove your profile photo?")) return;
-    setUploading(true);
-    setError("");
-    try {
-      await profileApi.removeAvatar({ userId: user.id });
-      setAvatarUrl(null);
-      refreshProfile();
-    } catch (err) {
-      setError((err as Error)?.message || "Could not remove photo");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleSave = async () => {
-    if (!user) return;
-    setSaving(true);
-    setError("");
-    setSaved(false);
-    try {
-      await profileApi.updateProfile({ userId: user.id, name, username });
-      refreshProfile();
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2500);
-    } catch (err) {
-      setError((err as Error)?.message || "Could not save changes");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  if (!user) return null;
+  if (authLoading || !user || loading) {
+    return <p className="px-6 py-16 text-center text-sm text-text-muted">Loading…</p>;
+  }
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-6 py-12">
-      <h1 className="text-2xl font-bold text-text-primary">Edit Profile</h1>
-
-      <div className="flex items-center gap-4">
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-surface-chip"
-          aria-label="Change photo"
-        >
-          {avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-            <img src={avatarUrl} alt={name} className="h-full w-full object-cover" />
-          ) : (
-            <User size={28} className="text-text-muted" />
-          )}
-        </button>
-        <div className="flex flex-col items-start gap-1.5">
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="text-sm font-semibold text-accent-link disabled:opacity-60"
-          >
-            {uploading ? "Uploading…" : "Upload from device"}
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowCamera(true)}
-            disabled={uploading}
-            className="flex items-center gap-1.5 text-sm font-semibold text-text-secondary hover:text-text-primary disabled:opacity-60"
-          >
-            <Camera size={14} />
-            Take a photo
-          </button>
-          {avatarUrl ? (
-            <button
-              type="button"
-              onClick={handleRemoveAvatar}
-              disabled={uploading}
-              className="flex items-center gap-1.5 text-sm font-semibold text-accent-error hover:opacity-80 disabled:opacity-60"
-            >
-              <Trash2 size={14} />
-              Remove photo
-            </button>
-          ) : null}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleAvatarChange}
-            className="hidden"
-          />
-        </div>
-      </div>
-
-      {error ? <p className="text-sm text-accent-error">{error}</p> : null}
-      {saved ? <p className="text-sm text-accent-success">Saved.</p> : null}
-
-      <label className="flex flex-col gap-1.5">
-        <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
-          Name
-        </span>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="rounded-xl border border-border-light bg-surface-sheet px-3.5 py-2.5 text-sm text-text-primary focus:outline-none"
-        />
-      </label>
-
-      <label className="flex flex-col gap-1.5">
-        <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
-          Username
-        </span>
-        <input
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="rounded-xl border border-border-light bg-surface-sheet px-3.5 py-2.5 text-sm text-text-primary focus:outline-none"
-        />
-      </label>
-
-      <button
-        type="button"
-        onClick={handleSave}
-        disabled={saving}
-        className="flex h-11 w-fit items-center justify-center rounded-full px-6 text-sm font-semibold text-text-on-accent disabled:opacity-60"
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-8">
+      <div
+        className="relative flex h-36 w-full items-center justify-center overflow-hidden rounded-2xl sm:h-44"
         style={{ backgroundImage: "var(--gradient-button-primary)" }}
       >
-        {saving ? "Saving…" : "Save changes"}
-      </button>
+        {mentor?.cover_image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
+          <img src={mentor.cover_image_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        ) : (
+          <span className="select-none text-2xl font-extrabold tracking-wide text-white/25 sm:text-3xl">
+            Connect<span className="text-white/40">iqo</span>
+          </span>
+        )}
+        {isMentor ? (
+          <Link
+            href={ROUTES.mentorProfileDashboard}
+            className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-black/50 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur hover:bg-black/65"
+          >
+            <Camera size={13} />
+            Edit Cover
+          </Link>
+        ) : null}
+      </div>
 
-      {isLearner ? (
-        <div className="flex flex-col gap-3 border-t border-border-light pt-6">
-          <div>
-            <h2 className="text-sm font-semibold text-text-primary">Interests</h2>
-            <p className="mt-0.5 text-xs text-text-muted">
-              Add or remove categories to fine-tune your &quot;Recommended for you&quot; feed.
-            </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex items-end gap-4">
+          <div className="relative -mt-16 flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-4 border-surface-page bg-surface-panel sm:h-28 sm:w-28">
+            {profile?.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
+              <img src={profile.avatar_url} alt={profile.name} className="h-full w-full object-cover" />
+            ) : (
+              <User size={36} className="text-text-muted" />
+            )}
+            <Link
+              href={ROUTES.editProfileForm}
+              aria-label="Change photo"
+              className="absolute bottom-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-accent-link text-white shadow-sm hover:opacity-90"
+            >
+              <Camera size={12} />
+            </Link>
           </div>
+          <div className="flex flex-col gap-1 pb-1">
+            <h1 className="text-xl font-extrabold text-text-primary sm:text-2xl">{profile?.name}</h1>
+            {profile?.username ? <p className="text-sm text-accent-link">@{profile.username}</p> : null}
+            <p className="text-sm text-text-secondary">{mentor?.specialization || (isMentor ? "Mentor" : "Member")}</p>
+          </div>
+        </div>
+        <Link
+          href={ROUTES.editProfileForm}
+          className="flex w-fit items-center gap-1.5 rounded-full border border-border-light px-4 py-2 text-sm font-semibold text-text-secondary hover:text-text-primary"
+        >
+          <Pencil size={14} />
+          Edit Profile
+        </Link>
+      </div>
 
-          {!interestsLoaded ? (
-            <p className="text-sm text-text-muted">Loading…</p>
-          ) : (
-            <>
-              <div className="flex flex-wrap gap-2">
-                {interests.map((category) => (
-                  <button
-                    key={category}
-                    type="button"
-                    onClick={() => handleToggleInterest(category)}
-                    className="flex items-center gap-1.5 rounded-full border border-accent-link/50 bg-accent-link/15 px-3 py-1.5 text-xs font-semibold text-accent-link"
-                  >
-                    <Check size={12} />
-                    {category}
-                  </button>
-                ))}
-                {interests.length === 0 ? (
-                  <p className="text-xs text-text-muted">No interests selected yet.</p>
-                ) : null}
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
-                  Add more
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  {categories
-                    .filter((c) => !interests.some((i) => i.toLowerCase() === c.toLowerCase()))
-                    .map((category) => (
-                      <button
-                        key={category}
-                        type="button"
-                        onClick={() => handleToggleInterest(category)}
-                        className="flex items-center gap-1.5 rounded-full border border-border-light px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary"
-                      >
-                        <Plus size={12} />
-                        {category}
-                      </button>
-                    ))}
-                </div>
-              </div>
-
-              {interestsError ? <p className="text-sm text-accent-error">{interestsError}</p> : null}
-              {interestsSaved ? <p className="text-sm text-accent-success">Saved.</p> : null}
-
-              <button
-                type="button"
-                onClick={handleSaveInterests}
-                disabled={savingInterests}
-                className="flex h-11 w-fit items-center justify-center rounded-full border border-border-light px-6 text-sm font-semibold text-text-secondary disabled:opacity-60"
-              >
-                {savingInterests ? "Saving…" : "Save interests"}
-              </button>
-            </>
-          )}
+      {categories.length > 0 ? (
+        <div className="flex flex-wrap gap-1.5">
+          {categories.map((c) => (
+            <span
+              key={c}
+              className="rounded-full border border-border-light bg-surface-chip px-2.5 py-1 text-xs text-text-secondary"
+            >
+              {c}
+            </span>
+          ))}
         </div>
       ) : null}
 
-      {showCamera ? (
-        <CameraCaptureModal onCapture={handleCameraCapture} onClose={() => setShowCamera(false)} />
+      {isMentor ? (
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+          <StatTile icon={UsersRound} label="Subscribers" value={String(subscriberCount)} />
+          <StatTile icon={VideoIcon} label="Videos" value={String(videos.length)} />
+          <StatTile icon={Calendar} label="Sessions" value={String(mentor?.total_sessions ?? 0)} />
+          <StatTile icon={Star} label="Rating" value={(mentor?.rating ?? 0).toFixed(1)} />
+          <StatTile icon={Award} label="Experience" value={`${mentor?.experience_years ?? 0} yrs`} />
+          <StatTile icon={Clock} label="Rate" value={mentor?.price_per_hour ? `₹${mentor.price_per_hour}/hr` : "—"} />
+        </div>
       ) : null}
 
-      <div className="flex flex-col gap-1.5 border-t border-border-light pt-6">
-        <h2 className="text-sm font-semibold text-accent-error">Danger zone</h2>
-        <p className="text-xs text-text-muted">
-          Permanently delete your account and all associated data. This can&apos;t be undone.
-        </p>
-        <Link
-          href={ROUTES.account}
-          className="mt-1.5 flex w-fit items-center gap-1.5 text-sm font-semibold text-accent-error hover:opacity-80"
-        >
-          <Trash2 size={14} />
-          Delete account
-        </Link>
+      {isMentor ? (
+        <nav className="flex gap-1 overflow-x-auto border-b border-border-light">
+          <span className="shrink-0 border-b-2 border-accent-link px-3.5 py-2.5 text-sm font-semibold text-accent-link">
+            Profile
+          </span>
+          {[
+            { label: "Sessions", href: ROUTES.mentorSessions },
+            { label: "Earnings", href: ROUTES.mentorEarnings },
+            { label: "Schedule", href: ROUTES.mentorSchedule },
+            { label: "Videos", href: ROUTES.mentorVideos },
+          ].map((tab) => (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              className="shrink-0 border-b-2 border-transparent px-3.5 py-2.5 text-sm font-semibold text-text-muted hover:border-accent-link/40 hover:text-text-secondary"
+            >
+              {tab.label}
+            </Link>
+          ))}
+        </nav>
+      ) : null}
+
+      <div className="grid gap-6 lg:grid-cols-[1fr_300px] lg:items-start">
+        <div className="flex flex-col gap-6">
+          <div className="grid gap-6 lg:grid-cols-[300px_1fr] lg:items-start">
+          <section className="flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4">
+            <h2 className="text-sm font-bold text-text-primary">About Me</h2>
+            {isMentor ? (
+              mentor?.bio?.trim() ? (
+                <p className="whitespace-pre-line text-sm leading-relaxed text-text-secondary">{mentor.bio}</p>
+              ) : (
+                <p className="text-sm text-text-muted">
+                  You haven&apos;t added a bio yet.{" "}
+                  <Link href={ROUTES.mentorProfileDashboard} className="font-semibold text-accent-link">
+                    Add one
+                  </Link>
+                </p>
+              )
+            ) : learnerBio?.bio?.trim() ? (
+              <p className="whitespace-pre-line text-sm leading-relaxed text-text-secondary">{learnerBio.bio}</p>
+            ) : (
+              <p className="text-sm text-text-muted">
+                You haven&apos;t added a bio yet.{" "}
+                <Link href={ROUTES.editProfileForm} className="font-semibold text-accent-link">
+                  Add one
+                </Link>
+              </p>
+            )}
+
+            {isMentor && mentor?.skills && mentor.skills.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {mentor.skills.map((skill) => (
+                  <span
+                    key={skill}
+                    className="rounded-full bg-accent-link/10 px-2.5 py-1 text-xs font-medium text-accent-link"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+
+            <div className="flex flex-col gap-1.5 border-t border-border-light pt-3 text-xs text-text-secondary">
+              {isMentor && mentor?.location ? (
+                <span className="flex items-center gap-2">
+                  <MapPin size={13} className="shrink-0 text-text-muted" />
+                  {mentor.location}
+                </span>
+              ) : null}
+              {profile?.email ? (
+                <span className="flex items-center gap-2">
+                  <Mail size={13} className="shrink-0 text-text-muted" />
+                  {profile.email}
+                </span>
+              ) : null}
+              {isMentor && mentor?.website ? (
+                <a
+                  href={/^https?:\/\//.test(mentor.website) ? mentor.website : `https://${mentor.website}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 hover:text-accent-link"
+                >
+                  <Globe size={13} className="shrink-0 text-text-muted" />
+                  {mentor.website}
+                </a>
+              ) : null}
+              {profile?.created_at ? (
+                <span className="flex items-center gap-2">
+                  <Calendar size={13} className="shrink-0 text-text-muted" />
+                  Joined{" "}
+                  {new Date(profile.created_at).toLocaleDateString("en-IN", {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </span>
+              ) : null}
+            </div>
+
+            {isMentor && (mentor?.linkedin_url || mentor?.twitter_url || mentor?.instagram_url || mentor?.youtube_url) ? (
+              <div className="flex items-center gap-2 border-t border-border-light pt-3">
+                {mentor.linkedin_url ? (
+                  <a
+                    href={mentor.linkedin_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="LinkedIn"
+                    title="LinkedIn"
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-chip text-text-secondary hover:text-text-primary"
+                  >
+                    <Briefcase size={14} />
+                  </a>
+                ) : null}
+                {mentor.twitter_url ? (
+                  <a
+                    href={mentor.twitter_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Twitter / X"
+                    title="Twitter / X"
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-chip text-text-secondary hover:text-text-primary"
+                  >
+                    <AtSign size={14} />
+                  </a>
+                ) : null}
+                {mentor.instagram_url ? (
+                  <a
+                    href={mentor.instagram_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Instagram"
+                    title="Instagram"
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-chip text-text-secondary hover:text-text-primary"
+                  >
+                    <Camera size={14} />
+                  </a>
+                ) : null}
+                {mentor.youtube_url ? (
+                  <a
+                    href={mentor.youtube_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="YouTube"
+                    title="YouTube"
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-chip text-text-secondary hover:text-text-primary"
+                  >
+                    <VideoIcon size={14} />
+                  </a>
+                ) : null}
+              </div>
+            ) : null}
+          </section>
+
+          {isMentor && videos.length > 0 ? (
+            <section className="relative flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-bold text-text-primary">Members Only</h2>
+                <Link href={ROUTES.mentorVideos} className="text-xs font-semibold text-accent-link">
+                  See all
+                </Link>
+              </div>
+              <div
+                ref={videoScrollRef}
+                className="flex gap-3 overflow-x-auto scroll-smooth pb-1"
+              >
+                {videos.map((video) => (
+                  <Link
+                    key={video.id}
+                    href={ROUTES.mentorVideos}
+                    className="flex w-44 shrink-0 flex-col gap-1.5"
+                  >
+                    <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl bg-meeting-canvas">
+                      {video.thumbnail_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
+                        <img src={video.thumbnail_url} alt={video.title} className="h-full w-full object-cover" />
+                      ) : (
+                        <VideoIcon size={20} className="text-text-muted" />
+                      )}
+                      {video.is_free ? (
+                        <span className="absolute left-1.5 top-1.5 rounded-full bg-accent-success/90 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                          FREE
+                        </span>
+                      ) : null}
+                      <VideoDurationBadge src={video.video_url} />
+                    </div>
+                    <p className="truncate text-xs font-semibold text-text-primary">{video.title}</p>
+                    {video.description ? (
+                      <p className="line-clamp-2 text-[11px] text-text-muted">{video.description}</p>
+                    ) : null}
+                    <span className="w-fit rounded-full bg-accent-link/10 px-2 py-0.5 text-[10px] font-semibold text-accent-link">
+                      Video
+                    </span>
+                  </Link>
+                ))}
+              </div>
+              {videos.length > 4 ? (
+                <button
+                  type="button"
+                  onClick={() => videoScrollRef.current?.scrollBy({ left: 320, behavior: "smooth" })}
+                  aria-label="Scroll videos"
+                  className="absolute right-2 top-1/2 flex h-8 w-8 items-center justify-center rounded-full border border-border-light bg-surface-panel text-text-secondary shadow-sm hover:text-text-primary"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              ) : null}
+            </section>
+          ) : null}
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+          <section className="flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold text-text-primary">Recent Sessions</h2>
+              <Link href={ROUTES.bookings} className="text-xs font-semibold text-accent-link">
+                See all
+              </Link>
+            </div>
+            {recentSessions.length === 0 ? (
+              <p className="text-sm text-text-muted">No sessions yet.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-120 border-collapse text-left text-sm">
+                  <thead>
+                    <tr className="text-[11px] uppercase tracking-wide text-text-muted">
+                      <th className="pb-2 font-semibold">{isMentor ? "Learner" : "Mentor"}</th>
+                      <th className="pb-2 font-semibold">Date &amp; Time</th>
+                      <th className="pb-2 font-semibold">Duration</th>
+                      <th className="pb-2 font-semibold">Status</th>
+                      <th className="pb-2 text-right font-semibold">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentSessions.map((booking) => {
+                      const otherParty = isMentor ? booking.learner_profile : booking.profiles;
+                      const past = isBookingSessionPast(booking);
+                      const playbackUrl = recordingByBooking.get(booking.id);
+                      return (
+                        <tr key={booking.id} className="border-t border-border-light">
+                          <td className="py-3 pr-3">
+                            <div className="flex min-w-0 items-center gap-2.5">
+                              <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
+                                {otherParty?.avatar_url ? (
+                                  // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
+                                  <img src={otherParty.avatar_url} alt="" className="h-full w-full object-cover" />
+                                ) : (
+                                  <User size={14} className="text-text-muted" />
+                                )}
+                              </span>
+                              <span className="truncate font-semibold text-text-primary">
+                                {otherParty?.name || (isMentor ? "Learner" : "Mentor")}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-3 pr-3 text-xs text-text-secondary">{formatSlotLabel(booking)}</td>
+                          <td className="py-3 pr-3 text-xs text-text-secondary">{durationLabel(booking)}</td>
+                          <td className="py-3 pr-3">
+                            <span
+                              className={`w-fit rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                                booking.status === "completed"
+                                  ? "bg-accent-success/15 text-accent-success"
+                                  : booking.status === "cancelled" || booking.status === "rejected"
+                                    ? "bg-accent-error/15 text-accent-error"
+                                    : past
+                                      ? "bg-text-disabled/20 text-text-muted"
+                                      : "bg-accent-info/15 text-accent-info"
+                              }`}
+                            >
+                              {booking.status}
+                            </span>
+                          </td>
+                          <td className="py-3 text-right">
+                            {playbackUrl ? (
+                              <div className="flex items-center justify-end gap-1.5">
+                                <a
+                                  href={playbackUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  aria-label="Play recording"
+                                  className="flex h-7 w-7 items-center justify-center rounded-full bg-accent-link/15 text-accent-link hover:bg-accent-link/25"
+                                >
+                                  <Play size={12} />
+                                </a>
+                                <a
+                                  href={playbackUrl}
+                                  download
+                                  aria-label="Download recording"
+                                  className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-chip text-text-secondary hover:text-text-primary"
+                                >
+                                  <Download size={12} />
+                                </a>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-text-muted">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+
+          {isMentor ? (
+            <section className="flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-bold text-text-primary">Reviews</h2>
+                {reviews.length > 0 ? (
+                  <Link
+                    href={ROUTES.mentorReviews(user.id)}
+                    className="text-xs font-semibold text-accent-link"
+                  >
+                    See all
+                  </Link>
+                ) : null}
+              </div>
+              {reviews.length === 0 ? (
+                <p className="text-sm text-text-muted">No reviews yet.</p>
+              ) : (
+                <>
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                    <div className="flex shrink-0 flex-col items-center gap-1 sm:w-28">
+                      <p className="text-3xl font-extrabold text-text-primary">
+                        {ratingBreakdown.average.toFixed(1)}
+                      </p>
+                      <div className="flex gap-0.5 text-accent-warning">
+                        {Array.from({ length: 5 }, (_, i) => (
+                          <Star
+                            key={i}
+                            size={13}
+                            className={i < Math.round(ratingBreakdown.average) ? "fill-current" : "text-border-default"}
+                          />
+                        ))}
+                      </div>
+                      <p className="text-[11px] text-text-muted">Based on {reviews.length} reviews</p>
+                    </div>
+                    <div className="flex flex-1 flex-col gap-1.5">
+                      {[5, 4, 3, 2, 1].map((star) => {
+                        const count = ratingBreakdown.counts[star - 1];
+                        const pct = reviews.length ? Math.round((count / reviews.length) * 100) : 0;
+                        return (
+                          <div key={star} className="flex items-center gap-2 text-xs text-text-secondary">
+                            <span className="w-8 shrink-0">{star} Star</span>
+                            <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-chip">
+                              <span
+                                className="block h-full rounded-full bg-accent-warning"
+                                style={{ width: `${pct}%` }}
+                              />
+                            </span>
+                            <span className="w-4 shrink-0 text-right">{count}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-3 border-t border-border-light pt-3">
+                    {reviews.slice(0, 3).map((review) => (
+                      <ReviewCard key={review.id} review={review} />
+                    ))}
+                  </div>
+                </>
+              )}
+            </section>
+          ) : null}
+          </div>
+        </div>
+
+        <aside className="flex flex-col gap-4">
+          <div className="rounded-2xl border border-border-light bg-surface-panel p-4">
+            <h3 className="mb-3 text-sm font-bold text-text-primary">Upcoming Session</h3>
+            {!nextSession ? (
+              <p className="text-xs text-text-muted">No upcoming sessions.</p>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2.5">
+                  {(() => {
+                    const otherParty = isMentor
+                      ? nextSession.booking.learner_profile
+                      : nextSession.booking.profiles;
+                    return (
+                      <>
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
+                          {otherParty?.avatar_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
+                            <img src={otherParty.avatar_url} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            <User size={14} className="text-text-muted" />
+                          )}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-semibold text-text-primary">
+                            {otherParty?.name || (isMentor ? "Learner" : "Mentor")}
+                          </p>
+                          <p className="text-[11px] text-text-muted">{formatSlotLabel(nextSession.booking)}</p>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+                <CountdownTimer target={nextSession.date} />
+                <Link
+                  href={ROUTES.call(nextSession.booking.id)}
+                  className="flex h-10 w-full items-center justify-center rounded-full text-sm font-bold text-text-on-accent"
+                  style={{ backgroundImage: "var(--gradient-button-primary)" }}
+                >
+                  Join Session
+                </Link>
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-2xl border border-border-light bg-surface-panel p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-text-primary">Profile Completion</h3>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-link/15 text-xs font-extrabold text-accent-link">
+                {completionPct}%
+              </span>
+            </div>
+            <p className="mb-3 text-xs text-text-muted">
+              {completionPct === 100
+                ? "Your profile is complete."
+                : completionPct >= 80
+                  ? "Great job! Your profile is almost complete."
+                  : "Complete your profile to help learners find and trust you."}
+            </p>
+            <ul className="flex flex-col gap-2">
+              {completionItems.map((item) => (
+                <li key={item.label} className="flex items-center gap-2 text-xs">
+                  {item.done ? (
+                    <CheckCircle2 size={14} className="shrink-0 text-accent-success" />
+                  ) : (
+                    <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border border-border-default" />
+                  )}
+                  <span className={item.done ? "text-text-secondary" : "text-text-muted"}>{item.label}</span>
+                </li>
+              ))}
+            </ul>
+            {!isMentor ? (
+              <Link
+                href={ROUTES.editProfileForm}
+                className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-accent-link"
+              >
+                <Camera size={13} />
+                Complete your profile
+              </Link>
+            ) : null}
+          </div>
+
+          {!isMentor ? (
+            <Link
+              href={ROUTES.mentorProfileDashboard}
+              className="flex flex-col gap-2 rounded-2xl p-4 text-white"
+              style={{ backgroundImage: "var(--gradient-button-primary)" }}
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15">
+                <Users size={16} />
+              </span>
+              <p className="text-sm font-bold">Become a Creator</p>
+              <p className="text-xs text-white/80">Share your knowledge, grow your brand and earn.</p>
+            </Link>
+          ) : null}
+        </aside>
       </div>
     </main>
+  );
+}
+
+function StatTile({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof Star;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-1 rounded-xl border border-border-light bg-surface-panel py-3">
+      <Icon size={16} className="text-accent-link" />
+      <span className="text-sm font-bold text-text-primary">{value}</span>
+      <span className="text-[11px] text-text-muted">{label}</span>
+    </div>
   );
 }

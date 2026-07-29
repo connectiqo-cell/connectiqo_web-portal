@@ -51,6 +51,14 @@ export interface TransactionRow {
   mentor_earning_paise: number;
 }
 
+export interface WithdrawalRequestRow {
+  id: string;
+  amount: number;
+  upi_id: string | null;
+  status: string;
+  created_at: string;
+}
+
 /** Ported (subset used by booking/checkout) from connectfront/src/api/paymentApi.js. */
 export const paymentApi = {
   /**
@@ -131,6 +139,22 @@ export const paymentApi = {
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data as unknown as TransactionRow[]) || [];
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  /** A mentor's withdrawal requests, newest first. */
+  getWithdrawalRequests: async (mentorId: string): Promise<WithdrawalRequestRow[]> => {
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase
+        .from("withdrawal_requests")
+        .select("id, amount, upi_id, status, created_at")
+        .eq("mentor_id", mentorId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data as unknown as WithdrawalRequestRow[]) || [];
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
     }

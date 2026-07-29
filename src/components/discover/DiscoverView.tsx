@@ -9,13 +9,17 @@ import { createClient } from "@/lib/supabase/client";
 import { mentorApi, type MentorProfileRow } from "@/lib/api/mentorApi";
 import { ROUTES } from "@/lib/routes";
 
-export function DiscoverView({ grouped }: { grouped: Record<string, MentorProfileRow[]> }) {
-  const [query, setQuery] = useState("");
+export function DiscoverView({
+  grouped,
+  initialQuery = "",
+}: {
+  grouped: Record<string, MentorProfileRow[]>;
+  initialQuery?: string;
+}) {
+  const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<MentorProfileRow[] | null>(null);
-  const [searching, setSearching] = useState(false);
+  const [searching, setSearching] = useState(!!initialQuery.trim());
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  console.log("DiscoverView rendered", { query, results, searching });
 
   const handleQueryChange = (value: string) => {
     setQuery(value);

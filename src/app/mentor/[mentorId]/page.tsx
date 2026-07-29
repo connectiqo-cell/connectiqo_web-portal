@@ -7,6 +7,7 @@ import { ReportUserModal } from "@/components/ReportUserModal";
 import { MentorProfileCta } from "@/components/mentor/MentorProfileCta";
 import { MentorVideoLibrary } from "@/components/mentor/MentorVideoLibrary";
 import { ReviewCard } from "@/components/mentor/ReviewCard";
+import { SaveMentorButton } from "@/components/mentor/SaveMentorButton";
 import { mentorApi } from "@/lib/api/mentorApi";
 import { reviewsApi } from "@/lib/api/reviewsApi";
 import { videoLibraryApi } from "@/lib/api/videoLibraryApi";
@@ -108,7 +109,12 @@ export default async function MentorProfilePage({ params }: PageProps) {
         </div>
       ) : null}
 
-      <MentorProfileCta mentorId={mentorId} />
+      <div className="flex items-center gap-3">
+        <div className="flex-1 sm:flex-none">
+          <MentorProfileCta mentorId={mentorId} />
+        </div>
+        <SaveMentorButton mentorId={mentorId} />
+      </div>
 
       <MentorVideoLibrary mentorId={mentorId} mentorName={name} unlockPrice={mentor.unlock_price ?? null} />
 
