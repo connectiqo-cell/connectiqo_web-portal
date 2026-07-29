@@ -103,11 +103,11 @@ function TrendingCreatorsCarousel({
               <Link
                 key={mentor.id}
                 href={ROUTES.mentorProfile(mentor.id)}
-                className="group flex w-56 shrink-0 gap-2.5 rounded-xl border border-border-light bg-surface-panel p-2.5 transition-all hover:border-accent-link hover:shadow-md"
+                className="group flex flex-col w-72 shrink-0 gap-3 rounded-xl border border-border-light bg-surface-panel p-3 transition-all hover:border-accent-link hover:shadow-lg"
               >
                 {/* Avatar */}
                 <div className="shrink-0">
-                  <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-lg bg-linear-to-br from-surface-chip to-surface-panel">
+                  <div className="flex h-32 w-full items-center justify-center overflow-hidden rounded-lg bg-linear-to-br from-surface-chip to-surface-panel">
                     {avatarUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -116,38 +116,38 @@ function TrendingCreatorsCarousel({
                         className="h-full w-full object-cover group-hover:scale-105 transition-transform"
                       />
                     ) : (
-                      <User size={28} className="text-text-muted" />
+                      <User size={40} className="text-text-muted" />
                     )}
                   </div>
                 </div>
 
                 {/* Content */}
-                <div className="flex flex-1 flex-col justify-between gap-1.5">
+                <div className="flex flex-1 flex-col justify-between gap-2.5">
                   <div>
-                    <div className="flex items-center gap-0.5">
-                      <p className="truncate text-xs font-bold text-text-primary">{name}</p>
+                    <div className="flex items-center gap-1">
+                      <p className="truncate font-semibold text-text-primary">{name}</p>
                       {mentor.rating && mentor.rating >= 4.5 && (
-                        <span className="text-xs">✓</span>
+                        <span className="text-sm">✓</span>
                       )}
                     </div>
-                    <p className="truncate text-xs text-text-muted">
+                    <p className="truncate text-sm text-text-muted">
                       {mentor.specialization || "Mentor"}
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-1">
-                    <Star size={11} className="fill-accent-secondary text-accent-secondary" />
-                    <span className="text-xs font-semibold text-text-primary">
+                  <div className="flex items-center gap-1.5">
+                    <Star size={14} className="fill-accent-secondary text-accent-secondary" />
+                    <span className="text-sm font-semibold text-text-primary">
                       {mentor.rating?.toFixed(1) || "0"}
                     </span>
-                    <span className="text-xs text-text-muted">
+                    <span className="text-sm text-text-muted">
                       ({(reviewCount / 1000).toFixed(1)}k)
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between gap-1">
+                  <div className="flex flex-col gap-2">
                     {mentor.price_per_hour && (
-                      <span className="text-xs font-semibold text-accent-secondary">
+                      <span className="text-sm font-semibold text-accent-secondary">
                         ₹{mentor.price_per_hour} /session
                       </span>
                     )}
@@ -156,7 +156,7 @@ function TrendingCreatorsCarousel({
                         e.preventDefault();
                         e.stopPropagation();
                       }}
-                      className="shrink-0 rounded-md bg-accent-primary px-2 py-1 text-xs font-semibold text-white hover:bg-accent-primary-hover transition-colors whitespace-nowrap"
+                      className="w-full rounded-md bg-accent-primary px-3 py-2 text-sm font-semibold text-white hover:bg-accent-primary-hover transition-colors whitespace-nowrap"
                     >
                       Book Now
                     </button>
