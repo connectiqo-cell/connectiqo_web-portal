@@ -334,7 +334,7 @@ export function MarketingHome({
               <Link
                 key={category}
                 href={ROUTES.category(category)}
-                className="flex flex-col items-center justify-center gap-3 w-24 shrink-0 rounded-xl border border-border-light bg-surface-panel p-4 text-center transition-all hover:border-accent-link hover:shadow-md"
+                className="flex flex-col items-center justify-center gap-3 w-32 shrink-0 rounded-xl border border-border-light bg-surface-panel p-4 text-center transition-all hover:border-accent-link hover:shadow-md"
               >
                 <Icon size={28} className="text-accent-link" />
                 <span className="text-xs font-semibold text-text-secondary line-clamp-2">
