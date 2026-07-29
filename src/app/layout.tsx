@@ -1,6 +1,5 @@
 import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { FrozenAccountNotice } from "@/components/FrozenAccountNotice";
@@ -53,8 +52,8 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <head>
-        <Script id="no-flash-theme" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: NO_FLASH_THEME_SCRIPT }} />
+      <head suppressHydrationWarning>
+        <script dangerouslySetInnerHTML={{ __html: NO_FLASH_THEME_SCRIPT }} suppressHydrationWarning />
       </head>
       <body className="min-h-full flex flex-col bg-void text-text-primary">
         <ThemeProvider>
