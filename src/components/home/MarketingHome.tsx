@@ -327,26 +327,28 @@ export function MarketingHome({
       </section>
 
       <section id="categories" className="mx-auto w-full max-w-6xl px-6 py-10">
-        <div className="flex flex-wrap gap-3">
+        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
           {HOME_CATEGORIES.map((category) => {
             const Icon = getCategoryIcon(category);
             return (
               <Link
                 key={category}
                 href={ROUTES.category(category)}
-                className="flex items-center gap-2 rounded-xl border border-border-light bg-surface-panel px-4 py-3 text-sm font-semibold text-text-secondary transition-colors hover:border-accent-link/40 hover:text-text-primary"
+                className="flex flex-col items-center justify-center gap-3 w-24 shrink-0 rounded-xl border border-border-light bg-surface-panel p-4 text-center transition-all hover:border-accent-link hover:shadow-md"
               >
-                <Icon size={16} className="text-accent-link" />
-                {category}
+                <Icon size={28} className="text-accent-link" />
+                <span className="text-xs font-semibold text-text-secondary line-clamp-2">
+                  {category}
+                </span>
               </Link>
             );
           })}
           <Link
             href={ROUTES.discover}
-            className="flex items-center gap-2 rounded-xl border border-border-light bg-surface-chip px-4 py-3 text-sm font-semibold text-text-secondary transition-colors hover:text-text-primary"
+            className="flex flex-col items-center justify-center gap-3 w-24 shrink-0 rounded-xl border border-border-light bg-surface-chip p-4 text-center transition-all hover:border-accent-link hover:shadow-md"
           >
-            <Grid3x3 size={16} />
-            View All
+            <Grid3x3 size={28} className="text-accent-link" />
+            <span className="text-xs font-semibold text-text-secondary">View All</span>
           </Link>
         </div>
       </section>
