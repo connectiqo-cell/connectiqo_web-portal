@@ -190,24 +190,87 @@ export function MarketingHome({
       </section>
 
       {trending.length > 0 ? (
-        <section className="mx-auto w-full max-w-6xl px-6 py-10">
-          <div className="mb-4 flex items-end justify-between">
+        <section className="mx-auto w-full max-w-6xl px-6 py-16">
+          <div className="mb-8 flex items-end justify-between">
             <div>
-              <h2 className="text-xl font-extrabold text-text-primary">Trending Creators 🔥</h2>
-              <p className="text-sm text-text-muted">Top creators loved by our community</p>
+              <h2 className="text-2xl font-bold text-text-primary">Trending Creators 🔥</h2>
+              <p className="mt-1 text-sm text-text-secondary">Top creators loved by our community</p>
             </div>
             <Link
               href={ROUTES.discover}
-              className="flex items-center gap-0.5 text-sm font-semibold text-accent-link"
+              className="flex items-center gap-1 text-sm font-semibold text-accent-link hover:text-accent-link-hover"
             >
               View All Creators
               <ChevronRight size={16} />
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {trending.map((mentor) => (
-              <MentorCard key={mentor.id} mentor={mentor} />
-            ))}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {trending.map((mentor) => {
+              const name = mentor.profiles?.name || "Mentor";
+              const avatarUrl = mentor.profiles?.avatar_url;
+              return (
+                <Link
+                  key={mentor.id}
+                  href={ROUTES.mentorProfile(mentor.id)}
+                  className="group flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4 transition-all hover:border-accent-link hover:shadow-lg"
+                >
+                  {/* Image */}
+                  <div className="flex h-40 w-full items-center justify-center overflow-hidden rounded-xl bg-linear-to-br from-surface-chip to-surface-panel">
+                    {avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={avatarUrl}
+                        alt={name}
+                        className="h-full w-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                    ) : (
+                      <User size={40} className="text-text-muted" />
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex flex-col gap-2.5">
+                    <div>
+                      <div className="flex items-center gap-1">
+                        <h3 className="truncate font-bold text-text-primary">{name}</h3>
+                        {mentor.rating && mentor.rating >= 4.5 && (
+                          <span className="text-sm">✓</span>
+                        )}
+                      </div>
+                      <p className="truncate text-xs text-text-muted">
+                        {mentor.specialization || "Mentor"}
+                      </p>
+                    </div>
+
+                    {/* Rating & Price */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <Star size={14} className="fill-accent-secondary text-accent-secondary" />
+                        <span className="text-xs font-semibold text-text-primary">
+                          {mentor.rating?.toFixed(1) || "0"}
+                        </span>
+                      </div>
+                      {mentor.price_per_hour && (
+                        <span className="text-xs font-semibold text-accent-secondary">
+                          ₹{mentor.price_per_hour}/hr
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Book Now Button */}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                      className="w-full rounded-lg bg-accent-primary px-3 py-2.5 text-xs font-semibold text-white hover:bg-accent-primary-hover transition-colors"
+                    >
+                      Book Now
+                    </button>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </section>
       ) : null}
