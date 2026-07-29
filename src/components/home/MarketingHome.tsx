@@ -1,4 +1,4 @@
-import { ChevronRight, Grid3x3, Heart, Play, PlayCircle, Search, ShieldCheck, Star, Users, Video } from "lucide-react";
+import { ChevronRight, Grid3x3, Heart, Play, PlayCircle, Search, ShieldCheck, Star, User, Users, Video } from "lucide-react";
 import Link from "next/link";
 
 import { AuthHeaderLinks } from "@/components/AuthHeaderLinks";
