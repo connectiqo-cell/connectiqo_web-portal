@@ -103,11 +103,11 @@ function TrendingCreatorsCarousel({
               <Link
                 key={mentor.id}
                 href={ROUTES.mentorProfile(mentor.id)}
-                className="group flex gap-4 w-96 shrink-0 rounded-xl border border-border-light bg-surface-panel p-4 transition-all hover:border-accent-link hover:shadow-lg"
+                className="group flex gap-5 w-[28rem] shrink-0 rounded-xl border border-border-light bg-surface-panel p-5 transition-all hover:border-accent-link hover:shadow-lg"
               >
                 {/* Avatar - Left Side */}
                 <div className="shrink-0">
-                  <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-lg bg-linear-to-br from-surface-chip to-surface-panel">
+                  <div className="flex h-40 w-40 items-center justify-center overflow-hidden rounded-lg bg-linear-to-br from-surface-chip to-surface-panel">
                     {avatarUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -124,30 +124,30 @@ function TrendingCreatorsCarousel({
                 {/* Content - Right Side */}
                 <div className="flex flex-1 flex-col justify-between gap-2">
                   <div>
-                    <div className="flex items-center gap-1">
-                      <p className="truncate font-bold text-text-primary text-sm">{name}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="truncate font-bold text-text-primary text-base">{name}</p>
                       {mentor.rating && mentor.rating >= 4.5 && (
-                        <span className="text-sm">✓</span>
+                        <span className="text-base">✓</span>
                       )}
                     </div>
-                    <p className="truncate text-xs text-text-muted">
+                    <p className="truncate text-sm text-text-muted">
                       {mentor.specialization || "Mentor"}
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-1">
-                    <Star size={13} className="fill-accent-secondary text-accent-secondary" />
-                    <span className="text-xs font-semibold text-text-primary">
+                  <div className="flex items-center gap-1.5">
+                    <Star size={16} className="fill-accent-secondary text-accent-secondary" />
+                    <span className="text-sm font-semibold text-text-primary">
                       {mentor.rating?.toFixed(1) || "0"}
                     </span>
-                    <span className="text-xs text-text-muted">
+                    <span className="text-sm text-text-muted">
                       ({(reviewCount / 1000).toFixed(1)}k)
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between gap-2">
                     {mentor.price_per_hour && (
-                      <span className="text-sm font-bold text-accent-secondary">
+                      <span className="text-base font-bold text-accent-secondary">
                         ₹{mentor.price_per_hour} /session
                       </span>
                     )}
@@ -156,7 +156,7 @@ function TrendingCreatorsCarousel({
                         e.preventDefault();
                         e.stopPropagation();
                       }}
-                      className="shrink-0 rounded-md bg-accent-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-primary-hover transition-colors whitespace-nowrap"
+                      className="shrink-0 rounded-md bg-accent-primary px-4 py-2 text-sm font-semibold text-white hover:bg-accent-primary-hover transition-colors whitespace-nowrap"
                     >
                       Book Now
                     </button>
