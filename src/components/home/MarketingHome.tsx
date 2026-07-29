@@ -1,5 +1,8 @@
+"use client";
+
 import { ChevronRight, Grid3x3, Heart, Play, PlayCircle, Search, ShieldCheck, Star, User, Users, Video } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 
 import { AuthHeaderLinks } from "@/components/AuthHeaderLinks";
 import { HomeSearchBar } from "@/components/HomeSearchBar";
@@ -29,6 +32,165 @@ const NAV_LINKS = [
   { href: "#pricing", label: "Pricing" },
   { href: ROUTES.login, label: "Become a Creator" },
 ];
+
+function TrendingCreatorsCarousel({
+  trending,
+}: {
+  trending: MentorProfileRow[];
+}) {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  useEffect(() => {
+    checkScroll();
+    const container = scrollContainerRef.current;
+    container?.addEventListener("scroll", checkScroll);
+    window.addEventListener("resize", checkScroll);
+
+    return () => {
+      container?.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, []);
+
+  const scroll = (direction: "left" | "right") => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = 320;
+      scrollContainerRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  return (
+    <section className="mx-auto w-full max-w-6xl px-6 py-16">
+      <div className="mb-6 flex items-end justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-text-primary">Trending Creators 🔥</h2>
+          <p className="mt-1 text-sm text-text-secondary">Top creators loved by our community</p>
+        </div>
+        <Link
+          href={ROUTES.discover}
+          className="flex items-center gap-1 text-sm font-semibold text-accent-link hover:text-accent-link-hover"
+        >
+          View All Creators
+          <ChevronRight size={16} />
+        </Link>
+      </div>
+
+      <div className="relative">
+        {/* Scroll Container */}
+        <div
+          ref={scrollContainerRef}
+          className="flex gap-3 overflow-x-auto scroll-smooth pb-2 scrollbar-thin [scrollbar-color:var(--color-border-light)_transparent]"
+        >
+          {trending.map((mentor) => {
+            const name = mentor.profiles?.name || "Mentor";
+            const avatarUrl = mentor.profiles?.avatar_url;
+            const reviewCount = mentor.total_sessions || 0;
+
+            return (
+              <Link
+                key={mentor.id}
+                href={ROUTES.mentorProfile(mentor.id)}
+                className="group flex w-56 shrink-0 gap-2.5 rounded-xl border border-border-light bg-surface-panel p-2.5 transition-all hover:border-accent-link hover:shadow-md"
+              >
+                {/* Avatar */}
+                <div className="shrink-0">
+                  <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-lg bg-linear-to-br from-surface-chip to-surface-panel">
+                    {avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={avatarUrl}
+                        alt={name}
+                        className="h-full w-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                    ) : (
+                      <User size={28} className="text-text-muted" />
+                    )}
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="flex flex-1 flex-col justify-between gap-1.5">
+                  <div>
+                    <div className="flex items-center gap-0.5">
+                      <p className="truncate text-xs font-bold text-text-primary">{name}</p>
+                      {mentor.rating && mentor.rating >= 4.5 && (
+                        <span className="text-xs">✓</span>
+                      )}
+                    </div>
+                    <p className="truncate text-xs text-text-muted">
+                      {mentor.specialization || "Mentor"}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <Star size={11} className="fill-accent-secondary text-accent-secondary" />
+                    <span className="text-xs font-semibold text-text-primary">
+                      {mentor.rating?.toFixed(1) || "0"}
+                    </span>
+                    <span className="text-xs text-text-muted">
+                      ({(reviewCount / 1000).toFixed(1)}k)
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-1">
+                    {mentor.price_per_hour && (
+                      <span className="text-xs font-semibold text-accent-secondary">
+                        ₹{mentor.price_per_hour} /session
+                      </span>
+                    )}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                      className="shrink-0 rounded-md bg-accent-primary px-2 py-1 text-xs font-semibold text-white hover:bg-accent-primary-hover transition-colors whitespace-nowrap"
+                    >
+                      Book Now
+                    </button>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Scroll Buttons */}
+        {canScrollLeft && (
+          <button
+            onClick={() => scroll("left")}
+            className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full bg-white shadow-md p-2 hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 z-10"
+            aria-label="Scroll left"
+          >
+            <ChevronRight size={18} className="rotate-180 text-text-primary" />
+          </button>
+        )}
+
+        {canScrollRight && (
+          <button
+            onClick={() => scroll("right")}
+            className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-white shadow-md p-2 hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 z-10"
+            aria-label="Scroll right"
+          >
+            <ChevronRight size={18} className="text-text-primary" />
+          </button>
+        )}
+      </div>
+    </section>
+  );
+}
 
 function formatCount(n: number): string {
   if (n >= 1000) return `${Math.floor(n / 100) / 10}K+`;
@@ -190,89 +352,7 @@ export function MarketingHome({
       </section>
 
       {trending.length > 0 ? (
-        <section className="mx-auto w-full max-w-6xl px-6 py-16">
-          <div className="mb-8 flex items-end justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-text-primary">Trending Creators 🔥</h2>
-              <p className="mt-1 text-sm text-text-secondary">Top creators loved by our community</p>
-            </div>
-            <Link
-              href={ROUTES.discover}
-              className="flex items-center gap-1 text-sm font-semibold text-accent-link hover:text-accent-link-hover"
-            >
-              View All Creators
-              <ChevronRight size={16} />
-            </Link>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {trending.map((mentor) => {
-              const name = mentor.profiles?.name || "Mentor";
-              const avatarUrl = mentor.profiles?.avatar_url;
-              return (
-                <Link
-                  key={mentor.id}
-                  href={ROUTES.mentorProfile(mentor.id)}
-                  className="group flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4 transition-all hover:border-accent-link hover:shadow-lg"
-                >
-                  {/* Image */}
-                  <div className="flex h-40 w-full items-center justify-center overflow-hidden rounded-xl bg-linear-to-br from-surface-chip to-surface-panel">
-                    {avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={avatarUrl}
-                        alt={name}
-                        className="h-full w-full object-cover group-hover:scale-105 transition-transform"
-                      />
-                    ) : (
-                      <User size={40} className="text-text-muted" />
-                    )}
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex flex-col gap-2.5">
-                    <div>
-                      <div className="flex items-center gap-1">
-                        <h3 className="truncate font-bold text-text-primary">{name}</h3>
-                        {mentor.rating && mentor.rating >= 4.5 && (
-                          <span className="text-sm">✓</span>
-                        )}
-                      </div>
-                      <p className="truncate text-xs text-text-muted">
-                        {mentor.specialization || "Mentor"}
-                      </p>
-                    </div>
-
-                    {/* Rating & Price */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1">
-                        <Star size={14} className="fill-accent-secondary text-accent-secondary" />
-                        <span className="text-xs font-semibold text-text-primary">
-                          {mentor.rating?.toFixed(1) || "0"}
-                        </span>
-                      </div>
-                      {mentor.price_per_hour && (
-                        <span className="text-xs font-semibold text-accent-secondary">
-                          ₹{mentor.price_per_hour}/hr
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Book Now Button */}
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                      className="w-full rounded-lg bg-accent-primary px-3 py-2.5 text-xs font-semibold text-white hover:bg-accent-primary-hover transition-colors"
-                    >
-                      Book Now
-                    </button>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
+        <TrendingCreatorsCarousel trending={trending} />
       ) : null}
 
       <section id="how-it-works" className="mx-auto w-full max-w-6xl px-6 py-10">
