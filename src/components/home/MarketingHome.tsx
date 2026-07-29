@@ -92,7 +92,7 @@ function TrendingCreatorsCarousel({
         {/* Scroll Container */}
         <div
           ref={scrollContainerRef}
-          className="flex gap-3 overflow-x-auto scroll-smooth pb-2 scrollbar-thin [scrollbar-color:var(--color-border-light)_transparent]"
+          className="flex gap-3 overflow-x-auto scroll-smooth pb-2 [-webkit-scrollbar:none] scrollbar-none"
         >
           {trending.map((mentor) => {
             const name = mentor.profiles?.name || "Mentor";
