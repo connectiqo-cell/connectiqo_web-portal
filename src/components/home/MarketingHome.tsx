@@ -103,11 +103,11 @@ function TrendingCreatorsCarousel({
               <Link
                 key={mentor.id}
                 href={ROUTES.mentorProfile(mentor.id)}
-                className="group flex gap-3 w-80 shrink-0 rounded-xl border border-border-light bg-surface-panel p-3 transition-all hover:border-accent-link hover:shadow-lg"
+                className="group flex gap-4 w-96 shrink-0 rounded-xl border border-border-light bg-surface-panel p-4 transition-all hover:border-accent-link hover:shadow-lg"
               >
                 {/* Avatar - Left Side */}
                 <div className="shrink-0">
-                  <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-lg bg-linear-to-br from-surface-chip to-surface-panel">
+                  <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-lg bg-linear-to-br from-surface-chip to-surface-panel">
                     {avatarUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
