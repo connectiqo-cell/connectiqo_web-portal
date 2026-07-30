@@ -91,9 +91,9 @@ export default function CategoriesOnboardingPage() {
       {/* Right Content */}
       <div className="flex-1 flex flex-col p-6 sm:p-12">
         {/* Mobile Header */}
-        <div className="sm:hidden flex items-center justify-between mb-6">
-          <div className="text-sm font-semibold text-accent-link">Step 1 of 2</div>
-          <div className="text-sm font-semibold text-accent-link">{selected.length} / 5 selected</div>
+        <div className="sm:hidden flex items-center justify-between mb-6 pb-4 border-b border-border-light">
+          <div className="text-xs font-bold text-accent-link uppercase tracking-wide">Step 1 of 2</div>
+          <div className="text-sm font-bold text-accent-link">{selected.length} / 5 selected</div>
         </div>
 
         {/* Header */}
