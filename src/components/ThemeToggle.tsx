@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme } from "@/contexts/ThemeContext";
+import { SunMoonIcon } from "@/components/SunMoonIcon";
 
 export function ThemeToggle() {
   const { mode, toggleTheme } = useTheme();
@@ -10,17 +11,14 @@ export function ThemeToggle() {
       type="button"
       onClick={toggleTheme}
       suppressHydrationWarning
-      className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
-        mode === "dark" ? "bg-accent-primary" : "bg-gray-300 dark:bg-gray-600"
+      className={`inline-flex items-center justify-center rounded-lg p-2 transition-colors ${
+        mode === "dark"
+          ? "text-yellow-300 hover:bg-accent-primary/20"
+          : "text-purple-600 hover:bg-yellow-300/20"
       }`}
       aria-label={`Switch to ${mode === "dark" ? "light" : "dark"} mode`}
     >
-      <span
-        suppressHydrationWarning
-        className={`inline-block h-7 w-7 transform rounded-full bg-white shadow-lg transition-transform ${
-          mode === "dark" ? "translate-x-6" : "translate-x-0.5"
-        }`}
-      />
+      <SunMoonIcon className="h-7 w-7" />
     </button>
   );
 }

@@ -18,7 +18,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { ThemeToggleSwitch } from "@/components/ThemeToggleSwitch";
 import { useAuth } from "@/contexts/AuthContext";
 import { paymentApi } from "@/lib/api/paymentApi";
 import { videoLibraryApi } from "@/lib/api/videoLibraryApi";
@@ -259,7 +259,7 @@ export default function SettingsHubPage() {
                 </div>
               </div>
               <div className="shrink-0 ml-4">
-                <ThemeToggle />
+                <ThemeToggleSwitch />
               </div>
             </div>
             <div className="h-px bg-border-light" />
