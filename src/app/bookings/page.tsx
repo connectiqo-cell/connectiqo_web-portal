@@ -23,7 +23,7 @@ import { paymentApi } from "@/lib/api/paymentApi";
 import { rescheduleApi, type ProposalWithBooking } from "@/lib/api/rescheduleApi";
 import { reviewsApi } from "@/lib/api/reviewsApi";
 import { ROUTES } from "@/lib/routes";
-import { isBookingSessionPast, isExpiredBooking } from "@/lib/utils/bookingSession";
+import { isBookingSessionPast } from "@/lib/utils/bookingSession";
 import { useBookingsRealtime } from "@/lib/hooks/useBookingsRealtime";
 
 const SUPPORT_EMAIL = "contact@connectiqo.com";
@@ -113,12 +113,10 @@ export default function BookingsPage() {
   const activeUpcoming = regularUpcoming.filter((b) => !isBookingSessionPast(b));
   const expired = regularUpcoming.filter((b) => isBookingSessionPast(b));
   const proposalByBookingId = new Map(proposals.map((p) => [p.booking_id, p]));
-  const upcomingCount = reschedulePending.length + activeUpcoming.length + expired.length;
+  const upcomingCount = reschedulePending.length + activeUpcoming.length;
   const visibleActiveUpcoming = showAllUpcoming ? activeUpcoming : activeUpcoming.slice(0, PREVIEW_COUNT);
-  const visibleExpired = showAllUpcoming
-    ? expired
-    : expired.slice(0, Math.max(0, PREVIEW_COUNT - visibleActiveUpcoming.length));
-  const visibleHistory = showAllHistory ? history : history.slice(0, PREVIEW_COUNT);
+  const combinedHistory = [...expired, ...history];
+  const visibleHistory = showAllHistory ? combinedHistory : combinedHistory.slice(0, PREVIEW_COUNT);
 
   const allBookings = useMemo(() => [...upcoming, ...history], [upcoming, history]);
   const bookingDatesSet = useMemo(
@@ -126,12 +124,19 @@ export default function BookingsPage() {
     [allBookings],
   );
   const summary = useMemo(
-    () => ({
-      total: allBookings.length,
-      completed: history.filter((b) => b.status === "completed").length,
-      expired: allBookings.filter((b) => isExpiredBooking(b)).length,
-    }),
-    [allBookings, history],
+    () => {
+      const expiredCount = upcoming.filter((b) => {
+        const reg = b.status !== "reschedule_pending";
+        const active = reg && !isBookingSessionPast(b);
+        return reg && !active;
+      }).length;
+      return {
+        total: upcoming.length + history.length,
+        completed: history.filter((b) => b.status === "completed").length,
+        expired: expiredCount,
+      };
+    },
+    [upcoming, history],
   );
 
   const year = monthCursor.getFullYear();
@@ -224,9 +229,6 @@ export default function BookingsPage() {
                     ))}
                     {visibleActiveUpcoming.map((booking) => (
                       <BookingListItem key={booking.id} booking={booking} onCancel={handleCancel} />
-                    ))}
-                    {visibleExpired.map((booking) => (
-                      <BookingListItem key={booking.id} booking={booking} />
                     ))}
                   </div>
                 )}
