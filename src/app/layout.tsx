@@ -53,7 +53,11 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head suppressHydrationWarning>
-        <script dangerouslySetInnerHTML={{ __html: NO_FLASH_THEME_SCRIPT }} suppressHydrationWarning />
+        <template
+          dangerouslySetInnerHTML={{
+            __html: `<script>${NO_FLASH_THEME_SCRIPT}</script>`,
+          }}
+        />
       </head>
       <body className="min-h-full flex flex-col bg-void text-text-primary">
         <ThemeProvider>
