@@ -201,8 +201,51 @@ export default function WalletPage() {
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-10">
       <div>
-        <h1 className="text-2xl font-bold text-text-primary">Wallet</h1>
-        <p className="mt-1 text-sm text-text-secondary">Track your income and withdraw earnings.</p>
+        <h1 className="text-2xl font-bold text-text-primary">Earnings</h1>
+        <p className="mt-1 text-sm text-text-secondary">Track your income and transactions</p>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 border-b border-border-light">
+        <Link
+          href={ROUTES.editProfile}
+          className="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-text-muted hover:text-text-primary"
+        >
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+          Profile
+        </Link>
+        <a
+          href="#sessions"
+          className="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-text-muted hover:text-text-primary"
+        >
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <path d="M16 2v4M8 2v4M3 10h18" />
+          </svg>
+          Sessions
+        </a>
+        <a
+          href="#earnings"
+          className="flex items-center gap-2 border-b-2 border-accent-link px-4 py-3 text-sm font-semibold text-accent-link"
+        >
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+          </svg>
+          Earnings
+        </a>
+        <a
+          href="#schedule"
+          className="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-text-muted hover:text-text-primary"
+        >
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <path d="M16 2v4M8 2v4M3 10h18" />
+          </svg>
+          Schedule
+        </a>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_300px] lg:items-start">
