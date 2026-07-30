@@ -9,6 +9,7 @@ import { HomeSearchBar } from "@/components/HomeSearchBar";
 import { LanguageMenu } from "@/components/LanguageMenu";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { MentorCard } from "@/components/mentor/MentorCard";
+import { CategoryCarousel } from "@/components/home/CategoryCarousel";
 import type { MentorProfileRow, PlatformStats } from "@/lib/api/mentorApi";
 import type { Testimonial } from "@/lib/api/testimonialApi";
 import { ROUTES } from "@/lib/routes";
@@ -374,6 +375,22 @@ export function MarketingHome({
 
       {trending.length > 0 ? (
         <TrendingCreatorsCarousel trending={trending} />
+      ) : null}
+
+      {spotlight.length > 0 ? (
+        <CategoryCarousel
+          title="Health & Wellness"
+          mentors={spotlight}
+          viewAllLink={ROUTES.category("Health & Wellness")}
+        />
+      ) : null}
+
+      {trending.length > 1 ? (
+        <CategoryCarousel
+          title="Finance & Investing"
+          mentors={trending.slice(0, 6)}
+          viewAllLink={ROUTES.category("Finance & Investing")}
+        />
       ) : null}
 
       <section id="how-it-works" className="mx-auto w-full max-w-6xl px-6 py-10">
