@@ -10,14 +10,14 @@ export function ThemeToggle() {
       type="button"
       onClick={toggleTheme}
       suppressHydrationWarning
-      className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
         mode === "dark" ? "bg-accent-primary" : "bg-gray-300 dark:bg-gray-600"
       }`}
       aria-label={`Switch to ${mode === "dark" ? "light" : "dark"} mode`}
     >
       <span
-        className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-lg transition-transform ${
-          mode === "dark" ? "translate-x-7" : "translate-x-1"
+        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform ${
+          mode === "dark" ? "translate-x-5" : "translate-x-0.5"
         }`}
       />
     </button>
