@@ -152,7 +152,7 @@ export default function BookingsPage() {
   if (!user) return null;
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-12">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-5 sm:gap-6 px-4 sm:px-6 py-8 sm:py-12">
       <div>
         <h1 className="text-2xl font-bold text-text-primary">My Bookings</h1>
         <p className="mt-1 text-sm text-text-secondary">Manage your upcoming and past sessions.</p>
