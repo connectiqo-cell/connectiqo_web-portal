@@ -62,7 +62,7 @@ export default function CategoriesOnboardingPage() {
   return (
     <div className="flex min-h-screen bg-white">
       {/* Left Sidebar */}
-      <div className="hidden lg:flex w-1/3 bg-gradient-to-br from-accent-primary via-accent-secondary to-accent-primary flex-col items-center justify-center p-12 text-white">
+      <div className="hidden sm:flex w-1/3 bg-gradient-to-br from-accent-primary via-accent-secondary to-accent-primary flex-col items-center justify-center p-8 sm:p-12 text-white">
         <div className="text-center max-w-sm">
           <h1 className="text-4xl font-extrabold mb-4">Connectiqo</h1>
           <p className="text-xl font-bold mb-6">Let's personalize your experience</p>
@@ -121,7 +121,7 @@ export default function CategoriesOnboardingPage() {
         </div>
 
         {/* Categories Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8 flex-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 flex-1">
           {filtered.map((cat) => (
             <button
               key={cat}
