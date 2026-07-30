@@ -1,6 +1,6 @@
 "use client";
 
-import { Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -23,9 +23,7 @@ export function ThemeToggle() {
           mode === "dark" ? "translate-x-6" : "translate-x-0"
         }`}
       />
-      <span className={`transition-opacity ${mode === "dark" ? "opacity-100" : "opacity-0"} text-lg text-purple-200`}>
-        ☽
-      </span>
+      <Moon size={16} className={`transition-opacity ${mode === "dark" ? "opacity-100" : "opacity-0"} text-purple-200`} />
     </button>
   );
 }
