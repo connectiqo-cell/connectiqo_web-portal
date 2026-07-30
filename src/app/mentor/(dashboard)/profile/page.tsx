@@ -3,7 +3,6 @@
 import { Award, Plus, Star, Users, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { RecentSessionsTable } from "@/components/mentor/RecentSessionsTable";
 import { useAuth } from "@/contexts/AuthContext";
 import { profileApi, type MentorProfileFields } from "@/lib/api/profileApi";
 import { MENTOR_CATEGORIES } from "@/lib/constants/mentorCategories";
@@ -113,12 +112,6 @@ export default function MentorProfileDashboardPage() {
         <StatTile icon={Star} label="Rating" value={(profile?.rating ?? 0).toFixed(1)} />
         <StatTile icon={Users} label="Sessions" value={String(profile?.total_sessions ?? 0)} />
         <StatTile icon={Award} label="Experience" value={`${profile?.experience_years ?? 0} yrs`} />
-      </div>
-
-      {/* Recent Sessions */}
-      <div className="flex flex-col gap-3">
-        <h2 className="text-sm font-bold text-text-primary">Recent Sessions</h2>
-        {user && <RecentSessionsTable mentorId={user.id} />}
       </div>
 
       {!pricePerHourIsSet(profile) ? (
