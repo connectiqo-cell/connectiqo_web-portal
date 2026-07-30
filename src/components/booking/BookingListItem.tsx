@@ -64,9 +64,9 @@ function MoreMenu({ otherPartyId, bookingId }: { otherPartyId?: string; bookingI
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label="More options"
-        className="flex h-7 w-7 items-center justify-center rounded-full text-text-muted hover:bg-surface-chip hover:text-text-primary"
+        className="flex h-10 w-10 sm:h-7 sm:w-7 items-center justify-center rounded-full text-text-muted hover:bg-surface-chip hover:text-text-primary"
       >
-        <MoreVertical size={16} />
+        <MoreVertical size={18} className="sm:size-4" />
       </button>
       {open ? (
         <div className="absolute right-0 top-9 z-10 w-40 rounded-xl border border-border-light bg-surface-panel p-1.5 shadow-lg">
@@ -103,8 +103,8 @@ export function BookingListItem({
   const otherName = otherParty?.name || (isMentorView ? "Learner" : "Mentor");
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-center gap-3">
+    <div className="flex flex-col gap-4 rounded-2xl border border-border-light bg-surface-panel p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center gap-3 min-w-0">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
           {otherParty?.avatar_url ? (
             // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
@@ -139,59 +139,65 @@ export function BookingListItem({
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_STYLES[label] || "bg-surface-chip text-text-secondary"}`}>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
+        <span className={`w-fit rounded-full px-3 py-1.5 sm:px-2.5 sm:py-1 text-xs font-semibold ${STATUS_STYLES[label] || "bg-surface-chip text-text-secondary"}`}>
           {label}
         </span>
-        {label === "Booked" ? (
-          <Link
-            href={ROUTES.call(booking.id)}
-            className="flex items-center gap-1 rounded-full bg-accent-link/15 px-2.5 py-1 text-xs font-semibold text-accent-link"
-          >
-            <Video size={12} />
-            Join
-          </Link>
-        ) : null}
-        {recordingUrl ? (
-          <>
-            <a
-              href={recordingUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 rounded-full border border-border-light px-2.5 py-1 text-xs font-semibold text-text-secondary hover:text-text-primary"
+        <div className="flex flex-wrap gap-2 sm:gap-1.5">
+          {label === "Booked" ? (
+            <Link
+              href={ROUTES.call(booking.id)}
+              className="flex items-center justify-center gap-1 rounded-full bg-accent-link/15 px-3 py-2 sm:px-2.5 sm:py-1 text-xs font-semibold text-accent-link min-h-10 sm:min-h-0"
             >
-              <Play size={12} />
-              Replay
-            </a>
-            <a
-              href={recordingUrl}
-              download
-              className="flex items-center gap-1 rounded-full border border-border-light px-2.5 py-1 text-xs font-semibold text-text-secondary hover:text-text-primary"
+              <Video size={14} className="sm:size-3" />
+              <span className="sm:hidden">Join Call</span>
+              <span className="hidden sm:inline">Join</span>
+            </Link>
+          ) : null}
+          {recordingUrl ? (
+            <>
+              <a
+                href={recordingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-1 rounded-full border border-border-light px-3 py-2 sm:px-2.5 sm:py-1 text-xs font-semibold text-text-secondary hover:text-text-primary min-h-10 sm:min-h-0"
+              >
+                <Play size={14} className="sm:size-3" />
+                <span className="sm:hidden">Replay</span>
+              </a>
+              <a
+                href={recordingUrl}
+                download
+                className="flex items-center justify-center gap-1 rounded-full border border-border-light px-3 py-2 sm:px-2.5 sm:py-1 text-xs font-semibold text-text-secondary hover:text-text-primary min-h-10 sm:min-h-0"
+              >
+                <Download size={14} className="sm:size-3" />
+                <span className="sm:hidden">Download</span>
+              </a>
+            </>
+          ) : null}
+          {canReview ? (
+            <Link
+              href={ROUTES.review(booking.id)}
+              className="flex items-center justify-center gap-1 rounded-full bg-accent-primary/15 px-3 py-2 sm:px-2.5 sm:py-1 text-xs font-semibold text-accent-primary min-h-10 sm:min-h-0"
             >
-              <Download size={12} />
-              Download
-            </a>
-          </>
-        ) : null}
-        {canReview ? (
-          <Link
-            href={ROUTES.review(booking.id)}
-            className="flex items-center gap-1 rounded-full bg-accent-primary/15 px-2.5 py-1 text-xs font-semibold text-accent-primary"
-          >
-            <Star size={12} />
-            Rate
-          </Link>
-        ) : null}
-        {canCancel ? (
-          <button
-            type="button"
-            onClick={() => onCancel!(booking.id)}
-            className="text-xs font-semibold text-accent-error hover:underline"
-          >
-            Cancel
-          </button>
-        ) : null}
-        <MoreMenu otherPartyId={otherParty?.id} bookingId={booking.id} />
+              <Star size={14} className="sm:size-3" />
+              <span className="sm:hidden">Rate Now</span>
+              <span className="hidden sm:inline">Rate</span>
+            </Link>
+          ) : null}
+          {canCancel ? (
+            <button
+              type="button"
+              onClick={() => onCancel!(booking.id)}
+              className="flex items-center justify-center px-3 py-2 sm:px-2 sm:py-1 text-xs font-semibold text-accent-error hover:text-accent-error hover:bg-accent-error/10 rounded-full min-h-10 sm:min-h-0"
+            >
+              Cancel
+            </button>
+          ) : null}
+        </div>
+        <div className="ml-auto sm:ml-0">
+          <MoreMenu otherPartyId={otherParty?.id} bookingId={booking.id} />
+        </div>
       </div>
     </div>
   );
