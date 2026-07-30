@@ -1,11 +1,16 @@
 "use client";
 
-import { User } from "lucide-react";
+import { Download, Play, User } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import type { BookingRow } from "@/lib/api/bookingApi";
 import { bookingApi } from "@/lib/api/bookingApi";
 import { isBookingSessionPast } from "@/lib/utils/bookingSession";
+
+const STATUS_STYLES: Record<string, string> = {
+  Completed: "bg-accent-success/15 text-accent-success",
+  Expired: "bg-text-disabled/20 text-text-muted",
+};
 
 export function RecentSessionsTable({ mentorId }: { mentorId: string }) {
   const [sessions, setSessions] = useState<BookingRow[]>([]);
@@ -34,27 +39,58 @@ export function RecentSessionsTable({ mentorId }: { mentorId: string }) {
   if (sessions.length === 0) return <p className="py-4 text-center text-sm text-text-muted">No sessions yet</p>;
 
   return (
-    <div className="flex flex-col gap-3">
-      {sessions.map((session) => (
-        <div key={session.id} className="flex items-center gap-3 border-b border-border-light pb-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
-            {session.learner_profile?.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={session.learner_profile.avatar_url} alt={session.learner_profile.name} className="h-full w-full object-cover" />
-            ) : (
-              <User size={18} className="text-text-muted" />
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-text-primary truncate">{session.learner_profile?.name || "Learner"}</p>
-            <p className="text-xs text-text-muted">{formatDateTime(session.availability_slots?.date, session.availability_slots?.start_time)}</p>
-          </div>
-          <div className="text-right shrink-0">
-            <p className="text-sm font-semibold text-text-primary">{session.duration_minutes || "—"}</p>
-            <p className="text-xs text-text-muted">min</p>
-          </div>
-        </div>
-      ))}
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead className="hidden sm:table-header-group">
+          <tr className="border-b border-border-light">
+            <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Learner</th>
+            <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Date & Time</th>
+            <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Duration</th>
+            <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Status</th>
+            <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Action</th>
+          </tr>
+        </thead>
+        <tbody className="block sm:table-row-group">
+          {sessions.map((session) => (
+            <tr key={session.id} className="mb-3 block sm:mb-0 sm:table-row border border-border-light sm:border-0 sm:border-b rounded-lg sm:rounded-none p-3 sm:p-0 bg-surface-panel sm:bg-transparent">
+              <td className="flex items-center gap-2 py-2 sm:py-3 px-0 sm:px-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
+                  {session.learner_profile?.avatar_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={session.learner_profile.avatar_url} alt={session.learner_profile.name} className="h-full w-full object-cover" />
+                  ) : (
+                    <User size={16} className="text-text-muted" />
+                  )}
+                </div>
+                <span className="font-semibold text-text-primary">{session.learner_profile?.name || "Learner"}</span>
+              </td>
+              <td className="py-2 sm:py-3 px-0 sm:px-3 text-text-secondary text-sm">
+                {formatDateTime(session.availability_slots?.date, session.availability_slots?.start_time)}
+              </td>
+              <td className="py-2 sm:py-3 px-0 sm:px-3 text-text-secondary text-sm">
+                {session.duration_minutes || "—"} min
+              </td>
+              <td className="py-2 sm:py-3 px-0 sm:px-3">
+                <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusStyle(session)}`}>
+                  {getStatusLabel(session)}
+                </span>
+              </td>
+              <td className="py-2 sm:py-3 px-0 sm:px-3">
+                {session.recording_url && (
+                  <div className="flex gap-2">
+                    <a href={session.recording_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center h-8 w-8 hover:bg-surface-chip rounded-full text-accent-link">
+                      <Play size={16} />
+                    </a>
+                    <a href={session.recording_url} download className="inline-flex items-center justify-center h-8 w-8 hover:bg-surface-chip rounded-full text-text-secondary">
+                      <Download size={16} />
+                    </a>
+                  </div>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -72,6 +108,15 @@ function formatDateTime(date?: string, time?: string) {
   const period = h >= 12 ? "PM" : "AM";
   const hour12 = h % 12 === 0 ? 12 : h % 12;
   return `${label}, ${hour12}:${String(min).padStart(2, "0")} ${period}`;
+}
+
+function getStatusLabel(session: BookingRow): string {
+  if (isBookingSessionPast(session)) return "Completed";
+  return "Completed";
+}
+
+function getStatusStyle(session: BookingRow): string {
+  return STATUS_STYLES[getStatusLabel(session)] || "bg-surface-chip text-text-secondary";
 }
 
 function getStatusLabel(session: BookingRow): string {

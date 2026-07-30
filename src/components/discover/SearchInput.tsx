@@ -12,7 +12,7 @@ export function SearchInput({
   placeholder?: string;
 }) {
   return (
-    <div className="flex items-center gap-2 rounded-full border border-border-light bg-surface-sheet px-4 py-2.5">
+    <div className="flex items-center gap-2 rounded-full border border-border-light bg-surface-sheet px-3 sm:px-4 py-3 sm:py-2.5">
       <Search size={18} className="shrink-0 text-text-secondary" />
       <input
         value={value}
@@ -21,7 +21,12 @@ export function SearchInput({
         className="flex-1 bg-transparent text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
       />
       {value ? (
-        <button type="button" onClick={() => onChange("")} aria-label="Clear search">
+        <button
+          type="button"
+          onClick={() => onChange("")}
+          aria-label="Clear search"
+          className="flex h-8 w-8 items-center justify-center -mr-2 sm:-mr-1 rounded-full hover:bg-surface-chip"
+        >
           <X size={16} className="text-text-secondary" />
         </button>
       ) : null}
