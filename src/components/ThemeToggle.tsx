@@ -18,7 +18,7 @@ export function ThemeToggle() {
       }`}
       aria-label={`Switch to ${mode === "dark" ? "light" : "dark"} mode`}
     >
-      <SunMoonIcon className="h-5 w-5" />
+      <SunMoonIcon className="h-7 w-7" />
     </button>
   );
 }
