@@ -248,13 +248,13 @@ export default function SettingsHubPage() {
           <SectionHeader title="Preferences" subtitle="Customize your app experience" />
           <div className="flex flex-col gap-0 rounded-xl border border-border-light bg-surface-panel">
             {/* Appearance */}
-            <div className="flex items-center justify-between px-4 py-4 text-left transition-colors hover:bg-surface-chip">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30 shrink-0">
-                  <Sun size={20} className="text-blue-600 dark:text-blue-400" />
+            <div className="flex items-center justify-between px-4 py-5 text-left transition-colors hover:bg-surface-chip">
+              <div className="flex items-center gap-4">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-100 dark:bg-cyan-900/40 shrink-0">
+                  <Sun size={24} className="text-cyan-600 dark:text-cyan-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-text-primary">Appearance</p>
+                  <p className="text-base font-bold text-text-primary">Appearance</p>
                   <p className="text-xs text-text-muted">Light · tap switch for Dark</p>
                 </div>
               </div>
