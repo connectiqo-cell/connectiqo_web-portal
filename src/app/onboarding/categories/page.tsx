@@ -51,7 +51,7 @@ export default function CategoriesOnboardingPage() {
         userId: user.id,
         category: selected[0],
       });
-      router.push(ROUTES.mentorProfileDashboard);
+      router.push(ROUTES.interestsOnboarding);
     } catch (err) {
       console.error("Error saving categories:", err);
     } finally {

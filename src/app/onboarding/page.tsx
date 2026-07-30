@@ -11,7 +11,7 @@ export default function OnboardingVideoPage() {
   const [isPlaying, setIsPlaying] = useState(false);
 
   const handleContinue = () => {
-    router.push(ROUTES.interestsOnboarding);
+    router.push(ROUTES.categoriesOnboarding);
   };
 
   const handleSkip = () => {
