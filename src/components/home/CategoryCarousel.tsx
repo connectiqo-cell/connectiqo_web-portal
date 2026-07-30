@@ -71,16 +71,16 @@ export function CategoryCarousel({
   if (!mentors.length) return null;
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-6 py-8">
-      <div className="flex items-center justify-between gap-4 mb-4">
-        <h2 className="text-xl font-bold text-text-primary">{title}</h2>
+    <section className="mx-auto w-full max-w-6xl px-4 sm:px-6 py-6 sm:py-8">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
+        <h2 className="text-lg sm:text-xl font-bold text-text-primary">{title}</h2>
         {viewAllLink && (
           <Link
             href={viewAllLink}
-            className="flex items-center gap-1 text-sm font-semibold text-accent-link hover:text-accent-link-hover"
+            className="flex items-center gap-1 text-xs sm:text-sm font-semibold text-accent-link hover:text-accent-link-hover w-fit"
           >
             View all ({mentors.length})
-            <ChevronRight size={16} />
+            <ChevronRight size={14} className="sm:size-4" />
           </Link>
         )}
       </div>
@@ -101,10 +101,10 @@ export function CategoryCarousel({
               <Link
                 key={mentor.id}
                 href={ROUTES.mentorProfile(mentor.id)}
-                className="group flex w-56 shrink-0 flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4 transition-all hover:border-border-default hover:shadow-lg"
+                className="group flex w-44 sm:w-56 shrink-0 flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-3 sm:p-4 transition-all hover:border-border-default hover:shadow-lg"
               >
                 {/* Avatar */}
-                <div className="flex h-32 w-full items-center justify-center overflow-hidden rounded-xl bg-linear-to-br from-surface-chip to-surface-panel">
+                <div className="flex h-24 sm:h-32 w-full items-center justify-center overflow-hidden rounded-xl bg-linear-to-br from-surface-chip to-surface-panel">
                   {avatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -113,14 +113,14 @@ export function CategoryCarousel({
                       className="h-full w-full object-cover group-hover:scale-105 transition-transform"
                     />
                   ) : (
-                    <User size={32} className="text-text-muted" />
+                    <User size={20} className="sm:size-8 text-text-muted" />
                   )}
                 </div>
 
                 {/* Content */}
                 <div className="flex flex-1 flex-col gap-2">
                   <div>
-                    <p className="truncate text-sm font-bold text-text-primary">{name}</p>
+                    <p className="truncate text-xs sm:text-sm font-bold text-text-primary">{name}</p>
                     <p className="truncate text-xs text-text-muted">
                       {mentor.specialization || "Mentor"}
                     </p>
@@ -128,7 +128,7 @@ export function CategoryCarousel({
 
                   {/* Rating */}
                   <div className="flex items-center gap-0.5">
-                    <Star size={14} className="fill-accent-secondary text-accent-secondary" />
+                    <Star size={12} className="sm:size-3.5 fill-accent-secondary text-accent-secondary" />
                     <span className="text-xs font-semibold text-text-primary">
                       {mentor.rating?.toFixed(1) || "0"}
                     </span>
@@ -140,8 +140,8 @@ export function CategoryCarousel({
                   {/* Price & Button */}
                   <div className="mt-auto flex items-center justify-between gap-2">
                     {mentor.price_per_hour && (
-                      <span className="text-sm font-bold text-accent-secondary">
-                        ₹{mentor.price_per_hour}/hr
+                      <span className="text-xs sm:text-sm font-bold text-accent-secondary">
+                        ₹{mentor.price_per_hour}
                       </span>
                     )}
                     <button
@@ -149,9 +149,9 @@ export function CategoryCarousel({
                         e.preventDefault();
                         e.stopPropagation();
                       }}
-                      className="shrink-0 rounded-lg bg-accent-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-primary-hover transition-colors whitespace-nowrap"
+                      className="shrink-0 rounded-lg bg-accent-primary px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-semibold text-white hover:bg-accent-primary-hover transition-colors whitespace-nowrap"
                     >
-                      Book Now
+                      Book
                     </button>
                   </div>
                 </div>
