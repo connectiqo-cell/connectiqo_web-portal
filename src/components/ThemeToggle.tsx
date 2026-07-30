@@ -1,5 +1,7 @@
 "use client";
 
+import { Moon, Sun } from "lucide-react";
+
 import { useTheme } from "@/contexts/ThemeContext";
 
 export function ThemeToggle() {
@@ -15,6 +17,12 @@ export function ThemeToggle() {
       }`}
       aria-label={`Switch to ${mode === "dark" ? "light" : "dark"} mode`}
     >
+      <span className="absolute left-1 flex h-4 w-4 items-center justify-center">
+        {mode === "dark" ? null : <Sun size={14} className="text-white" />}
+      </span>
+      <span className="absolute right-1 flex h-4 w-4 items-center justify-center">
+        {mode === "dark" ? <Moon size={14} className="text-white" /> : null}
+      </span>
       <span
         className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform ${
           mode === "dark" ? "translate-x-5" : "translate-x-0.5"
