@@ -249,7 +249,7 @@ export default function SettingsHubPage() {
           <div className="flex flex-col gap-0 rounded-xl border border-border-light bg-surface-panel">
             {/* Appearance */}
             <div className="flex items-center justify-between px-4 py-5 text-left transition-colors hover:bg-surface-chip">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 flex-1">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-100 dark:bg-cyan-900/40 shrink-0">
                   <Sun size={24} className="text-cyan-600 dark:text-cyan-400" />
                 </div>
@@ -258,7 +258,9 @@ export default function SettingsHubPage() {
                   <p className="text-xs text-text-muted">Light · tap switch for Dark</p>
                 </div>
               </div>
-              <ThemeToggle />
+              <div className="shrink-0 ml-4">
+                <ThemeToggle />
+              </div>
             </div>
             <div className="h-px bg-border-light" />
 
