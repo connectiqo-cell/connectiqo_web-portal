@@ -89,18 +89,19 @@ function TrendingCreatorsCarousel({
   };
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-6 py-16">
-      <div className="mb-6 flex items-end justify-between">
+    <section className="mx-auto w-full max-w-6xl px-4 sm:px-6 py-12 sm:py-16">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-text-primary">Trending Creators 🔥</h2>
-          <p className="mt-1 text-sm text-text-secondary">Top creators loved by our community</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-text-primary">Trending Creators 🔥</h2>
+          <p className="mt-1 text-xs sm:text-sm text-text-secondary">Top creators loved by our community</p>
         </div>
         <Link
           href={ROUTES.discover}
-          className="flex items-center gap-1 text-sm font-semibold text-accent-link hover:text-accent-link-hover"
+          className="flex items-center gap-1 text-xs sm:text-sm font-semibold text-accent-link hover:text-accent-link-hover"
         >
-          View All Creators
-          <ChevronRight size={16} />
+          View All
+          <ChevronRight size={14} className="sm:hidden" />
+          <ChevronRight size={16} className="hidden sm:block" />
         </Link>
       </div>
 
@@ -121,11 +122,11 @@ function TrendingCreatorsCarousel({
               <Link
                 key={mentor.id}
                 href={ROUTES.mentorProfile(mentor.id)}
-                className="group flex gap-5 w-[28rem] shrink-0 rounded-xl border border-border-light bg-surface-panel p-5 transition-all hover:border-accent-link hover:shadow-lg"
+                className="group flex flex-col sm:flex-row gap-4 sm:gap-5 w-[20rem] sm:w-[28rem] shrink-0 rounded-xl border border-border-light bg-surface-panel p-4 sm:p-5 transition-all hover:border-accent-link hover:shadow-lg"
               >
                 {/* Avatar - Left Side */}
                 <div className="shrink-0">
-                  <div className="flex h-40 w-40 items-center justify-center overflow-hidden rounded-lg bg-linear-to-br from-surface-chip to-surface-panel">
+                  <div className="flex h-28 w-28 sm:h-40 sm:w-40 items-center justify-center overflow-hidden rounded-lg bg-linear-to-br from-surface-chip to-surface-panel">
                     {avatarUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -134,7 +135,7 @@ function TrendingCreatorsCarousel({
                         className="h-full w-full object-cover group-hover:scale-105 transition-transform"
                       />
                     ) : (
-                      <User size={40} className="text-text-muted" />
+                      <User size={24} className="sm:size-10 text-text-muted" />
                     )}
                   </div>
                 </div>
@@ -142,31 +143,31 @@ function TrendingCreatorsCarousel({
                 {/* Content - Right Side */}
                 <div className="flex flex-1 flex-col justify-between gap-2">
                   <div>
-                    <div className="flex items-center gap-1.5">
-                      <p className="truncate font-bold text-text-primary text-base">{name}</p>
+                    <div className="flex items-center gap-1">
+                      <p className="truncate font-bold text-text-primary text-sm sm:text-base">{name}</p>
                       {mentor.rating && mentor.rating >= 4.5 && (
-                        <span className="text-base">✓</span>
+                        <span className="text-sm sm:text-base">✓</span>
                       )}
                     </div>
-                    <p className="truncate text-sm text-text-muted">
+                    <p className="truncate text-xs sm:text-sm text-text-muted">
                       {mentor.specialization || "Mentor"}
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-1.5">
-                    <Star size={16} className="fill-accent-secondary text-accent-secondary" />
-                    <span className="text-sm font-semibold text-text-primary">
+                  <div className="flex items-center gap-1">
+                    <Star size={14} className="sm:size-4 fill-accent-secondary text-accent-secondary" />
+                    <span className="text-xs sm:text-sm font-semibold text-text-primary">
                       {mentor.rating?.toFixed(1) || "0"}
                     </span>
-                    <span className="text-sm text-text-muted">
+                    <span className="text-xs sm:text-sm text-text-muted">
                       ({(reviewCount / 1000).toFixed(1)}k)
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between gap-2">
                     {mentor.price_per_hour && (
-                      <span className="text-base font-bold text-accent-secondary">
-                        ₹{mentor.price_per_hour} /session
+                      <span className="text-xs sm:text-base font-bold text-accent-secondary">
+                        ₹{mentor.price_per_hour}
                       </span>
                     )}
                     <button
@@ -174,10 +175,9 @@ function TrendingCreatorsCarousel({
                         e.preventDefault();
                         e.stopPropagation();
                       }}
-                      className="shrink-0 rounded-md bg-accent-primary px-4 py-2 text-sm font-semibold text-white hover:bg-accent-primary-hover transition-colors whitespace-nowrap"
+                      className="shrink-0 rounded-md bg-accent-primary px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white hover:bg-accent-primary-hover transition-colors whitespace-nowrap"
                     >
-                      
-                      Book Now
+                      Book
                     </button>
                   </div>
                 </div>
@@ -227,24 +227,24 @@ export function MarketingHome({
   return (
     <main className="flex flex-1 flex-col">
       <header className="sticky top-0 z-20 border-b border-border-light bg-surface-page/95 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-6 py-4">
-          <Link href={ROUTES.home} className="shrink-0 text-xl font-extrabold text-accent-link">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-4 sm:px-6 py-3 sm:py-4">
+          <Link href={ROUTES.home} className="shrink-0 text-lg sm:text-xl font-extrabold text-accent-link">
             Connectiqo
           </Link>
-          <nav className="hidden items-center gap-4 text-sm font-medium text-text-secondary xl:flex">
+          <nav className="hidden items-center gap-3 sm:gap-4 text-xs sm:text-sm font-medium text-text-secondary xl:flex">
             {NAV_LINKS.map((link) => (
               <a key={link.href} href={link.href} className="shrink-0 whitespace-nowrap hover:text-text-primary">
                 {link.label}
               </a>
             ))}
           </nav>
-          <div className="flex shrink-0 items-center gap-2 whitespace-nowrap sm:gap-3">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-3 whitespace-nowrap">
             <Link
               href={ROUTES.discover}
               aria-label="Search"
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-text-secondary hover:bg-surface-chip hover:text-text-primary"
             >
-              <Search size={17} />
+              <Search size={16} />
             </Link>
             <LanguageMenu />
             <AuthHeaderLinks />
@@ -255,20 +255,21 @@ export function MarketingHome({
         </div>
       </header>
 
-      <section className="mx-auto grid w-full max-w-6xl gap-10 px-6 py-16 lg:grid-cols-2 lg:items-center">
-        <div className="flex flex-col gap-5">
-          <span className="w-fit rounded-full border border-accent-link/30 bg-accent-link/10 px-3.5 py-1.5 text-xs font-semibold text-accent-link">
+      <section className="mx-auto grid w-full max-w-6xl gap-8 sm:gap-10 px-4 sm:px-6 py-12 sm:py-16 lg:grid-cols-2 lg:items-center">
+        <div className="flex flex-col gap-4 sm:gap-5">
+          <span className="w-fit rounded-full border border-accent-link/30 bg-accent-link/10 px-3 sm:px-3.5 py-1 sm:py-1.5 text-xs font-semibold text-accent-link">
             Connect · Learn · Grow · Earn
           </span>
-          <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-text-primary sm:text-5xl">
+          <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-text-primary sm:text-5xl">
             Connect with <span className="text-accent-link">Connectiqo</span>
           </h1>
-          <p className="max-w-lg text-lg text-text-secondary">
+          <p className="max-w-lg text-base sm:text-lg text-text-secondary">
             Join 1-on-1 video sessions with your favorite creators, mentors &amp; experts. Build
             real connections and grow together.
           </p>
           <HomeSearchBar />
-          <div className="flex flex-wrap gap-x-6 gap-y-2 pt-1 text-xs font-medium text-text-muted">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-x-6 sm:gap-y-2 pt-1 text-xs font-medium text-text-muted">
+
             <span className="flex items-center gap-1.5">
               <Video size={14} className="text-accent-link" /> 1-on-1 Video Calls
             </span>
