@@ -121,7 +121,7 @@ export default function CategoriesOnboardingPage() {
         </div>
 
         {/* Categories Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 flex-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8 flex-1">
           {filtered.map((cat) => (
             <button
               key={cat}
