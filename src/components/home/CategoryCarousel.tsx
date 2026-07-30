@@ -160,6 +160,26 @@ export function CategoryCarousel({
           })}
         </div>
 
+        {/* Scroll Buttons */}
+        {canScrollLeft && (
+          <button
+            onClick={() => scroll("left")}
+            className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full bg-white shadow-md p-2 hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 z-10"
+            aria-label="Scroll left"
+          >
+            <ChevronRight size={18} className="rotate-180 text-text-primary" />
+          </button>
+        )}
+
+        {canScrollRight && (
+          <button
+            onClick={() => scroll("right")}
+            className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-white shadow-md p-2 hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 z-10"
+            aria-label="Scroll right"
+          >
+            <ChevronRight size={18} className="text-text-primary" />
+          </button>
+        )}
       </div>
     </section>
   );
