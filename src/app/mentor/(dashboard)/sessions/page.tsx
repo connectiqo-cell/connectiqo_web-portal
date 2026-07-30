@@ -13,6 +13,7 @@ type Tab = "upcoming" | "history";
 
 export default function MentorSessionsPage() {
   const { user } = useAuth();
+  
   const [tab, setTab] = useState<Tab>("upcoming");
   const [upcoming, setUpcoming] = useState<BookingRow[]>([]);
   const [history, setHistory] = useState<BookingRow[]>([]);
@@ -47,6 +48,7 @@ export default function MentorSessionsPage() {
   const regularUpcoming = upcoming.filter((b) => b.status !== "reschedule_pending");
   const activeUpcoming = regularUpcoming.filter((b) => !isBookingSessionPast(b));
   const expired = regularUpcoming.filter((b) => isBookingSessionPast(b));
+  const combinedHistory = [...expired, ...history];
 
   return (
     <div className="flex flex-col gap-6">
@@ -73,7 +75,7 @@ export default function MentorSessionsPage() {
         <p className="py-8 text-center text-sm text-text-muted">Loading sessions…</p>
       ) : tab === "upcoming" ? (
         <div className="flex flex-col gap-3">
-          {reschedulePending.length === 0 && activeUpcoming.length === 0 && expired.length === 0 ? (
+          {reschedulePending.length === 0 && activeUpcoming.length === 0 ? (
             <p className="py-8 text-center text-sm text-text-muted">No upcoming sessions.</p>
           ) : (
             <>
@@ -83,18 +85,15 @@ export default function MentorSessionsPage() {
               {activeUpcoming.map((booking) => (
                 <BookingListItem key={booking.id} booking={booking} variant="mentor" />
               ))}
-              {expired.map((booking) => (
-                <BookingListItem key={booking.id} booking={booking} variant="mentor" />
-              ))}
             </>
           )}
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {history.length === 0 ? (
+          {combinedHistory.length === 0 ? (
             <p className="py-8 text-center text-sm text-text-muted">No past sessions yet.</p>
           ) : (
-            history.map((booking) => (
+            combinedHistory.map((booking) => (
               <BookingListItem key={booking.id} booking={booking} variant="mentor" />
             ))
           )}
