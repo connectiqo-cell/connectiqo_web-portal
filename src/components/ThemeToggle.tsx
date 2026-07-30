@@ -17,13 +17,14 @@ export function ThemeToggle() {
       }`}
       aria-label={`Switch to ${mode === "dark" ? "light" : "dark"} mode`}
     >
-      <Sun size={16} className={`transition-opacity ${mode === "dark" ? "opacity-0" : "opacity-100"} text-yellow-600`} />
+      <Sun size={16} className={`transition-opacity ${mode === "dark" ? "opacity-0" : "opacity-100"} text-yellow-600`} suppressHydrationWarning />
       <span
+        suppressHydrationWarning
         className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-lg transition-transform ${
           mode === "dark" ? "translate-x-6" : "translate-x-0"
         }`}
       />
-      <Moon size={16} className={`transition-opacity ${mode === "dark" ? "opacity-100" : "opacity-0"} text-purple-200`} />
+      <Moon size={16} className={`transition-opacity ${mode === "dark" ? "opacity-100" : "opacity-0"} text-purple-200`} suppressHydrationWarning />
     </button>
   );
 }
