@@ -1,11 +1,13 @@
 "use client";
 
 import { Award, Plus, Star, Users, X } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { profileApi, type MentorProfileFields } from "@/lib/api/profileApi";
 import { MENTOR_CATEGORIES } from "@/lib/constants/mentorCategories";
+import { ROUTES } from "@/lib/routes";
 
 export default function MentorProfileDashboardPage() {
   const { user } = useAuth();
@@ -108,6 +110,34 @@ export default function MentorProfileDashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Tabs */}
+      <div className="flex gap-2 border-b border-border-light">
+        <Link
+          href={ROUTES.mentorProfileDashboard}
+          className="border-b-2 border-accent-link px-4 py-3 text-sm font-semibold text-accent-link"
+        >
+          Profile
+        </Link>
+        <Link
+          href={ROUTES.mentorSessions}
+          className="px-4 py-3 text-sm font-semibold text-text-muted hover:text-text-primary"
+        >
+          Sessions
+        </Link>
+        <Link
+          href={ROUTES.mentorEarnings}
+          className="px-4 py-3 text-sm font-semibold text-text-muted hover:text-text-primary"
+        >
+          Earnings
+        </Link>
+        <Link
+          href={ROUTES.mentorSchedule}
+          className="px-4 py-3 text-sm font-semibold text-text-muted hover:text-text-primary"
+        >
+          Schedule
+        </Link>
+      </div>
+
       <div className="grid grid-cols-3 gap-3">
         <StatTile icon={Star} label="Rating" value={(profile?.rating ?? 0).toFixed(1)} />
         <StatTile icon={Users} label="Sessions" value={String(profile?.total_sessions ?? 0)} />
