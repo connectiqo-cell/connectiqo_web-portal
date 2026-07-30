@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { SearchInput } from "@/components/discover/SearchInput";
 import { MentorCard } from "@/components/mentor/MentorCard";
+import { CategoryCarousel } from "@/components/home/CategoryCarousel";
 import { createClient } from "@/lib/supabase/client";
 import { mentorApi, type MentorProfileRow } from "@/lib/api/mentorApi";
 import { ROUTES } from "@/lib/routes";
@@ -84,26 +84,14 @@ export function DiscoverView({
           ) : null}
         </div>
       ) : (
-        <div className="flex flex-col gap-10">
+        <div className="flex flex-col gap-0">
           {categories.map((category) => (
-            <div key={category} className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <h2 className="text-base font-extrabold text-text-primary">{category}</h2>
-                <Link
-                  href={ROUTES.category(category)}
-                  className="text-xs font-semibold text-accent-link"
-                >
-                  View all ({grouped[category].length})
-                </Link>
-              </div>
-              <div className="flex gap-3 overflow-x-auto pb-2">
-                {grouped[category].map((mentor) => (
-                  <div key={mentor.id} className="w-40 shrink-0">
-                    <MentorCard mentor={mentor} />
-                  </div>
-                ))}
-              </div>
-            </div>
+            <CategoryCarousel
+              key={category}
+              title={category}
+              mentors={grouped[category]}
+              viewAllLink={ROUTES.category(category)}
+            />
           ))}
 
           {categories.length === 0 ? (
