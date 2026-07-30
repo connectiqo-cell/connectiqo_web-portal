@@ -106,38 +106,38 @@ export default function SettingsHubPage() {
   if (!user) return null;
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-12">
+    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-4 sm:px-6 py-8 sm:py-12">
       <div>
-        <h1 className="text-2xl font-bold text-text-primary">Settings</h1>
-        <p className="mt-1 text-sm text-text-secondary">Manage your account and preferences</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-text-primary">Settings</h1>
+        <p className="mt-1 text-xs sm:text-sm text-text-secondary">Manage your account and preferences</p>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_320px] lg:items-start">
+      <div className="grid gap-6 sm:gap-8 lg:grid-cols-[1fr_320px] lg:items-start">
         {/* Left column */}
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-5 sm:gap-6">
           {/* Profile Card */}
-          <div className="flex flex-col gap-4 rounded-2xl border border-border-light bg-surface-panel p-5">
-          <div className="flex items-center gap-3">
-            <div className="group relative flex h-16 w-16 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border-4 border-accent-link bg-surface-chip">
+          <div className="flex flex-col gap-3 sm:gap-4 rounded-2xl border border-border-light bg-surface-panel p-4 sm:p-5">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="group relative flex h-12 sm:h-16 w-12 sm:w-16 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border-4 border-accent-link bg-surface-chip">
               {profile?.avatar_url ? (
                 // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
                 <img src={profile.avatar_url} alt={profile.name} className="h-full w-full object-cover" />
               ) : (
-                <User size={28} className="text-text-muted" />
+                <User size={16} className="sm:size-7 text-text-muted" />
               )}
               <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none">
-                <Camera size={18} className="text-white" />
+                <Camera size={12} className="sm:size-4.5 text-white" />
               </div>
-              <div className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full border-1.5 border-white bg-accent-link text-white shadow-md">
-                <Camera size={11} />
+              <div className="absolute -bottom-0.5 -right-0.5 flex h-4 sm:h-5 w-4 sm:w-5 items-center justify-center rounded-full border-1.5 border-white bg-accent-link text-white shadow-md">
+                <Camera size={8} className="sm:size-2.5" />
               </div>
             </div>
             <div className="flex flex-1 flex-col">
-              <p className="text-sm font-bold text-text-primary">{profile?.name || "User"}</p>
+              <p className="text-xs sm:text-sm font-bold text-text-primary">{profile?.name || "User"}</p>
               {profile?.username ? (
                 <p className="text-xs text-accent-link">@{profile.username}</p>
               ) : null}
-              <p className="text-xs text-text-muted">{profile?.email}</p>
+              <p className="text-xs text-text-muted truncate">{profile?.email}</p>
               <span className="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-surface-chip px-2 py-0.5 text-[10px] font-semibold text-accent-link">
                 {roleLabel}
               </span>
@@ -171,7 +171,7 @@ export default function SettingsHubPage() {
 
           <Link
             href={ROUTES.editProfileForm}
-            className="flex items-center justify-center gap-2 rounded-xl border border-border-light px-4 py-3 text-sm font-semibold text-accent-link transition-colors hover:bg-surface-chip"
+            className="flex items-center justify-center gap-2 rounded-xl border border-border-light px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-semibold text-accent-link transition-colors hover:bg-surface-chip"
           >
             Edit Profile
           </Link>
