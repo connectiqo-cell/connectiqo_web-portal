@@ -28,8 +28,8 @@ export function AppTopBar() {
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center border-b border-border-light bg-surface-page/95 px-6 backdrop-blur">
-      <div className="flex w-full items-center gap-4">
+    <header className="sticky top-0 z-30 flex h-14 sm:h-16 shrink-0 items-center border-b border-border-light bg-surface-page/95 px-3 sm:px-6 backdrop-blur">
+      <div className="flex w-full items-center gap-2 sm:gap-4">
         <Link href={ROUTES.home} className="flex shrink-0 items-center gap-2">
           <span
             className="flex h-8 w-8 items-center justify-center rounded-xl text-white"
@@ -44,22 +44,22 @@ export function AppTopBar() {
         <div className="hidden max-w-sm flex-1 sm:block">
           <HomeSearchBar placeholder="Search by name, @username or skill" compact />
         </div>
-        <div className="ml-auto flex shrink-0 items-center gap-3">
-          <div className="relative">
+        <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+          <div className="relative hidden sm:block">
             <button
               type="button"
               onClick={() => {
                 setPremiumNotice(true);
                 setTimeout(() => setPremiumNotice(false), 2000);
               }}
-              className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-text-on-accent"
+              className="flex items-center gap-1.5 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-text-on-accent"
               style={{ backgroundImage: "var(--gradient-button-primary)" }}
             >
-              <Crown size={14} />
-              Upgrade to Premium
+              <Crown size={12} className="sm:size-3.5" />
+              <span className="hidden sm:inline">Upgrade</span>
             </button>
             {premiumNotice ? (
-              <div className="absolute right-0 top-11 w-44 rounded-xl border border-border-light bg-surface-panel px-3 py-2 text-xs text-text-secondary shadow-lg">
+              <div className="absolute right-0 top-12 w-44 rounded-xl border border-border-light bg-surface-panel px-3 py-2 text-xs text-text-secondary shadow-lg">
                 Premium plans are coming soon.
               </div>
             ) : null}
@@ -72,14 +72,14 @@ export function AppTopBar() {
             <button
               type="button"
               onClick={() => setOpen((o) => !o)}
-              className="flex items-center gap-2 rounded-full border border-border-light py-1 pl-1 pr-2.5 hover:border-border-default"
+              className="flex items-center gap-1 sm:gap-2 rounded-full border border-border-light py-1 pl-1 pr-2 sm:pr-2.5 hover:border-border-default"
             >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
+              <span className="flex h-6 sm:h-7 w-6 sm:w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
                 {profile?.avatar_url ? (
                   // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
                   <img src={profile.avatar_url} alt={profile.name} className="h-full w-full object-cover" />
                 ) : (
-                  <User size={14} className="text-text-muted" />
+                  <User size={12} className="sm:size-3.5 text-text-muted" />
                 )}
               </span>
               <span className="hidden flex-col items-start leading-tight sm:flex">
@@ -88,11 +88,11 @@ export function AppTopBar() {
                   {profile?.role === "mentor" || profile?.role === "both" ? "Creator" : "Member"}
                 </span>
               </span>
-              <ChevronDown size={14} className="text-text-muted" />
+              <ChevronDown size={12} className="sm:size-3.5 text-text-muted" />
             </button>
 
             {open ? (
-              <div className="absolute right-0 top-11 w-44 overflow-hidden rounded-xl border border-border-light bg-surface-panel py-1 shadow-lg">
+              <div className="absolute right-0 top-12 sm:top-11 w-44 overflow-hidden rounded-xl border border-border-light bg-surface-panel py-1 shadow-lg">
                 <Link
                   href={ROUTES.settings}
                   onClick={() => setOpen(false)}
