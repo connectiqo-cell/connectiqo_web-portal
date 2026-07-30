@@ -5,9 +5,11 @@ import {
   Camera,
   CreditCard,
   Landmark,
+  Moon,
   PlayCircle,
   Share2,
   ShieldCheck,
+  Sun,
   Trash2,
   User,
   Wallet,
@@ -16,6 +18,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
 import { paymentApi } from "@/lib/api/paymentApi";
 import { videoLibraryApi } from "@/lib/api/videoLibraryApi";
@@ -244,6 +247,20 @@ export default function SettingsHubPage() {
         <div className="flex flex-col gap-3">
           <SectionHeader title="Preferences" subtitle="Customize your app experience" />
           <div className="flex flex-col gap-0 rounded-xl border border-border-light bg-surface-panel">
+            {/* Appearance */}
+            <div
+              className="flex items-center justify-between px-4 py-3 text-left transition-colors hover:bg-surface-chip"
+            >
+              <div className="flex items-center gap-3">
+                <Sun size={18} className="text-accent-link" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-text-primary">Appearance</p>
+                  <p className="text-xs text-text-muted">Light · tap switch for Dark</p>
+                </div>
+              </div>
+              <ThemeToggle />
+            </div>
+            <div className="h-px bg-border-light" />
             <button
               type="button"
               onClick={() => {}}
