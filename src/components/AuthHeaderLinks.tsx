@@ -29,13 +29,6 @@ export function AuthHeaderLinks() {
         >
           Login
         </Link>
-        <Link
-          href={ROUTES.signup}
-          className="shrink-0 rounded-full px-4 py-1.5 text-text-on-accent"
-          style={{ backgroundImage: "var(--gradient-button-primary)" }}
-        >
-          Sign Up
-        </Link>
       </div>
     );
   }
