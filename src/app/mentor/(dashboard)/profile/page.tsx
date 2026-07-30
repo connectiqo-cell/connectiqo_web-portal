@@ -111,34 +111,34 @@ export default function MentorProfileDashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-border-light">
+      <div className="flex gap-2 border-b border-border-light overflow-x-auto">
         <Link
           href={ROUTES.mentorProfileDashboard}
-          className="border-b-2 border-accent-link px-4 py-3 text-sm font-semibold text-accent-link"
+          className="border-b-2 border-accent-link px-3 sm:px-4 py-3 text-xs sm:text-sm font-semibold text-accent-link whitespace-nowrap"
         >
           Profile
         </Link>
         <Link
           href={ROUTES.mentorSessions}
-          className="px-4 py-3 text-sm font-semibold text-text-muted hover:text-text-primary"
+          className="px-3 sm:px-4 py-3 text-xs sm:text-sm font-semibold text-text-muted hover:text-text-primary whitespace-nowrap"
         >
           Sessions
         </Link>
         <Link
           href={ROUTES.mentorEarnings}
-          className="px-4 py-3 text-sm font-semibold text-text-muted hover:text-text-primary"
+          className="px-3 sm:px-4 py-3 text-xs sm:text-sm font-semibold text-text-muted hover:text-text-primary whitespace-nowrap"
         >
           Earnings
         </Link>
         <Link
           href={ROUTES.mentorSchedule}
-          className="px-4 py-3 text-sm font-semibold text-text-muted hover:text-text-primary"
+          className="px-3 sm:px-4 py-3 text-xs sm:text-sm font-semibold text-text-muted hover:text-text-primary whitespace-nowrap"
         >
           Schedule
         </Link>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatTile icon={Star} label="Rating" value={(profile?.rating ?? 0).toFixed(1)} />
         <StatTile icon={Users} label="Sessions" value={String(profile?.total_sessions ?? 0)} />
         <StatTile icon={Award} label="Experience" value={`${profile?.experience_years ?? 0} yrs`} />
@@ -188,7 +188,7 @@ export default function MentorProfileDashboardPage() {
           />
         </Field>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Experience (years)">
             <input
               type="number"
@@ -209,7 +209,7 @@ export default function MentorProfileDashboardPage() {
           </Field>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Location">
             <input
               value={location}
@@ -271,7 +271,7 @@ export default function MentorProfileDashboardPage() {
           </div>
         </Field>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="LinkedIn">
             <input
               value={linkedinUrl}
