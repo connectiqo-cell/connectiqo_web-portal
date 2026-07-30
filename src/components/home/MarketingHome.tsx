@@ -391,35 +391,7 @@ export function MarketingHome({
         </div>
       </section>
 
-      {trending.length > 0 ? (
-        <TrendingCreatorsCarousel trending={trending} />
-      ) : null}
-
-      <section id="how-it-works" className="mx-auto w-full max-w-6xl px-6 py-10">
-        <h2 className="mb-6 text-xl font-extrabold text-text-primary">How It Works</h2>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {[
-            { title: "Discover a mentor", desc: "Browse creators by category or search for a specific expert." },
-            { title: "Book a live session", desc: "Pick an open slot and pay securely through Razorpay." },
-            { title: "Connect 1-on-1", desc: "Join a live video call, or unlock a mentor's video library." },
-          ].map((step, i) => (
-            <div key={step.title} className="rounded-2xl border border-border-light bg-surface-panel p-5">
-              <span className="text-xs font-bold text-accent-link">STEP {i + 1}</span>
-              <h3 className="mt-1.5 text-sm font-bold text-text-primary">{step.title}</h3>
-              <p className="mt-1 text-sm text-text-secondary">{step.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section id="pricing" className="mx-auto w-full max-w-6xl px-6 py-10">
-        <h2 className="mb-2 text-xl font-extrabold text-text-primary">Pricing</h2>
-        <p className="max-w-2xl text-sm text-text-secondary">
-          Connectiqo doesn&apos;t charge subscription fees. Every mentor sets their own hourly
-          rate and video-library unlock price – you only pay for the sessions or content you
-          book.
-        </p>
-      </section>
+      <TrendingCreatorsCarousel trending={trending} />
 
       <section className="mx-auto w-full max-w-6xl px-6 pb-16">
         <div
