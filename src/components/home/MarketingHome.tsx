@@ -268,12 +268,6 @@ export function MarketingHome({
           <HomeSearchBar />
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <Link
-              href={ROUTES.signup}
-              className="flex items-center justify-center px-6 sm:px-8 py-3 bg-accent-primary text-white font-extrabold rounded-full hover:bg-accent-primary-hover transition-colors shadow-lg hover:shadow-xl"
-            >
-              Sign Up
-            </Link>
-            <Link
               href={ROUTES.login}
               className="flex items-center justify-center px-6 sm:px-8 py-3 bg-white/20 text-white font-extrabold rounded-full hover:bg-white/30 transition-colors border border-white/50 backdrop-blur"
             >
