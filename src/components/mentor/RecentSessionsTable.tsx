@@ -52,7 +52,7 @@ export function RecentSessionsTable({ mentorId }: { mentorId: string }) {
                 <div className="flex h-10 sm:h-8 w-10 sm:w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
                   {session.learner_profile?.avatar_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={session.learner_profile.avatar_url} alt={session.learner_profile.name} className="h-full w-full object-cover" />
+                    <img src={session.learner_profile.avatar_url} alt={session.learner_profile?.name || "Learner"} className="h-full w-full object-cover" />
                   ) : (
                     <User size={18} className="sm:size-4 text-text-muted" />
                   )}
@@ -78,16 +78,7 @@ export function RecentSessionsTable({ mentorId }: { mentorId: string }) {
                 </span>
               </td>
               <td className="flex items-center justify-center gap-2 py-2 sm:py-4 px-0 sm:px-3">
-                {session.recording_url && (
-                  <div className="flex gap-2">
-                    <a href={session.recording_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center h-10 w-10 sm:h-8 sm:w-8 hover:bg-surface-chip rounded-full text-accent-link transition-colors">
-                      <Play size={18} className="sm:size-4" />
-                    </a>
-                    <a href={session.recording_url} download className="inline-flex items-center justify-center h-10 w-10 sm:h-8 sm:w-8 hover:bg-surface-chip rounded-full text-text-secondary transition-colors">
-                      <Download size={18} className="sm:size-4" />
-                    </a>
-                  </div>
-                )}
+                <span className="text-xs text-text-muted">—</span>
               </td>
             </tr>
           ))}

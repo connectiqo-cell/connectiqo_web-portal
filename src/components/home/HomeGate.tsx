@@ -20,5 +20,5 @@ export function HomeGate({
     return <DashboardHome trending={trending} stats={stats} />;
   }
 
-  return <MarketingHome trending={trending} spotlight={spotlight} stats={stats} />;
+  return <MarketingHome trending={trending} stats={stats} />;
 }
