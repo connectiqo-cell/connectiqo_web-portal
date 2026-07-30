@@ -1,420 +1,226 @@
 "use client";
 
-import { ChevronRight, Grid3x3, Heart, Play, PlayCircle, Search, ShieldCheck, Star, User, Users, Video } from "lucide-react";
+import { ChevronRight, Search, Clock, Shield, MapPin, Calendar } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
-import { AuthHeaderLinks } from "@/components/AuthHeaderLinks";
-import { HomeSearchBar } from "@/components/HomeSearchBar";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { MentorCard } from "@/components/mentor/MentorCard";
-import type { MentorProfileRow, PlatformStats } from "@/lib/api/mentorApi";
-import type { Testimonial } from "@/lib/api/testimonialApi";
 import { ROUTES } from "@/lib/routes";
-import { getCategoryIcon } from "@/lib/utils/categoryIcons";
 
-const HOME_CATEGORIES = [
-  "Business",
-  "Finance & Investing",
-  "AI & Machine Learning",
-  "Health & Wellness",
-  "Education & Coaching",
-  "Content Creation",
-  "Personal Development",
-] as const;
-
-const NAV_LINKS = [
-  { href: ROUTES.home, label: "Home" },
-  { href: ROUTES.discover, label: "Discover Creators" },
-  { href: "#categories", label: "Categories" },
-  { href: ROUTES.login, label: "Become a Creator" },
+const CREATORS = [
+  { name: "Ankur Warikoo", role: "Entrepreneur & Content Creator", rating: 4.9, count: "2.1k", price: 499, category: "Business" },
+  { name: "Prajakta Koli", role: "YouTuber & Influencer", rating: 4.9, count: "1.8k", price: 399, category: "Entertainment" },
+  { name: "Andrej Karpathy", role: "AI Researcher", rating: 4.9, count: "967", price: 799, category: "AI" },
+  { name: "Yogini Melania", role: "Yoga & Wellness Expert", rating: 4.8, count: "1.2k", price: 499, category: "Health" },
 ];
 
-function TrendingCreatorsCarousel({
-  trending,
-}: {
-  trending: MentorProfileRow[];
-}) {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
+const CATEGORIES = [
+  { id: "Business", label: "Business & Startup", icon: "📊" },
+  { id: "Finance", label: "Finance & Investing", icon: "📈" },
+  { id: "AI", label: "AI & Technology", icon: "🤖" },
+  { id: "Health", label: "Health & Fitness", icon: "💪" },
+  { id: "Spirituality", label: "Spirituality", icon: "✨" },
+  { id: "Education", label: "Education", icon: "🎓" },
+  { id: "Entertainment", label: "Entertainment", icon: "🎬" },
+  { id: "Lifestyle", label: "Lifestyle", icon: "🛍️" },
+];
 
-  const checkScroll = () => {
-    if (scrollContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-      setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
-    }
-  };
+function MarketingHome() {
+  const [activeCategory, setActiveCategory] = useState("Business");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [toast, setToast] = useState("");
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.touches[0].clientX);
-  };
+  const filteredCreators = CREATORS.filter(c => activeCategory === "All" || c.category === activeCategory);
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStart === null) return;
-    const touchEnd = e.changedTouches[0].clientX;
-    const diff = touchStart - touchEnd;
-
-    if (Math.abs(diff) > 50) {
-      scroll(diff > 0 ? "right" : "left");
-    }
-    setTouchStart(null);
-  };
-
-  useEffect(() => {
-    checkScroll();
-    const container = scrollContainerRef.current;
-    container?.addEventListener("scroll", checkScroll);
-    window.addEventListener("resize", checkScroll);
-
-    return () => {
-      container?.removeEventListener("scroll", checkScroll);
-      window.removeEventListener("resize", checkScroll);
-    };
-  }, []);
-
-  const scroll = (direction: "left" | "right") => {
-    if (scrollContainerRef.current) {
-      const scrollAmount = 320;
-      scrollContainerRef.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      });
-    }
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(""), 2600);
   };
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-4 sm:px-6 py-12 sm:py-16">
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-text-primary">Trending Creators 🔥</h2>
-          <p className="mt-1 text-xs sm:text-sm text-text-secondary">Top creators loved by our community</p>
-        </div>
-        <Link
-          href={ROUTES.discover}
-          className="flex items-center gap-1 text-xs sm:text-sm font-semibold text-accent-link hover:text-accent-link-hover"
-        >
-          View All
-          <ChevronRight size={14} className="sm:hidden" />
-          <ChevronRight size={16} className="hidden sm:block" />
-        </Link>
-      </div>
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b border-purple-200 backdrop-blur-sm bg-white/90">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 py-4 flex items-center justify-between">
+          <div className="text-2xl font-bold text-purple-600">Connectiqo</div>
 
-      <div className="relative">
-        {/* Scroll Container */}
-        <div
-          ref={scrollContainerRef}
-          className="flex gap-3 overflow-x-auto scroll-smooth pb-2 [-webkit-scrollbar:none] scrollbar-none"
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-        >
-          {trending.map((mentor) => {
-            const name = mentor.profiles?.name || "Mentor";
-            const avatarUrl = mentor.profiles?.avatar_url;
-            const reviewCount = mentor.total_sessions || 0;
-
-            return (
-              <Link
-                key={mentor.id}
-                href={ROUTES.mentorProfile(mentor.id)}
-                className="group flex flex-col sm:flex-row gap-4 sm:gap-5 w-[20rem] sm:w-[28rem] shrink-0 rounded-xl border border-border-light bg-surface-panel p-4 sm:p-5 transition-all hover:border-accent-link hover:shadow-lg"
-              >
-                {/* Avatar - Left Side */}
-                <div className="shrink-0">
-                  <div className="flex h-28 w-28 sm:h-40 sm:w-40 items-center justify-center overflow-hidden rounded-lg bg-linear-to-br from-surface-chip to-surface-panel">
-                    {avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={avatarUrl}
-                        alt={name}
-                        className="h-full w-full object-cover group-hover:scale-105 transition-transform"
-                      />
-                    ) : (
-                      <User size={24} className="sm:size-10 text-text-muted" />
-                    )}
-                  </div>
-                </div>
-
-                {/* Content - Right Side */}
-                <div className="flex flex-1 flex-col justify-between gap-2">
-                  <div>
-                    <div className="flex items-center gap-1">
-                      <p className="truncate font-bold text-text-primary text-sm sm:text-base">{name}</p>
-                      {mentor.rating && mentor.rating >= 4.5 && (
-                        <span className="text-sm sm:text-base">✓</span>
-                      )}
-                    </div>
-                    <p className="truncate text-xs sm:text-sm text-text-muted">
-                      {mentor.specialization || "Mentor"}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-1">
-                    <Star size={14} className="sm:size-4 fill-accent-secondary text-accent-secondary" />
-                    <span className="text-xs sm:text-sm font-semibold text-text-primary">
-                      {mentor.rating?.toFixed(1) || "0"}
-                    </span>
-                    <span className="text-xs sm:text-sm text-text-muted">
-                      ({(reviewCount / 1000).toFixed(1)}k)
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-2">
-                    {mentor.price_per_hour && (
-                      <span className="text-xs sm:text-base font-bold text-accent-secondary">
-                        ₹{mentor.price_per_hour}
-                      </span>
-                    )}
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                      className="shrink-0 rounded-md bg-accent-primary px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white hover:bg-accent-primary-hover transition-colors whitespace-nowrap"
-                    >
-                      Book
-                    </button>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-
-        {/* Scroll Buttons */}
-        {canScrollLeft && (
-          <button
-            onClick={() => scroll("left")}
-            className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full bg-white shadow-md p-2 hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 z-10"
-            aria-label="Scroll left"
-          >
-            <ChevronRight size={18} className="rotate-180 text-text-primary" />
-          </button>
-        )}
-
-        {canScrollRight && (
-          <button
-            onClick={() => scroll("right")}
-            className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-white shadow-md p-2 hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 z-10"
-            aria-label="Scroll right"
-          >
-            <ChevronRight size={18} className="text-text-primary" />
-          </button>
-        )}
-      </div>
-    </section>
-  );
-}
-
-function formatCount(n: number): string {
-  if (n >= 1000) return `${Math.floor(n / 100) / 10}K+`;
-  return `${n}`;
-}
-
-export function MarketingHome({
-  trending,
-  stats,
-}: {
-  trending: MentorProfileRow[];
-  stats: PlatformStats;
-}) {
-
-  return (
-    <main className="flex flex-1 flex-col">
-      <header className="sticky top-0 z-20 border-b border-border-light bg-surface-page/95 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-4 sm:px-6 py-3 sm:py-4">
-          <Link href={ROUTES.home} className="shrink-0 text-lg sm:text-xl font-extrabold text-accent-link">
-            Connectiqo
-          </Link>
-          <nav className="hidden items-center gap-3 sm:gap-4 text-xs sm:text-sm font-medium text-text-secondary xl:flex">
-            {NAV_LINKS.map((link) => (
-              <a key={link.href} href={link.href} className="shrink-0 whitespace-nowrap hover:text-text-primary">
-                {link.label}
-              </a>
-            ))}
+          <nav className="hidden lg:flex items-center gap-8">
+            <a href="#" className="text-sm font-medium text-gray-600 hover:text-gray-900 border-b-2 border-purple-600 pb-1">Home</a>
+            <a href="#" className="text-sm font-medium text-gray-600 hover:text-gray-900">Discover Creators</a>
+            <a href="#" className="text-sm font-medium text-gray-600 hover:text-gray-900">Categories</a>
+            <a href={ROUTES.login} className="text-sm font-medium text-gray-600 hover:text-gray-900">Become a Creator</a>
           </nav>
-          <div className="flex shrink-0 items-center gap-1 sm:gap-3 whitespace-nowrap">
-            <Link
-              href={ROUTES.discover}
-              aria-label="Search"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-text-secondary hover:bg-surface-chip hover:text-text-primary"
-            >
-              <Search size={16} />
+
+          <div className="flex items-center gap-3">
+            <button className="p-2 hover:bg-purple-50 rounded-full transition">
+              <Search size={18} className="text-gray-600" />
+            </button>
+            <Link href={ROUTES.login} className="px-5 py-2 text-sm font-semibold text-gray-700 border border-gray-300 rounded-full hover:border-purple-400 hover:text-purple-600 transition">
+              Login
             </Link>
-            <AuthHeaderLinks />
-            <div className="hidden sm:block">
-              <ThemeToggle />
-            </div>
           </div>
         </div>
       </header>
 
-      <section className="mx-auto grid w-full max-w-6xl gap-8 sm:gap-10 px-4 sm:px-6 py-12 sm:py-16 lg:grid-cols-2 lg:items-center">
-        <div className="flex flex-col gap-4 sm:gap-5">
-          <span className="w-fit rounded-full border border-accent-link/30 bg-accent-link/10 px-3 sm:px-3.5 py-1 sm:py-1.5 text-xs font-semibold text-accent-link">
-            Connect · Learn · Grow · Earn
-          </span>
-          <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight tracking-tight">
-            <span className="text-text-primary">Connect with</span> <span className="text-accent-primary">Connectiqo</span>
-          </h1>
-          <p className="max-w-lg text-base sm:text-lg text-text-secondary">
-            Join 1-on-1 video sessions with your favorite creators, mentors &amp; experts. Build
-            real connections and grow together.
-          </p>
-          <HomeSearchBar />
-          <div className="flex flex-col sm:flex-row gap-3 pt-2">
-            <Link
-              href={ROUTES.login}
-              className="flex items-center justify-center px-6 sm:px-8 py-3 bg-white/20 text-white font-extrabold rounded-full hover:bg-white/30 transition-colors border border-white/50 backdrop-blur"
-            >
-              Login
-            </Link>
-          </div>
-          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-x-6 sm:gap-y-2 pt-2 text-xs font-medium text-text-muted">
-
-            <span className="flex items-center gap-1.5">
-              <Video size={14} className="text-accent-link" /> 1-on-1 Video Calls
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Users size={14} className="text-accent-link" /> Trusted Creators
-            </span>
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck size={14} className="text-accent-link" /> Secure &amp; Safe
-            </span>
-            <span className="flex items-center gap-1.5">
-              <PlayCircle size={14} className="text-accent-link" /> Easy Booking
-            </span>
-          </div>
-        </div>
-
-        {/* Video Testimonial Card */}
-        <div className="relative">
-          <div className="group relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-3xl bg-black shadow-2xl">
-            <video
-              src="/videos/testimonial-1.mp4"
-              poster="/videos/testimonial-1.jpg"
-              className="absolute inset-0 h-full w-full object-cover"
-              playsInline
-            />
-
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent" />
-
-            {/* Play Button */}
-            <button
-              type="button"
-              className="relative z-10 flex h-16 w-16 items-center justify-center rounded-full bg-white/90 text-accent-link transition-transform hover:scale-110"
-              aria-label="Play testimonial"
-              onClick={(e) => {
-                e.preventDefault();
-                const video = (e.currentTarget.parentElement as HTMLElement)?.querySelector('video') as HTMLVideoElement;
-                if (video) video.play();
-              }}
-            >
-              <Play size={28} className="ml-1 fill-current" />
-            </button>
-
-            {/* Like Button */}
-            <button
-              type="button"
-              className="absolute bottom-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-red-500 transition-transform hover:scale-110"
-              aria-label="Like"
-            >
-              <Heart size={20} className="fill-current" />
-            </button>
-
-            {/* Stats Badge */}
-            <div className="absolute bottom-4 left-4 flex items-center gap-2.5 rounded-2xl bg-white/95 px-3.5 py-2.5 backdrop-blur z-10">
-              <div className="flex -space-x-2">
-                {[...Array(3)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-6 w-6 rounded-full border-2 border-white bg-accent-link/20 flex items-center justify-center"
-                  >
-                    <Users size={11} className="text-accent-link" />
-                  </div>
-                ))}
-              </div>
-              <div>
-                <p className="text-xs font-bold text-text-primary">
-                  59+ Happy Users
-                </p>
-                <p className="text-[10px] text-text-muted">Successful Connections Made</p>
-              </div>
+      {/* Hero */}
+      <section className="bg-gradient-to-br from-purple-50 to-white px-6 sm:px-8 py-16 sm:py-20">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <div>
+            <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-600 text-xs font-semibold px-4 py-2 rounded-full mb-6">
+              ✦ Connect · Learn · Grow · Earn
             </div>
-          </div>
-        </div>
-      </section>
 
-      <section id="categories" className="mx-auto w-full max-w-6xl px-6 py-10">
-        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
-          {HOME_CATEGORIES.map((category) => {
-            const Icon = getCategoryIcon(category);
-            return (
-              <Link
-                key={category}
-                href={ROUTES.category(category)}
-                className="flex flex-col items-center justify-center gap-3 w-32 shrink-0 rounded-xl border border-border-light bg-surface-panel p-4 text-center transition-all hover:border-accent-link hover:shadow-md"
+            <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight mb-4">
+              Connect with <span className="text-purple-600">Connectiqo</span>
+            </h1>
+
+            <p className="text-lg text-gray-600 mb-8 max-w-md">
+              Join 1-on-1 video sessions with your favorite creators, mentors &amp; experts. Build real connections and grow together.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3 mb-8">
+              <div className="flex-1 relative">
+                <Search className="absolute left-4 top-3.5 text-gray-400" size={18} />
+                <input
+                  type="text"
+                  placeholder="Search creators, mentors, experts..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+              <button
+                onClick={() => showToast(searchQuery ? `Searching for "${searchQuery}"...` : "Type something to search")}
+                className="px-8 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition whitespace-nowrap"
               >
-                <Icon size={28} className="text-accent-link" />
-                <span className="text-xs font-semibold text-text-secondary line-clamp-2">
-                  {category}
-                </span>
-              </Link>
-            );
-          })}
-          <Link
-            href={ROUTES.discover}
-            className="flex flex-col items-center justify-center gap-3 w-24 shrink-0 rounded-xl border border-border-light bg-surface-chip p-4 text-center transition-all hover:border-accent-link hover:shadow-md"
-          >
-            <Grid3x3 size={28} className="text-accent-link" />
-            <span className="text-xs font-semibold text-text-secondary">View All</span>
-          </Link>
-        </div>
-      </section>
+                Search
+              </button>
+            </div>
 
-      {trending.length > 0 ? (
-        <TrendingCreatorsCarousel trending={trending} />
-      ) : null}
-
-
-      <section className="mx-auto w-full max-w-6xl px-6 pb-16">
-        <div
-          className="grid grid-cols-2 gap-4 rounded-2xl px-6 py-8 text-white sm:grid-cols-4"
-          style={{ backgroundImage: "var(--gradient-button-primary)" }}
-        >
-          <div className="flex items-center gap-2.5">
-            <Users size={22} />
-            <div>
-              <p className="text-lg font-extrabold">{formatCount(stats.mentorCount)}</p>
-              <p className="text-xs opacity-80">Active Creators</p>
+            <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+              <span className="flex items-center gap-2"><Clock size={16} className="text-purple-600" /> 1-on-1 Video Calls</span>
+              <span className="flex items-center gap-2"><Shield size={16} className="text-purple-600" /> Trusted Creators</span>
+              <span className="flex items-center gap-2"><MapPin size={16} className="text-purple-600" /> Secure &amp; Safe</span>
+              <span className="flex items-center gap-2"><Calendar size={16} className="text-purple-600" /> Easy Booking</span>
             </div>
           </div>
-          <div className="flex items-center gap-2.5">
-            <Video size={22} />
-            <div>
-              <p className="text-lg font-extrabold">{formatCount(stats.sessionCount)}</p>
-              <p className="text-xs opacity-80">Sessions Booked</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <ShieldCheck size={22} />
-            <div>
-              <p className="text-lg font-extrabold">{formatCount(stats.userCount)}</p>
-              <p className="text-xs opacity-80">Happy Users</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <Star size={22} className="fill-current" />
-            <div>
-              <p className="text-lg font-extrabold">{stats.averageRating.toFixed(1)}/5</p>
-              <p className="text-xs opacity-80">Average Rating</p>
+
+          <div className="hidden lg:block relative aspect-square">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-300 to-purple-600 rounded-3xl opacity-20 blur-3xl" />
+            <div className="relative h-full bg-gradient-to-br from-purple-200 to-purple-400 rounded-3xl flex items-center justify-center text-9xl">
+              👋
             </div>
           </div>
         </div>
       </section>
-    </main>
+
+      {/* Categories */}
+      <section className="max-w-7xl mx-auto px-6 sm:px-8 py-12">
+        <div className="flex gap-2 overflow-x-auto pb-4 border border-gray-200 rounded-2xl p-2">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.id)}
+              className={`flex items-center gap-2 px-5 py-3 rounded-lg font-semibold text-sm whitespace-nowrap transition flex-shrink-0 ${
+                activeCategory === cat.id
+                  ? "bg-purple-100 text-purple-600"
+                  : "text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <span className="text-lg">{cat.icon}</span>
+              {cat.label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* Trending */}
+      <section className="max-w-7xl mx-auto px-6 sm:px-8 py-16">
+        <div className="flex justify-between items-start mb-10">
+          <div>
+            <h2 className="text-3xl font-bold mb-2">Trending Creators 🔥</h2>
+            <p className="text-gray-600 text-sm">Top creators loved by our community</p>
+          </div>
+          <a href="#" className="text-purple-600 font-semibold text-sm flex items-center gap-1 hover:gap-2 transition">
+            View All <ChevronRight size={16} />
+          </a>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {filteredCreators.map((creator) => (
+            <div key={creator.name} className="border border-gray-200 rounded-2xl p-4 hover:shadow-lg hover:-translate-y-1 transition bg-white">
+              <div className="aspect-video bg-gradient-to-br from-purple-300 to-purple-600 rounded-xl mb-4" />
+
+              <div className="flex items-center gap-2 font-bold text-sm mb-1">
+                {creator.name}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-purple-600">
+                  <path d="M12 2l2.4 2.2 3.2-.6.9 3.1 3.1.9-.6 3.2L23 12l-2.2 2.4.6 3.2-3.1.9-.9 3.1-3.2-.6L12 23l-2.4-2.2-3.2.6-.9-3.1-3.1-.9.6-3.2L1 12l2.2-2.4-.6-3.2 3.1-.9.9-3.1 3.2.6z" />
+                </svg>
+              </div>
+
+              <p className="text-xs text-gray-600 mb-2">{creator.role}</p>
+
+              <div className="flex items-center gap-2 text-xs font-semibold mb-4">
+                ⭐ {creator.rating} <span className="text-gray-500 font-normal">({creator.count})</span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-gray-600">₹{creator.price} / session</span>
+                <button
+                  onClick={() => showToast(`Session request sent to ${creator.name}`)}
+                  className="px-3 py-1.5 bg-purple-600 text-white text-xs font-semibold rounded-lg hover:bg-purple-700 transition"
+                >
+                  Book Now
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="max-w-7xl mx-auto px-6 sm:px-8 py-20">
+        <div className="bg-gradient-to-r from-purple-600 to-purple-900 rounded-3xl p-8 sm:p-12 text-white">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-2xl flex-shrink-0">👥</div>
+              <div>
+                <div className="text-2xl font-bold">10K+</div>
+                <div className="text-xs sm:text-sm text-white/75">Active Creators</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-2xl flex-shrink-0">▶️</div>
+              <div>
+                <div className="text-2xl font-bold">50K+</div>
+                <div className="text-xs sm:text-sm text-white/75">Sessions Booked</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-2xl flex-shrink-0">😊</div>
+              <div>
+                <div className="text-2xl font-bold">100K+</div>
+                <div className="text-xs sm:text-sm text-white/75">Happy Users</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-2xl flex-shrink-0">⭐</div>
+              <div>
+                <div className="text-2xl font-bold">4.8/5</div>
+                <div className="text-xs sm:text-sm text-white/75">Average Rating</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-lg animate-in fade-in slide-in-from-bottom-4 z-50">
+          {toast}
+        </div>
+      )}
+    </div>
   );
 }
+
+export { MarketingHome };
