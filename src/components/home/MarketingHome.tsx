@@ -256,7 +256,7 @@ export function MarketingHome({
           <span className="w-fit rounded-full border border-accent-link/30 bg-accent-link/10 px-3 sm:px-3.5 py-1 sm:py-1.5 text-xs font-semibold text-accent-link">
             Connect · Learn · Grow · Earn
           </span>
-          <h1 className="text-4xl sm:text-6xl font-extrabold leading-tight tracking-tight text-text-primary">
+          <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight tracking-tight text-text-primary">
             Connect with <span className="text-accent-primary">Connectiqo</span>
           </h1>
           <p className="max-w-lg text-base sm:text-lg text-text-secondary">
