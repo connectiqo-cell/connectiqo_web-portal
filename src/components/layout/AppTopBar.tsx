@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { HomeSearchBar } from "@/components/HomeSearchBar";
 import { NotificationBell } from "@/components/NotificationBell";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROUTES } from "@/lib/routes";
 
@@ -64,6 +65,9 @@ export function AppTopBar() {
             ) : null}
           </div>
           <NotificationBell />
+          <div className="hidden sm:block">
+            <ThemeToggle />
+          </div>
           <div ref={menuRef} className="relative">
             <button
               type="button"
