@@ -186,7 +186,7 @@ function TrendingCreatorsCarousel({
         </div>
 
         {/* Scroll Buttons */}
-        {canScrollLeft && (
+        {canScrollLeft && trending.length > 0 && (
           <button
             onClick={() => scroll("left")}
             className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full bg-white shadow-md p-2 hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 z-10"
@@ -234,7 +234,7 @@ export function MarketingHome({
     <main className="flex flex-1 flex-col">
       <header className="sticky top-0 z-20 border-b border-border-light bg-surface-page/95 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-4 sm:px-6 py-3 sm:py-4">
-          <Link href={ROUTES.home} className="shrink-0 text-lg sm:text-xl font-extrabold text-accent-link">
+          <Link href={ROUTES.home} className="shrink-0 text-xl sm:text-2xl font-extrabold text-accent-link">
             Connectiqo
           </Link>
           <nav className="hidden items-center gap-3 sm:gap-4 text-xs sm:text-sm font-medium text-text-secondary xl:flex">
@@ -253,6 +253,12 @@ export function MarketingHome({
               <Search size={16} />
             </Link>
             <LanguageMenu />
+            <Link
+              href={ROUTES.signup}
+              className="hidden sm:flex items-center justify-center px-4 sm:px-5 py-2 text-sm font-semibold text-white bg-accent-primary rounded-full hover:bg-accent-primary-hover transition-colors"
+            >
+              Sign Up
+            </Link>
             <AuthHeaderLinks />
             <div className="hidden sm:block">
               <ThemeToggle />
@@ -274,20 +280,6 @@ export function MarketingHome({
             real connections and grow together.
           </p>
           <HomeSearchBar />
-          <div className="flex flex-col sm:flex-row gap-3 pt-2">
-            <Link
-              href={ROUTES.signup}
-              className="flex items-center justify-center px-6 sm:px-8 py-3 bg-accent-primary text-white font-extrabold rounded-full hover:bg-accent-primary-hover transition-colors shadow-lg hover:shadow-xl"
-            >
-              Sign Up
-            </Link>
-            <Link
-              href={ROUTES.login}
-              className="flex items-center justify-center px-6 sm:px-8 py-3 bg-white/20 text-white font-extrabold rounded-full hover:bg-white/30 transition-colors border border-white/50 backdrop-blur"
-            >
-              Login
-            </Link>
-          </div>
           <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-x-6 sm:gap-y-2 pt-2 text-xs font-medium text-text-muted">
 
             <span className="flex items-center gap-1.5">
