@@ -243,7 +243,7 @@ export default function BookingsPage() {
                     <History size={15} className="text-accent-link" />
                     Session History
                   </h2>
-                  {history.length > PREVIEW_COUNT ? (
+                  {combinedHistory.length > PREVIEW_COUNT ? (
                     <button
                       type="button"
                       onClick={() => setShowAllHistory((v) => !v)}
@@ -253,7 +253,7 @@ export default function BookingsPage() {
                     </button>
                   ) : null}
                 </div>
-                {history.length === 0 ? (
+                {combinedHistory.length === 0 ? (
                   <p className="py-8 text-center text-sm text-text-muted">No past sessions yet.</p>
                 ) : (
                   <div className="flex flex-col gap-3">
