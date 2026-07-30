@@ -243,16 +243,16 @@ export default function SettingsHubPage() {
           )}
         </div>
 
-        {/* Preferences */}
+        {/* Appearance - Top Priority */}
         <div className="flex flex-col gap-3">
-          <SectionHeader title="Preferences" subtitle="Customize your app experience" />
+          <SectionHeader title="Customize your app experience" subtitle="Appearance" />
           <div className="flex flex-col gap-0 rounded-xl border border-border-light bg-surface-panel">
             {/* Appearance */}
             <div
-              className="flex items-center justify-between px-4 py-3 text-left transition-colors hover:bg-surface-chip"
+              className="flex items-center justify-between px-4 py-4 text-left transition-colors hover:bg-surface-chip"
             >
               <div className="flex items-center gap-3">
-                <Sun size={18} className="text-accent-link" />
+                <Sun size={24} className="text-yellow-400" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-text-primary">Appearance</p>
                   <p className="text-xs text-text-muted">Light · tap switch for Dark</p>
@@ -260,7 +260,13 @@ export default function SettingsHubPage() {
               </div>
               <ThemeToggle />
             </div>
-            <div className="h-px bg-border-light" />
+          </div>
+        </div>
+
+        {/* Preferences */}
+        <div className="flex flex-col gap-3">
+          <SectionHeader title="More Preferences" subtitle="Additional settings" />
+          <div className="flex flex-col gap-0 rounded-xl border border-border-light bg-surface-panel">
             <button
               type="button"
               onClick={() => {}}
@@ -289,7 +295,6 @@ export default function SettingsHubPage() {
               </div>
             </button>
           </div>
-        </div>
         </div>
 
         {/* Right sidebar */}
