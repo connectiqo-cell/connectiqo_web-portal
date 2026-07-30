@@ -15,6 +15,7 @@ export function TrendingCreators({ mentors }: TrendingCreatorsProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
 
   const checkScroll = () => {
     if (scrollContainerRef.current) {
@@ -22,6 +23,21 @@ export function TrendingCreators({ mentors }: TrendingCreatorsProps) {
       setCanScrollLeft(scrollLeft > 0);
       setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
     }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    const touchEnd = e.changedTouches[0].clientX;
+    const diff = touchStart - touchEnd;
+
+    if (Math.abs(diff) > 50) {
+      scroll(diff > 0 ? "right" : "left");
+    }
+    setTouchStart(null);
   };
 
   useEffect(() => {
@@ -71,6 +87,8 @@ export function TrendingCreators({ mentors }: TrendingCreatorsProps) {
         <div
           ref={scrollContainerRef}
           className="flex gap-4 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:thin] [scrollbar-color:var(--color-border-light)_transparent]"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
         >
           {mentors.map((mentor) => (
             <CreatorCard key={mentor.id} mentor={mentor} />
