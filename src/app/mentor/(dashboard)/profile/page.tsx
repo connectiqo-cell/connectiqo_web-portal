@@ -4,6 +4,7 @@ import { Award, Plus, Star, Users, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { RecentSessionsTable } from "@/components/mentor/RecentSessionsTable";
 import { useAuth } from "@/contexts/AuthContext";
 import { profileApi, type MentorProfileFields } from "@/lib/api/profileApi";
 import { MENTOR_CATEGORIES } from "@/lib/constants/mentorCategories";
@@ -144,6 +145,12 @@ export default function MentorProfileDashboardPage() {
         <StatTile icon={Award} label="Experience" value={`${profile?.experience_years ?? 0} yrs`} />
       </div>
 
+      {/* Recent Sessions */}
+      <div className="flex flex-col gap-3">
+        <h2 className="text-sm font-bold text-text-primary">Recent Sessions</h2>
+        {user && <RecentSessionsTable mentorId={user.id} />}
+      </div>
+
       {!pricePerHourIsSet(profile) ? (
         <p className="rounded-xl border border-accent-warning/40 bg-accent-warning/10 px-3.5 py-2.5 text-sm text-accent-warning">
           Set your hourly price below — learners can&apos;t book you until you do.
@@ -153,7 +160,10 @@ export default function MentorProfileDashboardPage() {
       {error ? <p className="text-sm text-accent-error">{error}</p> : null}
       {saved ? <p className="text-sm text-accent-success">Saved.</p> : null}
 
-      <div className="flex flex-col gap-4">
+      {/* About You Section */}
+      <div>
+        <h2 className="text-sm font-bold text-text-primary mb-4">About You</h2>
+        <div className="flex flex-col gap-4">
         <Field label="Specialization">
           <input
             value={specialization}
@@ -315,6 +325,7 @@ export default function MentorProfileDashboardPage() {
         >
           {saving ? "Saving…" : "Save profile"}
         </button>
+        </div>
       </div>
     </div>
   );
