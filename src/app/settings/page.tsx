@@ -5,7 +5,6 @@ import {
   Camera,
   CreditCard,
   Landmark,
-  Moon,
   PlayCircle,
   Share2,
   ShieldCheck,
@@ -295,6 +294,7 @@ export default function SettingsHubPage() {
               </div>
             </button>
           </div>
+        </div>
         </div>
 
         {/* Right sidebar */}
