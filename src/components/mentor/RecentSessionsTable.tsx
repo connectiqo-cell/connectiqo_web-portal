@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Play, User } from "lucide-react";
+import { User } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import type { BookingRow } from "@/lib/api/bookingApi";
@@ -34,52 +34,43 @@ export function RecentSessionsTable({ mentorId }: { mentorId: string }) {
   if (sessions.length === 0) return <p className="py-4 text-center text-sm text-text-muted">No sessions yet</p>;
 
   return (
-    <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
-      <table className="w-full text-xs sm:text-sm">
-        <thead className="hidden sm:table-header-group">
-          <tr className="border-b border-border-light">
-            <th className="px-2 sm:px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Learner</th>
-            <th className="px-2 sm:px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Date & Time</th>
-            <th className="px-2 sm:px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Duration</th>
-            <th className="px-2 sm:px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Status</th>
-            <th className="px-2 sm:px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Action</th>
+    <div className="w-full overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-border-light bg-surface-chip/50">
+            <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Learner</th>
+            <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Date & Time</th>
+            <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Duration</th>
+            <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Status</th>
+            <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Action</th>
           </tr>
         </thead>
-        <tbody className="block sm:table-row-group space-y-2 sm:space-y-0">
+        <tbody>
           {sessions.map((session) => (
-            <tr key={session.id} className="mb-2 sm:mb-0 block sm:table-row border border-border-light sm:border-0 sm:border-b rounded-lg sm:rounded-none p-4 sm:p-0 bg-surface-panel sm:bg-transparent hover:bg-surface-chip/50 transition-colors">
-              <td className="flex items-center gap-3 mb-3 sm:mb-0 py-2 sm:py-4 px-0 sm:px-3 min-w-0">
-                <div className="flex h-10 sm:h-8 w-10 sm:w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
-                  {session.learner_profile?.avatar_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={session.learner_profile.avatar_url} alt={session.learner_profile?.name || "Learner"} className="h-full w-full object-cover" />
-                  ) : (
-                    <User size={18} className="sm:size-4 text-text-muted" />
-                  )}
+            <tr key={session.id} className="border-b border-border-light hover:bg-surface-chip/30 transition-colors">
+              <td className="px-3 py-4">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
+                    {session.learner_profile?.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={session.learner_profile.avatar_url} alt={session.learner_profile?.name || "Learner"} className="h-full w-full object-cover" />
+                    ) : (
+                      <User size={16} className="text-text-muted" />
+                    )}
+                  </div>
+                  <span className="font-semibold text-text-primary">{session.learner_profile?.name || "Learner"}</span>
                 </div>
-                <span className="font-semibold text-text-primary truncate">{session.learner_profile?.name || "Learner"}</span>
               </td>
-              <td className="flex items-center justify-between mb-3 sm:mb-0 py-2 sm:py-4 px-0 sm:px-3">
-                <span className="text-xs text-text-muted sm:hidden mr-2">Date:</span>
-                <span className="text-text-secondary text-xs sm:text-sm">
-                  {formatDateTime(session.availability_slots?.date, session.availability_slots?.start_time)}
-                </span>
+              <td className="px-3 py-4 text-text-secondary">
+                {formatDateTime(session.availability_slots?.date, session.availability_slots?.start_time)}
               </td>
-              <td className="flex items-center justify-between mb-3 sm:mb-0 py-2 sm:py-4 px-0 sm:px-3">
-                <span className="text-xs text-text-muted sm:hidden mr-2">Duration:</span>
-                <span className="text-text-secondary text-xs sm:text-sm font-medium">
-                  30 min
-                </span>
-              </td>
-              <td className="flex items-center justify-between mb-3 sm:mb-0 py-2 sm:py-4 px-0 sm:px-3">
-                <span className="text-xs text-text-muted sm:hidden mr-2">Status:</span>
-                <span className={`inline-flex rounded-full px-3 py-1.5 sm:px-2.5 sm:py-1 text-xs font-semibold ${getStatusStyle(session)}`}>
+              <td className="px-3 py-4 text-text-secondary">30 min</td>
+              <td className="px-3 py-4">
+                <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusStyle(session)}`}>
                   {getStatusLabel(session)}
                 </span>
               </td>
-              <td className="flex items-center justify-center gap-2 py-2 sm:py-4 px-0 sm:px-3">
-                <span className="text-xs text-text-muted">—</span>
-              </td>
+              <td className="px-3 py-4 text-center text-text-muted">—</td>
             </tr>
           ))}
         </tbody>

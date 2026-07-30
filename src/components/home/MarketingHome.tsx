@@ -268,7 +268,21 @@ export function MarketingHome({
             real connections and grow together.
           </p>
           <HomeSearchBar />
-          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-x-6 sm:gap-y-2 pt-1 text-xs font-medium text-text-muted">
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <Link
+              href={ROUTES.signup}
+              className="flex items-center justify-center px-6 sm:px-8 py-3 bg-accent-primary text-white font-extrabold rounded-full hover:bg-accent-primary-hover transition-colors shadow-lg hover:shadow-xl"
+            >
+              Sign Up
+            </Link>
+            <Link
+              href={ROUTES.login}
+              className="flex items-center justify-center px-6 sm:px-8 py-3 bg-white/20 text-white font-extrabold rounded-full hover:bg-white/30 transition-colors border border-white/50 backdrop-blur"
+            >
+              Login
+            </Link>
+          </div>
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-x-6 sm:gap-y-2 pt-2 text-xs font-medium text-text-muted">
 
             <span className="flex items-center gap-1.5">
               <Video size={14} className="text-accent-link" /> 1-on-1 Video Calls
