@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Crown, LogOut, Settings as SettingsIcon, Shield, User, Zap } from "lucide-react";
+import { ChevronDown, LogOut, Settings as SettingsIcon, Shield, User, Zap } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -15,7 +15,6 @@ export function AppTopBar() {
   const router = useRouter();
   const { profile, signOut } = useAuth();
   const [open, setOpen] = useState(false);
-  const [premiumNotice, setPremiumNotice] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -45,25 +44,6 @@ export function AppTopBar() {
           <HomeSearchBar placeholder="Search by name, @username or skill" compact />
         </div>
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
-          <div className="relative hidden sm:block">
-            <button
-              type="button"
-              onClick={() => {
-                setPremiumNotice(true);
-                setTimeout(() => setPremiumNotice(false), 2000);
-              }}
-              className="flex items-center gap-1.5 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-text-on-accent"
-              style={{ backgroundImage: "var(--gradient-button-primary)" }}
-            >
-              <Crown size={12} className="sm:size-3.5" />
-              <span className="hidden sm:inline">Upgrade</span>
-            </button>
-            {premiumNotice ? (
-              <div className="absolute right-0 top-12 w-44 rounded-xl border border-border-light bg-surface-panel px-3 py-2 text-xs text-text-secondary shadow-lg">
-                Premium plans are coming soon.
-              </div>
-            ) : null}
-          </div>
           <NotificationBell />
           <div className="hidden sm:block">
             <ThemeToggle />
