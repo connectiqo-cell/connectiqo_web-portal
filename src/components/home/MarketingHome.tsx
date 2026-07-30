@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from "react";
 
 import { AuthHeaderLinks } from "@/components/AuthHeaderLinks";
 import { HomeSearchBar } from "@/components/HomeSearchBar";
-import { LanguageMenu } from "@/components/LanguageMenu";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { MentorCard } from "@/components/mentor/MentorCard";
 import type { MentorProfileRow, PlatformStats } from "@/lib/api/mentorApi";
@@ -246,7 +245,6 @@ export function MarketingHome({
             >
               <Search size={16} />
             </Link>
-            <LanguageMenu />
             <AuthHeaderLinks />
             <div className="hidden sm:block">
               <ThemeToggle />
