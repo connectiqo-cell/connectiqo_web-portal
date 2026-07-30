@@ -85,13 +85,25 @@ export function CallShell({
 
   if (permission === "denied") {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
+      <div className="flex flex-1 flex-col items-center justify-center gap-6 px-6 text-center">
         <AlertTriangle size={32} className="text-accent-error" />
-        <h1 className="text-lg font-bold text-text-primary">Camera/mic access blocked</h1>
-        <p className="text-sm text-text-secondary">
-          Click the lock icon in your browser&apos;s address bar, allow Camera and Microphone for
-          this site, then reload the page.
-        </p>
+        <div>
+          <h1 className="text-lg font-bold text-text-primary mb-2">Camera/mic access blocked</h1>
+          <div className="text-sm text-text-secondary space-y-3">
+            <p>
+              <strong>Click the lock icon</strong> 🔒 in your browser&apos;s address bar (next to the URL)
+            </p>
+            <p>
+              <strong>Select &quot;Allow&quot;</strong> for both Camera and Microphone in the permission dialog
+            </p>
+            <p>
+              <strong>Reload the page</strong> to start your session
+            </p>
+            <p className="pt-2 text-xs opacity-75">
+              Or go to browser settings → Privacy and security → Site settings → Camera/Microphone and allow this site
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
