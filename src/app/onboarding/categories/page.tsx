@@ -51,7 +51,7 @@ export default function CategoriesOnboardingPage() {
         userId: user.id,
         category: selected[0],
       });
-      router.push(ROUTES.interestsOnboarding);
+      router.push(ROUTES.home);
     } catch (err) {
       console.error("Error saving categories:", err);
     } finally {
@@ -149,7 +149,7 @@ export default function CategoriesOnboardingPage() {
         {/* Actions */}
         <div className="flex gap-4">
           <button
-            onClick={() => router.push(ROUTES.mentorProfileDashboard)}
+            onClick={() => router.push(ROUTES.home)}
             className="px-6 py-3 text-text-secondary font-semibold rounded-full border border-border-light hover:bg-surface-chip transition-colors"
           >
             Skip for now
