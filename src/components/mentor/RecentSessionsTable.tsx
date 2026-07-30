@@ -7,11 +7,6 @@ import type { BookingRow } from "@/lib/api/bookingApi";
 import { bookingApi } from "@/lib/api/bookingApi";
 import { isBookingSessionPast } from "@/lib/utils/bookingSession";
 
-const STATUS_STYLES: Record<string, string> = {
-  Completed: "bg-accent-success/15 text-accent-success",
-  Expired: "bg-text-disabled/20 text-text-muted",
-};
-
 export function RecentSessionsTable({ mentorId }: { mentorId: string }) {
   const [sessions, setSessions] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,15 +103,6 @@ function formatDateTime(date?: string, time?: string) {
   const period = h >= 12 ? "PM" : "AM";
   const hour12 = h % 12 === 0 ? 12 : h % 12;
   return `${label}, ${hour12}:${String(min).padStart(2, "0")} ${period}`;
-}
-
-function getStatusLabel(session: BookingRow): string {
-  if (isBookingSessionPast(session)) return "Completed";
-  return "Completed";
-}
-
-function getStatusStyle(session: BookingRow): string {
-  return STATUS_STYLES[getStatusLabel(session)] || "bg-surface-chip text-text-secondary";
 }
 
 function getStatusLabel(session: BookingRow): string {
