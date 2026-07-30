@@ -104,7 +104,7 @@ export function CategoryCarousel({
                 className="group flex w-56 shrink-0 flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4 transition-all hover:border-border-default hover:shadow-lg"
               >
                 {/* Avatar */}
-                <div className="flex h-32 w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-surface-chip to-surface-panel">
+                <div className="flex h-32 w-full items-center justify-center overflow-hidden rounded-xl bg-linear-to-br from-surface-chip to-surface-panel">
                   {avatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -149,7 +149,7 @@ export function CategoryCarousel({
                         e.preventDefault();
                         e.stopPropagation();
                       }}
-                      className="flex-shrink-0 rounded-lg bg-accent-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-primary-hover transition-colors whitespace-nowrap"
+                      className="shrink-0 rounded-lg bg-accent-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-primary-hover transition-colors whitespace-nowrap"
                     >
                       Book Now
                     </button>
@@ -160,26 +160,6 @@ export function CategoryCarousel({
           })}
         </div>
 
-        {/* Scroll Buttons */}
-        {canScrollLeft && (
-          <button
-            onClick={() => scroll("left")}
-            className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full bg-white shadow-md p-2 hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 z-10"
-            aria-label="Scroll left"
-          >
-            <ChevronRight size={18} className="rotate-180 text-text-primary" />
-          </button>
-        )}
-
-        {canScrollRight && (
-          <button
-            onClick={() => scroll("right")}
-            className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-white shadow-md p-2 hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 z-10"
-            aria-label="Scroll right"
-          >
-            <ChevronRight size={18} className="text-text-primary" />
-          </button>
-        )}
       </div>
     </section>
   );
