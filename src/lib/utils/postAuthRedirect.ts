@@ -6,7 +6,7 @@ import { ROUTES } from "@/lib/routes";
 
 /**
  * Mirrors RootNavigator.js's checkInterestsOnboarding gate: send the user to
- * interest selection if they haven't picked >= MIN_LEARNER_INTERESTS yet,
+ * video welcome page if they haven't picked >= MIN_LEARNER_INTERESTS yet,
  * otherwise straight into the app.
  */
 export async function resolvePostLoginRoute(
@@ -20,7 +20,7 @@ export async function resolvePostLoginRoute(
     ]);
     const known = categoryNames.length ? categoryNames : [...MENTOR_CATEGORIES];
     if (needsCategoryInterestOnboarding(learner?.interests, known)) {
-      return ROUTES.interestsOnboarding;
+      return "/onboarding";
     }
     return fallback;
   } catch {
