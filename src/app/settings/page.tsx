@@ -263,64 +263,42 @@ export default function SettingsHubPage() {
           </div>
         </div>
 
-        {/* Preferences - Enhanced Layout */}
-        <div className="flex flex-col gap-4">
-          <SectionHeader title="Preferences" subtitle="Theme, notifications, and bookings" />
-
-          {/* Appearance Card */}
-          <div className="flex items-center justify-between rounded-2xl border border-border-light bg-surface-panel p-4 hover:border-border-default transition-colors">
-            <div className="flex items-center gap-4">
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-blue-100 dark:bg-blue-900/30">
-                <Sun size={28} className="text-blue-600 dark:text-blue-400" />
+        {/* Preferences */}
+        <div className="flex flex-col gap-3">
+          <SectionHeader title="Preferences" subtitle="Customize your app experience" />
+          <div className="flex flex-col gap-0 rounded-xl border border-border-light bg-surface-panel">
+            {/* Notification Settings */}
+            <button
+              type="button"
+              onClick={() => {}}
+              className="flex items-center justify-between px-4 py-4 text-left transition-colors hover:bg-surface-chip"
+            >
+              <div className="flex items-center gap-3">
+                <Bell size={20} className="text-accent-link shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-text-primary">Notification Settings</p>
+                  <p className="text-xs text-text-muted">Manage push and email notifications</p>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-base font-bold text-text-primary">Appearance</p>
-                <p className="text-sm text-text-muted">Light · tap switch for Dark</p>
+              <ChevronRight size={18} className="text-text-muted shrink-0" />
+            </button>
+            <div className="h-px bg-border-light" />
+            {/* Privacy Settings */}
+            <button
+              type="button"
+              onClick={() => {}}
+              className="flex items-center justify-between px-4 py-4 text-left transition-colors hover:bg-surface-chip"
+            >
+              <div className="flex items-center gap-3">
+                <ShieldCheck size={20} className="text-accent-link shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-text-primary">Privacy Settings</p>
+                  <p className="text-xs text-text-muted">Manage your privacy and visibility</p>
+                </div>
               </div>
-            </div>
-            <ThemeToggle />
+              <ChevronRight size={18} className="text-text-muted shrink-0" />
+            </button>
           </div>
-
-          {/* Notifications Card */}
-          <button
-            type="button"
-            onClick={() => {}}
-            className="flex items-center justify-between rounded-2xl border border-border-light bg-surface-panel p-4 hover:border-border-default transition-colors"
-          >
-            <div className="flex items-center gap-4">
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-purple-100 dark:bg-purple-900/30">
-                <Bell size={28} className="text-purple-600 dark:text-purple-400" />
-              </div>
-              <div className="flex-1 min-w-0 text-left">
-                <p className="text-base font-bold text-text-primary">Notifications</p>
-                <p className="text-sm text-text-muted">Session updates, bookings, and reminders</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-accent-primary text-white text-xs font-bold">
-                10
-              </span>
-              <ChevronRight size={20} className="text-text-muted shrink-0" />
-            </div>
-          </button>
-
-          {/* My Bookings Card */}
-          <button
-            type="button"
-            onClick={() => {}}
-            className="flex items-center justify-between rounded-2xl border border-border-light bg-surface-panel p-4 hover:border-border-default transition-colors"
-          >
-            <div className="flex items-center gap-4">
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-yellow-100 dark:bg-yellow-900/30">
-                <PlayCircle size={28} className="text-yellow-600 dark:text-yellow-400" />
-              </div>
-              <div className="flex-1 min-w-0 text-left">
-                <p className="text-base font-bold text-text-primary">My Bookings</p>
-                <p className="text-sm text-text-muted">Upcoming and past sessions</p>
-              </div>
-            </div>
-            <ChevronRight size={20} className="text-text-muted shrink-0" />
-          </button>
         </div>
         </div>
 
