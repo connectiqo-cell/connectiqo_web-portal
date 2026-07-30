@@ -1,7 +1,5 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
-
 import { useTheme } from "@/contexts/ThemeContext";
 
 export function ThemeToggle() {
@@ -12,19 +10,16 @@ export function ThemeToggle() {
       type="button"
       onClick={toggleTheme}
       suppressHydrationWarning
-      className="flex items-center gap-2 rounded-full border border-border-light bg-surface-chip px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:border-border-accent hover:text-text-primary"
+      className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+        mode === "dark" ? "bg-accent-primary" : "bg-gray-300 dark:bg-gray-600"
+      }`}
+      aria-label={`Switch to ${mode === "dark" ? "light" : "dark"} mode`}
     >
-      {mode === "dark" ? (
-        <>
-          <Sun size={16} />
-          Switch to light
-        </>
-      ) : (
-        <>
-          <Moon size={16} />
-          Switch to dark
-        </>
-      )}
+      <span
+        className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-lg transition-transform ${
+          mode === "dark" ? "translate-x-7" : "translate-x-1"
+        }`}
+      />
     </button>
   );
 }
