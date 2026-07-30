@@ -41,6 +41,7 @@ function TrendingCreatorsCarousel({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
 
   const checkScroll = () => {
     if (scrollContainerRef.current) {
@@ -48,6 +49,21 @@ function TrendingCreatorsCarousel({
       setCanScrollLeft(scrollLeft > 0);
       setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
     }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    const touchEnd = e.changedTouches[0].clientX;
+    const diff = touchStart - touchEnd;
+
+    if (Math.abs(diff) > 50) {
+      scroll(diff > 0 ? "right" : "left");
+    }
+    setTouchStart(null);
   };
 
   useEffect(() => {
@@ -93,6 +109,8 @@ function TrendingCreatorsCarousel({
         <div
           ref={scrollContainerRef}
           className="flex gap-3 overflow-x-auto scroll-smooth pb-2 [-webkit-scrollbar:none] scrollbar-none"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
         >
           {trending.map((mentor) => {
             const name = mentor.profiles?.name || "Mentor";
@@ -158,6 +176,7 @@ function TrendingCreatorsCarousel({
                       }}
                       className="shrink-0 rounded-md bg-accent-primary px-4 py-2 text-sm font-semibold text-white hover:bg-accent-primary-hover transition-colors whitespace-nowrap"
                     >
+                      
                       Book Now
                     </button>
                   </div>
