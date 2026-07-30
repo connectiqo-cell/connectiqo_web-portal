@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Play } from "lucide-react";
+import { User } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import type { BookingRow } from "@/lib/api/bookingApi";
@@ -34,44 +34,27 @@ export function RecentSessionsTable({ mentorId }: { mentorId: string }) {
   if (sessions.length === 0) return <p className="py-4 text-center text-sm text-text-muted">No sessions yet</p>;
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-border-light">
-            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Name</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Date & Time</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Duration</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Status</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sessions.map((session) => (
-            <tr key={session.id} className="border-b border-border-light hover:bg-surface-chip/50">
-              <td className="px-4 py-3 text-text-primary font-semibold">{session.learner_profile?.name || "Learner"}</td>
-              <td className="px-4 py-3 text-text-secondary">{formatDateTime(session.availability_slots?.date, session.availability_slots?.start_time)}</td>
-              <td className="px-4 py-3 text-text-secondary">{session.duration_minutes || "—"} min</td>
-              <td className="px-4 py-3">
-                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusStyle(session)}`}>
-                  {getStatusLabel(session)}
-                </span>
-              </td>
-              <td className="px-4 py-3 text-accent-link">
-                {session.recording_url && (
-                  <div className="flex gap-2">
-                    <a href={session.recording_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:underline">
-                      <Play size={14} />
-                    </a>
-                    <a href={session.recording_url} download className="inline-flex items-center gap-1 hover:underline">
-                      <Download size={14} />
-                    </a>
-                  </div>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="flex flex-col gap-3">
+      {sessions.map((session) => (
+        <div key={session.id} className="flex items-center gap-3 border-b border-border-light pb-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
+            {session.learner_profile?.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={session.learner_profile.avatar_url} alt={session.learner_profile.name} className="h-full w-full object-cover" />
+            ) : (
+              <User size={18} className="text-text-muted" />
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-text-primary truncate">{session.learner_profile?.name || "Learner"}</p>
+            <p className="text-xs text-text-muted">{formatDateTime(session.availability_slots?.date, session.availability_slots?.start_time)}</p>
+          </div>
+          <div className="text-right shrink-0">
+            <p className="text-sm font-semibold text-text-primary">{session.duration_minutes || "—"}</p>
+            <p className="text-xs text-text-muted">min</p>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
