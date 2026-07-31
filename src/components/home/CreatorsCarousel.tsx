@@ -29,10 +29,10 @@ export function CreatorsCarousel({ mentors }: CreatorsCarouselProps) {
           <Link
             key={mentor.id}
             href={ROUTES.mentorProfile(mentor.id)}
-            className="flex shrink-0 w-64 flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4 transition-all hover:shadow-lg"
+            className="flex shrink-0 w-64 flex-col gap-2 rounded-2xl border border-border-light bg-surface-panel p-3 transition-all hover:shadow-lg"
           >
             {/* Avatar/Image */}
-            <div className="flex h-40 w-full items-center justify-center overflow-hidden rounded-xl bg-surface-chip">
+            <div className="flex h-32 w-full items-center justify-center overflow-hidden rounded-xl bg-surface-chip">
               {mentor.profiles?.avatar_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img

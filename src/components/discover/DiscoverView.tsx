@@ -61,11 +61,11 @@ export function DiscoverView({
   const isSearching = query.trim().length > 0;
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <SearchInput value={query} onChange={handleQueryChange} />
 
       {isSearching ? (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
           <h2 className="text-sm font-semibold text-text-muted">
             {searching ? "Searching…" : `${results?.length ?? 0} mentors found`}
           </h2>
