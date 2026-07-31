@@ -88,7 +88,7 @@ export function DashboardSidebar() {
 
           {BOTTOM_ITEMS.map((item) => {
             const Icon = item.icon;
-            const active = pathname.startsWith(item.prefix);
+            const active = pathname === item.href || pathname.startsWith(item.prefix + "/");
             return (
               <Link
                 key={item.label}
