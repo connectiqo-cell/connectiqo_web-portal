@@ -27,7 +27,7 @@ const NAV_ITEMS = [
   { href: ROUTES.videos, label: "Videos", icon: PlayCircle },
   { href: ROUTES.bookings, label: "Bookings", icon: Calendar },
   { href: null, label: "Messages", icon: MessageSquare },
-  { href: ROUTES.bookings, label: "My Sessions", icon: VideoIcon },
+  { href: ROUTES.mentorSessions, label: "My Sessions", icon: VideoIcon },
   { href: ROUTES.wallet, label: "Wallet", icon: WalletIcon },
 ] as const;
 
