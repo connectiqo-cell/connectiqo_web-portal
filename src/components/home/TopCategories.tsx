@@ -33,7 +33,13 @@ const categories: Category[] = [
   { label: "Spirituality & Astrology", icon: Sparkles, color: "text-amber-500" },
 ];
 
-export function TopCategories() {
+export function TopCategories({
+  selectedCategory,
+  onSelectCategory,
+}: {
+  selectedCategory: string | null;
+  onSelectCategory: (category: string) => void;
+}) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -95,17 +101,25 @@ export function TopCategories() {
           ref={scrollRef}
           className="flex flex-1 gap-2 overflow-x-auto scroll-smooth px-1 scrollbar-none [&::-webkit-scrollbar]:hidden"
         >
-          {categories.map(({ label, icon: Icon, color }) => (
-            <button
-              key={label}
-              className="flex shrink-0 w-18 flex-col items-center justify-center gap-0.5 rounded-md border border-gray-200 bg-white px-1 py-1.5 text-center transition hover:shadow-sm"
-            >
-              <Icon className={`w-3.5 h-3.5 ${color}`} strokeWidth={1.75} />
-              <span className="text-[9px] font-medium leading-tight text-gray-700">
-                {label}
-              </span>
-            </button>
-          ))}
+          {categories.map(({ label, icon: Icon, color }) => {
+            const isSelected = selectedCategory === label;
+            return (
+              <button
+                key={label}
+                onClick={() => onSelectCategory(isSelected ? "" : label)}
+                className={`flex shrink-0 w-18 flex-col items-center justify-center gap-0.5 rounded-md border transition hover:shadow-sm px-1 py-1.5 text-center ${
+                  isSelected
+                    ? "border-indigo-600 bg-indigo-50"
+                    : "border-gray-200 bg-white"
+                }`}
+              >
+                <Icon className={`w-3.5 h-3.5 ${color}`} strokeWidth={1.75} />
+                <span className={`text-[9px] font-medium leading-tight ${isSelected ? "text-indigo-600" : "text-gray-700"}`}>
+                  {label}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         <button
