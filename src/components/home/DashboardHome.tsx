@@ -1,20 +1,14 @@
 "use client";
 
-import { Calendar, ChevronRight, Mic, PlayCircle, ShieldCheck, Sparkles, Star, Users, Video } from "lucide-react";
+import { Calendar, ChevronRight, Mic, PlayCircle, ShieldCheck, Star, Users, Video } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import { MentorCard } from "@/components/mentor/MentorCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { type BookingRow, bookingApi } from "@/lib/api/bookingApi";
 import { type MentorProfileRow, type PlatformStats, mentorApi } from "@/lib/api/mentorApi";
-import { profileApi } from "@/lib/api/profileApi";
-import { MENTOR_CATEGORIES } from "@/lib/constants/mentorCategories";
 import { ROUTES } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/client";
-import { getCategoryIcon } from "@/lib/utils/categoryIcons";
-
-const TOP_CATEGORIES = MENTOR_CATEGORIES.slice(0, 8);
 
 function formatCount(n: number): string {
   if (n >= 1000) return `${Math.floor(n / 100) / 10}K+`;
@@ -46,7 +40,11 @@ export function DashboardHome({
 }) {
   const { user } = useAuth();
   const [upcoming, setUpcoming] = useState<BookingRow[]>([]);
-  const [recommended, setRecommended] = useState<MentorProfileRow[]>([]);
+  const [popularCreators, setPopularCreators] = useState<MentorProfileRow[]>([]);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
 
   useEffect(() => {
     if (!user) return;
@@ -61,33 +59,64 @@ export function DashboardHome({
   }, [user]);
 
   useEffect(() => {
-    if (!user) return;
     let cancelled = false;
     (async () => {
-      const learnerProfile = await profileApi.getLearnerProfile(user.id).catch(() => null);
-      const interests = learnerProfile?.interests || [];
-      if (!interests.length || cancelled) return;
       const supabase = createClient();
-      const rows = await mentorApi.getRecommendedMentors(supabase, interests, 0, 8).catch(() => []);
-      if (!cancelled) setRecommended(rows);
+      const rows = await mentorApi.getTrendingMentors(supabase, 4).catch(() => []);
+      if (!cancelled) setPopularCreators(rows);
     })();
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, []);
+
+  const checkScroll = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  useEffect(() => {
+    checkScroll();
+    const container = scrollContainerRef.current;
+    container?.addEventListener("scroll", checkScroll);
+    window.addEventListener("resize", checkScroll);
+
+    return () => {
+      container?.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, [popularCreators]);
+
+  const scroll = (direction: "left" | "right") => {
+    if (scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      const firstCard = container.querySelector('[data-card]') as HTMLElement;
+      if (firstCard) {
+        const cardWidth = firstCard.offsetWidth;
+        const gap = 16;
+        const scrollAmount = cardWidth + gap;
+        container.scrollBy({
+          left: direction === "left" ? -scrollAmount : scrollAmount,
+          behavior: "smooth",
+        });
+      }
+    }
+  };
 
   const spotlightMentor = trending[0];
-  const popularCreators = trending.slice(0, 8);
 
   return (
     <>
       <main className="flex flex-1 flex-col">
-        <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-6 py-8 xl:flex-row xl:items-start">
-          <div className="flex flex-1 flex-col gap-8">
+        <div className="flex w-full flex-1 flex-col gap-6 px-6 py-6 xl:flex-row xl:items-start xl:gap-6">
+          <div className="flex flex-1 flex-col gap-6">
             {spotlightMentor ? (
               <Link
                 href={ROUTES.mentorProfile(spotlightMentor.id)}
-                className="relative flex min-h-[220px] flex-col justify-center gap-3 overflow-hidden rounded-2xl px-8 py-10 text-white"
+                className="relative flex min-h-[180px] flex-col justify-center gap-3 overflow-hidden rounded-2xl px-8 py-8 text-white"
                 style={{ backgroundImage: "var(--gradient-button-primary)" }}
               >
                 <span className="w-fit rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">
@@ -110,74 +139,117 @@ export function DashboardHome({
               </Link>
             ) : null}
 
-            <section>
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-lg font-extrabold text-text-primary">Top Categories</h3>
-                <Link href={ROUTES.discover} className="text-sm font-semibold text-accent-link">
-                  View all
+<section className="w-full">
+              <div className="mb-6 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-gray-900">Popular Creators</h3>
+                <Link href={ROUTES.discover} className="flex items-center gap-1 text-sm font-semibold text-accent-link">
+                  View all <ChevronRight size={16} />
                 </Link>
               </div>
-              <div className="flex flex-wrap gap-3">
-                {TOP_CATEGORIES.map((category) => {
-                  const Icon = getCategoryIcon(category);
-                  return (
+              <div className="relative">
+                <div
+                  ref={scrollContainerRef}
+                  className="flex gap-4 overflow-x-auto scroll-smooth pb-2 scrollbar-none"
+                  onTouchStart={(e) => {
+                    const touch = e.touches[0].clientX;
+                    scrollContainerRef.current?.setAttribute('data-touch-start', String(touch));
+                  }}
+                  onTouchEnd={(e) => {
+                    const start = Number(scrollContainerRef.current?.getAttribute('data-touch-start') || 0);
+                    const end = e.changedTouches[0].clientX;
+                    const diff = start - end;
+                    if (Math.abs(diff) > 50) {
+                      scroll(diff > 0 ? "right" : "left");
+                    }
+                  }}
+                >
+                  {popularCreators.map((creator) => (
                     <Link
-                      key={category}
-                      href={ROUTES.category(category)}
-                      className="flex items-center gap-2 rounded-xl border border-border-light bg-surface-panel px-4 py-3 text-sm font-semibold text-text-secondary transition-colors hover:border-accent-link/40 hover:text-text-primary"
+                      key={creator.id}
+                      href={ROUTES.mentorProfile(creator.id)}
+                      data-card
+                      className="group flex w-44 sm:w-56 shrink-0 flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-3 sm:p-4 transition-all hover:border-border-default hover:shadow-lg"
                     >
-                      <Icon size={16} className="text-accent-link" />
-                      {category}
+                      <div className="flex h-24 sm:h-32 w-full items-center justify-center overflow-hidden rounded-xl bg-linear-to-br from-surface-chip to-surface-panel">
+                        {creator.profiles?.avatar_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={creator.profiles.avatar_url}
+                            alt={creator.profiles?.name || ""}
+                            className="h-full w-full object-cover group-hover:scale-105 transition-transform"
+                          />
+                        ) : (
+                          <Users size={20} className="sm:size-8 text-text-muted" />
+                        )}
+                      </div>
+
+                      <div className="flex flex-1 flex-col gap-2">
+                        <div>
+                          <p className="truncate text-xs sm:text-sm font-bold text-text-primary">{creator.profiles?.name}</p>
+                          <p className="truncate text-xs text-text-muted">
+                            {creator.specialization || "Mentor"}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-0.5">
+                          <Star size={12} className="sm:size-3.5 fill-accent-secondary text-accent-secondary" />
+                          <span className="text-xs font-semibold text-text-primary">
+                            {creator.rating?.toFixed(1) || "0"}
+                          </span>
+                          <span className="text-xs text-text-muted">
+                            ({((creator.total_sessions || 0) / 1000).toFixed(1)}k)
+                          </span>
+                        </div>
+
+                        <div className="mt-auto flex items-center justify-between gap-2">
+                          {creator.price_per_hour && (
+                            <span className="text-xs sm:text-sm font-bold text-accent-secondary">
+                              ₹{creator.price_per_hour}
+                            </span>
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                            }}
+                            className="shrink-0 rounded-lg bg-accent-primary px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-semibold text-white hover:bg-accent-primary-hover transition-colors whitespace-nowrap"
+                          >
+                            Book
+                          </button>
+                        </div>
+                      </div>
                     </Link>
-                  );
-                })}
+                  ))}
+                </div>
+        {canScrollLeft && (
+          <button
+            onClick={() => scroll("left")}
+            className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full bg-white shadow-md p-2 hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 z-10"
+            aria-label="Scroll left"
+          >
+            <ChevronRight size={18} className="rotate-180 text-text-primary" />
+          </button>
+        )}
+
+        {canScrollRight && (
+          <button
+            onClick={() => scroll("right")}
+            className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-white shadow-md p-2 hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 z-10"
+            aria-label="Scroll right"
+          >
+            <ChevronRight size={18} className="text-text-primary" />
+          </button>
+        )}
+        <Link
+          href={ROUTES.discover}
+          className="absolute right-12 top-1/2 -translate-y-1/2 flex items-center justify-center h-10 w-10 rounded-full bg-accent-primary hover:bg-accent-primary-hover transition-colors z-10"
+        >
+          <ChevronRight size={18} className="text-white" />
+        </Link>
               </div>
             </section>
 
-            {popularCreators.length > 0 ? (
-              <section>
-                <div className="mb-3 flex items-center justify-between">
-                  <h3 className="text-lg font-extrabold text-text-primary">Popular Creators</h3>
-                  <Link
-                    href={ROUTES.discover}
-                    className="flex items-center gap-0.5 text-sm font-semibold text-accent-link"
-                  >
-                    View all
-                    <ChevronRight size={16} />
-                  </Link>
-                </div>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                  {popularCreators.map((mentor) => (
-                    <MentorCard key={mentor.id} mentor={mentor} />
-                  ))}
-                </div>
-              </section>
-            ) : null}
-
-            {recommended.length > 0 ? (
-              <section>
-                <div className="mb-3 flex items-center justify-between">
-                  <h3 className="flex items-center gap-1.5 text-lg font-extrabold text-text-primary">
-                    <Sparkles size={17} className="text-accent-secondary" />
-                    Recommended For You
-                  </h3>
-                  <Link
-                    href={ROUTES.recommended}
-                    className="flex items-center gap-0.5 text-sm font-semibold text-accent-link"
-                  >
-                    View all
-                    <ChevronRight size={16} />
-                  </Link>
-                </div>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                  {recommended.map((mentor) => (
-                    <MentorCard key={mentor.id} mentor={mentor} />
-                  ))}
-                </div>
-              </section>
-            ) : null}
           </div>
-
           <aside className="flex w-full flex-col gap-4 xl:w-72 xl:shrink-0">
             <div className="rounded-2xl border border-border-light bg-surface-panel p-4">
               <div className="mb-3 flex items-center gap-3">

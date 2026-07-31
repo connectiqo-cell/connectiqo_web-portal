@@ -18,11 +18,13 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
   const pathname = usePathname();
   const { user, profile, loading } = useAuth();
 
+
   useEffect(() => {
     if (loading) return;
     if (!user) {
       router.replace(`${ROUTES.login}?next=${encodeURIComponent(pathname)}`);
       return;
+      
     }
     if (profile && !profile.is_admin) {
       router.replace(ROUTES.home);

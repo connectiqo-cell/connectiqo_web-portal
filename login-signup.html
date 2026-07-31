@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connectiqo — Connect with Connectiqo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#0e0a2e;
+    --bg-deep-2:#150e3d;
+    --accent-1:#7c5cff;
+    --accent-2:#c084fc;
+    --accent-grad: linear-gradient(135deg,#8b5cf6,#6d28d9);
+    --white:#ffffff;
+    --ink:#1a1530;
+    --muted:#6b6480;
+    --field-border:#e6e2f2;
+    --card-shadow: 0 30px 60px -20px rgba(30,10,80,.35);
+    --footer-bg:#f6f4fc;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    background:var(--bg-deep);
+  }
+  h1,h2,h3,.brand,.field label,.btn-primary{font-family:'Plus Jakarta Sans',sans-serif;}
+
+  .hero{
+    position:relative;
+    display:grid;
+    grid-template-columns: 1.15fr 1fr;
+    align-items:stretch;
+    background:
+      radial-gradient(1200px 600px at 30% -10%, rgba(124,92,255,.35), transparent 60%),
+      radial-gradient(800px 500px at 80% 10%, rgba(192,132,252,.18), transparent 55%),
+      linear-gradient(160deg,var(--bg-deep-2), var(--bg-deep) 70%);
+    overflow:hidden;
+    min-height: 100vh;
+  }
+
+  /* subtle swirl accent line */
+  .hero::before{
+    content:"";
+    position:absolute;
+    top:-120px; left:28%;
+    width:520px; height:520px;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:50%;
+    pointer-events:none;
+  }
+
+  .left-panel{
+    position:relative;
+    padding: 56px 40px 56px 64px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    color:var(--white);
+    z-index:2;
+  }
+
+  .brand{
+    position:absolute;
+    top:40px; left:64px;
+    font-size:26px;
+    font-weight:800;
+    letter-spacing:-0.02em;
+  }
+  .brand span{
+    background:linear-gradient(90deg,#a78bfa,#e9d5ff);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+
+  .content{
+    max-width:520px;
+  }
+
+  .headline{
+    font-size:52px;
+    line-height:1.06;
+    font-weight:800;
+    letter-spacing:-0.02em;
+    margin:0 0 22px;
+  }
+  .headline .grad{
+    background:linear-gradient(90deg,#c4b5fd,#8b5cf6 60%,#7c3aed);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    display:block;
+  }
+
+  .sub{
+    font-size:16px;
+    line-height:1.6;
+    color:rgba(255,255,255,.65);
+    margin:0 0 34px;
+    max-width:430px;
+  }
+
+  .divider{
+    width:90px; height:3px;
+    border-radius:3px;
+    background:linear-gradient(90deg,#a78bfa,transparent);
+    margin-bottom:34px;
+    position:relative;
+  }
+  .divider::after{
+    content:"";
+    position:absolute; left:0; top:50%;
+    width:6px;height:6px;border-radius:50%;
+    background:#c4b5fd;
+    transform:translateY(-50%);
+  }
+
+  .features{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    margin-bottom:38px;
+  }
+  .feature{
+    display:flex;
+    align-items:flex-start;
+    gap:14px;
+  }
+  .feature .icon{
+    flex:0 0 44px;
+    width:44px; height:44px;
+    border-radius:12px;
+    background:linear-gradient(135deg, rgba(139,92,246,.35), rgba(124,58,237,.15));
+    border:1px solid rgba(167,139,250,.35);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .feature .icon svg{width:20px;height:20px;stroke:#c4b5fd;}
+  .feature h3{
+    margin:0 0 2px;
+    font-size:15.5px;
+    font-weight:700;
+  }
+  .feature p{
+    margin:0;
+    font-size:13.5px;
+    color:rgba(255,255,255,.55);
+  }
+
+  .social-proof{
+    display:inline-flex;
+    align-items:center;
+    gap:16px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.12);
+    padding:14px 20px;
+    border-radius:16px;
+    width:fit-content;
+    backdrop-filter: blur(6px);
+  }
+  .avatars{
+    display:flex;
+  }
+  .avatars img{
+    width:38px;height:38px;border-radius:50%;
+    object-fit:cover;
+    border:2px solid var(--bg-deep-2);
+    margin-left:-10px;
+  }
+  .avatars img:first-child{margin-left:0;}
+  .avatars .plus{
+    width:38px;height:38px;border-radius:50%;
+    background:#7c5cff;
+    color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px; font-weight:700;
+    margin-left:-10px;
+    border:2px solid var(--bg-deep-2);
+  }
+  .proof-text{font-size:13px;}
+  .proof-text strong{display:block;font-size:14px;font-weight:700;margin-bottom:3px;}
+  .stars{color:#fbbf24; font-size:12.5px; letter-spacing:1px;}
+  .stars .rating{color:rgba(255,255,255,.6); margin-left:6px; font-weight:600;}
+
+  /* right visual card (phone mock) */
+  .visual{
+    position:relative;
+    z-index:2;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .phone{
+    width:300px;
+    height:460px;
+    border-radius:34px;
+    background:
+      radial-gradient(circle at 30% 20%, rgba(196,181,253,.25), transparent 55%),
+      linear-gradient(160deg,#3b2a7a,#1c1240 70%);
+    box-shadow: 0 40px 80px -20px rgba(76,29,149,.6), inset 0 0 0 1px rgba(255,255,255,.08);
+    position:relative;
+    overflow:hidden;
+  }
+  .phone img.main{
+    width:100%;height:100%;object-fit:cover;
+    mix-blend-mode:normal;
+  }
+  .caller-tile{
+    position:absolute; top:16px; left:16px;
+    width:80px; height:64px;
+    border-radius:12px;
+    overflow:hidden;
+    border:2px solid rgba(255,255,255,.5);
+    box-shadow:0 8px 18px rgba(0,0,0,.35);
+  }
+  .caller-tile img{width:100%;height:100%;object-fit:cover;}
+  .call-controls{
+    position:absolute; bottom:18px; left:50%;
+    transform:translateX(-50%);
+    display:flex; gap:14px;
+  }
+  .call-controls .ctrl{
+    width:42px;height:42px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.15);
+    backdrop-filter: blur(4px);
+  }
+  .call-controls .end{background:#ef4444;}
+  .call-controls svg{width:18px;height:18px;stroke:#fff;fill:none;}
+  .call-controls .end svg{fill:#fff; stroke:none; transform: rotate(135deg);}
+
+  .sparkle{
+    position:absolute;
+    color:#c4b5fd;
+    font-size:18px;
+    opacity:.8;
+  }
+
+  /* Sign up card */
+  .auth-wrap{
+    position:relative;
+    z-index:3;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 40px 56px;
+  }
+  .auth-card{
+    width:100%;
+    max-width:520px;
+    background:var(--white);
+    border-radius:24px;
+    box-shadow: var(--card-shadow);
+    padding:40px 44px 34px;
+  }
+  .tabs{
+    display:flex;
+    border-bottom:1px solid #efedf6;
+    margin-bottom:26px;
+  }
+  .tab{
+    flex:1;
+    text-align:center;
+    padding-bottom:14px;
+    font-weight:700;
+    font-size:15.5px;
+    color:#9691ab;
+    cursor:pointer;
+    position:relative;
+    background:none;border:none;
+    font-family:inherit;
+  }
+  .tab.active{color:#5b21b6;}
+  .tab.active::after{
+    content:"";
+    position:absolute; left:0; right:0; bottom:-1px;
+    height:3px; border-radius:3px 3px 0 0;
+    background:linear-gradient(90deg,#7c5cff,#5b21b6);
+  }
+
+  .auth-heading{text-align:center; margin-bottom:26px;}
+  .auth-heading h2{font-size:24px; margin:0 0 6px; letter-spacing:-0.01em;}
+  .auth-heading p{margin:0; color:var(--muted); font-size:14px;}
+
+  form{display:flex; flex-direction:column; gap:14px;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+
+  .field{
+    position:relative;
+    display:flex;
+    align-items:center;
+    border:1.5px solid var(--field-border);
+    border-radius:12px;
+    padding:0 14px;
+    height:52px;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .field:focus-within{
+    border-color:#8b5cf6;
+    box-shadow:0 0 0 4px rgba(139,92,246,.12);
+  }
+  .field svg{
+    width:18px;height:18px;
+    stroke:#a39cc0;
+    flex:0 0 18px;
+    margin-right:10px;
+  }
+  .field input{
+    border:none; outline:none;
+    width:100%;
+    font-size:14.5px;
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    background:transparent;
+    height:100%;
+  }
+  .field input::placeholder{color:#a39cc0;}
+  .field .toggle-eye{
+    cursor:pointer;
+    flex:0 0 auto;
+    margin-right:0;
+    margin-left:10px;
+  }
+
+  .btn-primary{
+    margin-top:6px;
+    height:52px;
+    border:none;
+    border-radius:12px;
+    background:var(--accent-grad);
+    color:#fff;
+    font-size:15.5px;
+    font-weight:700;
+    letter-spacing:.01em;
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
+    box-shadow:0 12px 24px -8px rgba(109,40,217,.55);
+  }
+  .btn-primary:hover{filter:brightness(1.06); transform:translateY(-1px);}
+  .btn-primary:active{transform:translateY(0);}
+
+  .or-divider{
+    display:flex; align-items:center; gap:14px;
+    margin:22px 0 18px;
+    color:#a39cc0; font-size:12.5px;
+  }
+  .or-divider::before, .or-divider::after{
+    content:""; flex:1; height:1px; background:#eeecf6;
+  }
+
+  .oauth-row{
+    display:grid; grid-template-columns:1fr 1fr; gap:14px;
+    margin-bottom:22px;
+  }
+  .oauth-btn{
+    height:48px;
+    border-radius:12px;
+    border:1.5px solid var(--field-border);
+    background:#fff;
+    display:flex; align-items:center; justify-content:center;
+    gap:10px;
+    font-size:14px; font-weight:600; color:var(--ink);
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .oauth-btn:hover{border-color:#c9c2e6; background:#fbfaff;}
+  .oauth-btn svg,.oauth-btn img{width:18px;height:18px;}
+
+  .agree{
+    display:flex; align-items:flex-start; gap:10px;
+    font-size:13px; color:var(--muted);
+    margin-bottom:20px;
+    line-height:1.5;
+  }
+  .agree input{
+    margin-top:2px;
+    width:16px;height:16px;
+    accent-color:#7c3aed;
+    flex:0 0 16px;
+  }
+  .agree a{color:#7c3aed; text-decoration:none; font-weight:600;}
+  .agree a:hover{text-decoration:underline;}
+
+  .switch{
+    text-align:center;
+    font-size:14px;
+    color:var(--muted);
+  }
+  .switch a{color:#7c3aed; font-weight:700; text-decoration:none;}
+  .switch a:hover{text-decoration:underline;}
+
+  .forgot-password{
+    text-align:right;
+    font-size:13px;
+  }
+  .forgot-password a{color:#7c3aed; text-decoration:none; font-weight:600;}
+  .forgot-password a:hover{text-decoration:underline;}
+
+  /* footer strip */
+  .footer{
+    background:var(--footer-bg);
+    padding:34px 64px;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:24px;
+  }
+  .footer .item{display:flex; align-items:center; gap:14px;}
+  .footer .item .icon{
+    width:48px;height:48px;border-radius:14px;
+    background:#ece5ff;
+    display:flex;align-items:center;justify-content:center;
+    flex:0 0 48px;
+  }
+  .footer .item .icon svg{width:22px;height:22px;stroke:#7c3aed;}
+  .footer .item h4{margin:0 0 2px; font-size:14.5px; font-weight:700; color:var(--ink);}
+  .footer .item p{margin:0; font-size:12.5px; color:var(--muted);}
+
+  .hidden-form{
+    display:none;
+  }
+
+  @media (max-width: 1080px){
+    .hero{grid-template-columns:1fr;}
+    .visual{display:none;}
+    .left-panel{padding:120px 32px 40px;}
+    .footer{grid-template-columns:repeat(2,1fr);}
+  }
+  @media (max-width:560px){
+    .auth-wrap{padding:24px;}
+    .auth-card{padding:28px 22px;}
+    .row2{grid-template-columns:1fr;}
+    .oauth-row{grid-template-columns:1fr;}
+    .headline{font-size:38px;}
+    .footer{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="brand">Connect<span>iqo</span></div>
+
+  <div class="left-panel">
+    <div class="content">
+      <h1 class="headline">Connect with<span class="grad">Connectiqo</span></h1>
+      <p class="sub">1-on-1 video sessions with your favorite creators, mentors &amp; experts. Build real connections. Learn, grow and earn together.</p>
+      <div class="divider"></div>
+
+      <div class="features">
+        <div class="feature">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+          </div>
+          <div>
+            <h3>1-on-1 Video Calls</h3>
+            <p>Private &amp; personalized sessions</p>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div>
+            <h3>Trusted &amp; Secure</h3>
+            <p>Safe payments &amp; secure platform</p>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9 12 2"/></svg>
+          </div>
+          <div>
+            <h3>Top Creators &amp; Experts</h3>
+            <p>Learn from the best in the world</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="social-proof">
+        <div class="avatars">
+          <img src="https://i.pravatar.cc/80?img=12" alt="">
+          <img src="https://i.pravatar.cc/80?img=32" alt="">
+          <img src="https://i.pravatar.cc/80?img=47" alt="">
+          <div class="plus">+</div>
+        </div>
+        <div class="proof-text">
+          <strong>Join 50K+ happy users</strong>
+          <span class="stars">★★★★★<span class="rating">4.8/5</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="visual">
+    <div class="phone">
+      <img class="main" src="https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?q=80&w=800&auto=format&fit=crop" alt="Video call">
+      <div class="caller-tile">
+        <img src="https://i.pravatar.cc/160?img=51" alt="Caller">
+      </div>
+      <div class="call-controls">
+        <div class="ctrl"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg></div>
+        <div class="ctrl end"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg></div>
+        <div class="ctrl"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>
+      </div>
+    </div>
+    <div class="sparkle" style="top:60px; left:60px;">✦</div>
+    <div class="sparkle" style="bottom:120px; right:40px; font-size:12px;">✦</div>
+  </div>
+
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="tabs">
+        <button class="tab active" type="button" id="loginTab">Login</button>
+        <button class="tab" type="button" id="signupTab">Sign Up</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div id="loginForm" class="auth-form">
+        <div class="auth-heading">
+          <h2>Welcome back</h2>
+          <p>Login to continue connecting</p>
+        </div>
+
+        <form id="loginFormElement">
+          <div class="field">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 6 10-6"/></svg>
+            <input type="email" placeholder="Email Address" required>
+          </div>
+
+          <div class="field">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            <input id="loginPwd" type="password" placeholder="Password" required>
+            <svg class="toggle-eye" class="loginEye" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          </div>
+
+          <div class="forgot-password">
+            <a href="#">Forgot password?</a>
+          </div>
+
+          <button type="submit" class="btn-primary">Login</button>
+        </form>
+
+        <div class="or-divider">or continue with</div>
+
+        <div class="oauth-row">
+          <button class="oauth-btn" type="button">
+            <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.9 32.8 29.4 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4c-7.7 0-14.4 4.3-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.4-1.9 14.3-5.2l-6.6-5.6C29.6 34.9 26.9 36 24 36c-5.3 0-9.8-3.2-11.3-7.9l-6.6 5.1C9.6 39.6 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.7 2.1-2.1 3.9-3.9 5.2l6.6 5.6C39.9 37.4 44 31.6 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+            Google
+          </button>
+          <button class="oauth-btn" type="button">
+            <svg viewBox="0 0 24 24"><path d="M16.365 1.43c0 1.14-.42 2.2-1.14 3.02-.85.98-2.24 1.74-3.42 1.64-.14-1.1.42-2.26 1.14-3.02.85-.98 2.3-1.72 3.42-1.64zM20.6 17.1c-.5 1.16-.74 1.68-1.38 2.7-.9 1.42-2.16 3.2-3.72 3.2-1.38 0-1.74-.9-3.62-.9-1.86 0-2.28.88-3.66.9-1.56.02-2.76-1.6-3.66-3-2.5-3.86-2.76-8.38-1.22-10.8.98-1.56 2.66-2.5 4.32-2.5 1.5 0 2.44.98 3.66.98 1.2 0 1.94-.98 3.66-.98 1.5 0 3.08.82 4.06 2.24-3.56 2-2.98 7.16.56 8.16z" fill="#000"/></svg>
+            Apple
+          </button>
+        </div>
+
+        <div class="switch">Don't have an account? <a href="#" id="toSignup">Sign up</a></div>
+      </div>
+
+      <!-- SIGNUP FORM -->
+      <div id="signupForm" class="auth-form hidden-form">
+        <div class="auth-heading">
+          <h2>Create your account</h2>
+          <p>Join Connectiqo and start connecting!</p>
+        </div>
+
+        <form id="signupFormElement">
+          <div class="row2">
+            <div class="field">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a7.5 7.5 0 0113 0"/></svg>
+              <input type="text" placeholder="Full Name" required>
+            </div>
+            <div class="field">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 6 10-6"/></svg>
+              <input type="email" placeholder="Email Address" required>
+            </div>
+          </div>
+
+          <div class="field">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+            <input type="tel" placeholder="Phone Number" required>
+          </div>
+
+          <div class="field">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            <input id="signupPwd" type="password" placeholder="Create Password" required>
+            <svg class="toggle-eye signupEye" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          </div>
+
+          <button type="submit" class="btn-primary">Sign Up</button>
+        </form>
+
+        <div class="or-divider">or continue with</div>
+
+        <div class="oauth-row">
+          <button class="oauth-btn" type="button">
+            <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.9 32.8 29.4 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4c-7.7 0-14.4 4.3-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.4-1.9 14.3-5.2l-6.6-5.6C29.6 34.9 26.9 36 24 36c-5.3 0-9.8-3.2-11.3-7.9l-6.6 5.1C9.6 39.6 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.7 2.1-2.1 3.9-3.9 5.2l6.6 5.6C39.9 37.4 44 31.6 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+            Google
+          </button>
+          <button class="oauth-btn" type="button">
+            <svg viewBox="0 0 24 24"><path d="M16.365 1.43c0 1.14-.42 2.2-1.14 3.02-.85.98-2.24 1.74-3.42 1.64-.14-1.1.42-2.26 1.14-3.02.85-.98 2.3-1.72 3.42-1.64zM20.6 17.1c-.5 1.16-.74 1.68-1.38 2.7-.9 1.42-2.16 3.2-3.72 3.2-1.38 0-1.74-.9-3.62-.9-1.86 0-2.28.88-3.66.9-1.56.02-2.76-1.6-3.66-3-2.5-3.86-2.76-8.38-1.22-10.8.98-1.56 2.66-2.5 4.32-2.5 1.5 0 2.44.98 3.66.98 1.2 0 1.94-.98 3.66-.98 1.5 0 3.08.82 4.06 2.24-3.56 2-2.98 7.16.56 8.16z" fill="#000"/></svg>
+            Apple
+          </button>
+        </div>
+
+        <label class="agree">
+          <input type="checkbox" checked>
+          <span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></span>
+        </label>
+
+        <div class="switch">Already have an account? <a href="#" id="toLogin">Login</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="item">
+    <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
+    <div><h4>100% Secure</h4><p>Your data is safe with us</p></div>
+  </div>
+  <div class="item">
+    <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg></div>
+    <div><h4>24/7 Support</h4><p>We're here to help</p></div>
+  </div>
+  <div class="item">
+    <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
+    <div><h4>Verified Creators</h4><p>Quality you can trust</p></div>
+  </div>
+  <div class="item">
+    <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+    <div><h4>Instant Booking</h4><p>Book and connect instantly</p></div>
+  </div>
+</div>
+
+<script>
+  const loginTab = document.getElementById('loginTab');
+  const signupTab = document.getElementById('signupTab');
+  const loginForm = document.getElementById('loginForm');
+  const signupForm = document.getElementById('signupForm');
+  const toSignup = document.getElementById('toSignup');
+  const toLogin = document.getElementById('toLogin');
+
+  function showLogin(){
+    loginTab.classList.add('active');
+    signupTab.classList.remove('active');
+    loginForm.classList.remove('hidden-form');
+    signupForm.classList.add('hidden-form');
+  }
+
+  function showSignup(){
+    signupTab.classList.add('active');
+    loginTab.classList.remove('active');
+    signupForm.classList.remove('hidden-form');
+    loginForm.classList.add('hidden-form');
+  }
+
+  loginTab.addEventListener('click', (e) => { e.preventDefault(); showLogin(); });
+  signupTab.addEventListener('click', (e) => { e.preventDefault(); showSignup(); });
+  toSignup.addEventListener('click', (e) => { e.preventDefault(); showSignup(); });
+  toLogin.addEventListener('click', (e) => { e.preventDefault(); showLogin(); });
+
+  // Password toggle for login
+  const loginPwd = document.getElementById('loginPwd');
+  const loginEye = document.querySelector('.loginEye');
+  if(loginEye) loginEye.addEventListener('click', () => {
+    loginPwd.type = loginPwd.type === 'password' ? 'text' : 'password';
+  });
+
+  // Password toggle for signup
+  const signupPwd = document.getElementById('signupPwd');
+  const signupEye = document.querySelector('.signupEye');
+  if(signupEye) signupEye.addEventListener('click', () => {
+    signupPwd.type = signupPwd.type === 'password' ? 'text' : 'password';
+  });
+
+  // Form submissions
+  document.getElementById('loginFormElement').addEventListener('submit', (e) => {
+    e.preventDefault();
+    alert('Login submitted! (demo only)');
+  });
+
+  document.getElementById('signupFormElement').addEventListener('submit', (e) => {
+    e.preventDefault();
+    alert('Account created! (demo only)');
+  });
+</script>
+
+</body>
+</html>
