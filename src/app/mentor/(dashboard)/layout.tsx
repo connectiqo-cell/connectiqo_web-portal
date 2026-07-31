@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, LayoutDashboard, Wallet, Video } from "lucide-react";
+import { Calendar } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -9,19 +9,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ROUTES } from "@/lib/routes";
 
 const NAV_ITEMS = [
-  { href: ROUTES.mentorProfileDashboard, label: "Profile", icon: LayoutDashboard },
   { href: ROUTES.mentorSessions, label: "Sessions", icon: Calendar },
-  { href: ROUTES.mentorEarnings, label: "Earnings", icon: Wallet },
-  { href: ROUTES.mentorSchedule, label: "Schedule", icon: Calendar },
-  { href: ROUTES.mentorVideos, label: "Videos", icon: Video },
 ];
 
 const PAGE_HEADERS: Record<string, { title: string; subtitle: string }> = {
-  [ROUTES.mentorProfileDashboard]: { title: "Profile", subtitle: "Manage your profile information" },
   [ROUTES.mentorSessions]: { title: "Sessions", subtitle: "Track your teaching sessions" },
-  [ROUTES.mentorEarnings]: { title: "Earnings", subtitle: "Track your income and transactions" },
-  [ROUTES.mentorSchedule]: { title: "Schedule", subtitle: "Manage your availability" },
-  [ROUTES.mentorVideos]: { title: "Videos", subtitle: "Manage your video content" },
 };
 
 export default function MentorDashboardLayout({ children }: { children: React.ReactNode }) {

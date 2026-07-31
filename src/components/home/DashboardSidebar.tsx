@@ -76,7 +76,7 @@ export function DashboardSidebar() {
                 href={item.href}
                 className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
                   active
-                    ? "bg-accent-link/10 text-accent-link"
+                    ? "text-accent-link"
                     : "text-text-secondary hover:bg-surface-chip hover:text-text-primary"
                 }`}
               >
@@ -95,7 +95,7 @@ export function DashboardSidebar() {
                 href={item.href}
                 className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
                   active
-                    ? "bg-accent-link/10 text-accent-link"
+                    ? "text-accent-link"
                     : "text-text-secondary hover:bg-surface-chip hover:text-text-primary"
                 }`}
               >
