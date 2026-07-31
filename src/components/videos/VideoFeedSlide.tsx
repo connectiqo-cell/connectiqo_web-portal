@@ -110,12 +110,12 @@ export function VideoFeedSlide({
               <img
                 src={video.thumbnail_url}
                 alt={video.title}
-                className="h-full w-full object-cover opacity-40 blur-sm"
+                className="h-full w-full object-cover"
               />
             ) : null}
             <Link
               href={ROUTES.mentorProfile(video.mentor_id)}
-              className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50 text-white"
+              className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/20 text-white"
             >
               <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/15">
                 <Lock size={20} />

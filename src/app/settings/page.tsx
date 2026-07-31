@@ -10,7 +10,6 @@ import {
   Share2,
   ShieldCheck,
   Sun,
-  Trash2,
   User,
   Wallet,
 } from "lucide-react";
@@ -412,17 +411,6 @@ export default function SettingsHubPage() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-text-primary">Two-Factor Authentication</p>
                   <p className="text-xs text-text-muted">Add extra security to your account</p>
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => {}}
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
-              >
-                <Trash2 size={16} className="shrink-0 text-red-500" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-red-500">Delete Account</p>
-                  <p className="text-xs text-text-muted">Permanently delete your account</p>
                 </div>
               </button>
             </div>

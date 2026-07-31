@@ -5,7 +5,6 @@ import {
   Calendar,
   Compass,
   Home,
-  Mic,
   MessageSquare,
   PlayCircle,
   Settings,
@@ -33,7 +32,6 @@ const NAV_ITEMS = [
 ] as const;
 
 const BOTTOM_ITEMS = [
-  { href: ROUTES.mentorProfileDashboard, label: "Become a Creator", icon: Mic, prefix: "/mentor" },
   { href: ROUTES.editProfile, label: "Profile", icon: User, prefix: ROUTES.editProfile },
   { href: ROUTES.settings, label: "Settings", icon: Settings, prefix: ROUTES.settings },
 ] as const;
