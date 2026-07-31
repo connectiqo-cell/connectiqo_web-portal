@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { type BookingRow, bookingApi } from "@/lib/api/bookingApi";
 import { type MentorProfileRow, type PlatformStats, mentorApi } from "@/lib/api/mentorApi";
+import { type PublicVideo, videoLibraryApi } from "@/lib/api/videoLibraryApi";
 import { ROUTES } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/client";
 
@@ -41,9 +42,13 @@ export function DashboardHome({
   const { user } = useAuth();
   const [upcoming, setUpcoming] = useState<BookingRow[]>([]);
   const [popularCreators, setPopularCreators] = useState<MentorProfileRow[]>([]);
+  const [recommendedVideos, setRecommendedVideos] = useState<PublicVideo[]>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const videosScrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [canScrollVideosLeft, setCanScrollVideosLeft] = useState(false);
+  const [canScrollVideosRight, setCanScrollVideosRight] = useState(false);
 
 
   useEffect(() => {
@@ -64,6 +69,17 @@ export function DashboardHome({
       const supabase = createClient();
       const rows = await mentorApi.getTrendingMentors(supabase, 4).catch(() => []);
       if (!cancelled) setPopularCreators(rows);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const videos = await videoLibraryApi.getAllPublicVideos({ page: 0, pageSize: 4 }).catch(() => []);
+      if (!cancelled) setRecommendedVideos(videos);
     })();
     return () => {
       cancelled = true;
@@ -98,6 +114,42 @@ export function DashboardHome({
         const cardWidth = firstCard.offsetWidth;
         const gap = 16;
         const scrollAmount = cardWidth + gap;
+        container.scrollBy({
+          left: direction === "left" ? -scrollAmount : scrollAmount,
+          behavior: "smooth",
+        });
+      }
+    }
+  };
+
+  const checkVideosScroll = () => {
+    if (videosScrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = videosScrollRef.current;
+      setCanScrollVideosLeft(scrollLeft > 0);
+      setCanScrollVideosRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  useEffect(() => {
+    checkVideosScroll();
+    const container = videosScrollRef.current;
+    container?.addEventListener("scroll", checkVideosScroll);
+    window.addEventListener("resize", checkVideosScroll);
+
+    return () => {
+      container?.removeEventListener("scroll", checkVideosScroll);
+      window.removeEventListener("resize", checkVideosScroll);
+    };
+  }, [recommendedVideos]);
+
+  const scrollVideos = (direction: "left" | "right") => {
+    if (videosScrollRef.current) {
+      const container = videosScrollRef.current;
+      const firstVideo = container.querySelector('[data-video]') as HTMLElement;
+      if (firstVideo) {
+        const videoWidth = firstVideo.offsetWidth;
+        const gap = 16;
+        const scrollAmount = videoWidth + gap;
         container.scrollBy({
           left: direction === "left" ? -scrollAmount : scrollAmount,
           behavior: "smooth",
@@ -240,12 +292,70 @@ export function DashboardHome({
             <ChevronRight size={18} className="text-text-primary" />
           </button>
         )}
-        <Link
-          href={ROUTES.discover}
-          className="absolute right-12 top-1/2 -translate-y-1/2 flex items-center justify-center h-10 w-10 rounded-full bg-accent-primary hover:bg-accent-primary-hover transition-colors z-10"
-        >
-          <ChevronRight size={18} className="text-white" />
-        </Link>
+              </div>
+            </section>
+
+            <section className="w-full mt-8">
+              <div className="mb-6 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-gray-900">Recommended For You</h3>
+                <Link href={ROUTES.videos} className="flex items-center gap-1 text-sm font-semibold text-accent-link">
+                  View all <ChevronRight size={16} />
+                </Link>
+              </div>
+              <div className="relative">
+                <div
+                  ref={videosScrollRef}
+                  className="flex gap-4 overflow-x-auto scroll-smooth pb-2 scrollbar-none"
+                >
+                  {recommendedVideos.map((video) => (
+                    <Link
+                      key={video.id}
+                      href={ROUTES.videos}
+                      data-video
+                      className="group flex w-48 sm:w-64 shrink-0 flex-col gap-3 rounded-2xl overflow-hidden transition-all hover:shadow-lg"
+                    >
+                      <div className="relative flex h-28 sm:h-36 w-full items-center justify-center overflow-hidden rounded-xl bg-black">
+                        {video.thumbnail_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={video.thumbnail_url}
+                            alt={video.title}
+                            className="h-full w-full object-cover group-hover:scale-105 transition-transform"
+                          />
+                        ) : (
+                          <Video size={32} className="text-text-muted" />
+                        )}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <PlayCircle size={40} className="text-white opacity-80 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-1 flex-col gap-2 px-3 pb-3">
+                        <p className="truncate text-xs sm:text-sm font-bold text-text-primary line-clamp-2">{video.title}</p>
+                        <p className="truncate text-xs text-text-muted">{video.profiles?.name || "Creator"}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+        {canScrollVideosLeft && (
+          <button
+            onClick={() => scrollVideos("left")}
+            className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full bg-white shadow-md p-2 hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 z-10"
+            aria-label="Scroll left"
+          >
+            <ChevronRight size={18} className="rotate-180 text-text-primary" />
+          </button>
+        )}
+
+        {canScrollVideosRight && (
+          <button
+            onClick={() => scrollVideos("right")}
+            className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-white shadow-md p-2 hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 z-10"
+            aria-label="Scroll right"
+          >
+            <ChevronRight size={18} className="text-text-primary" />
+          </button>
+        )}
               </div>
             </section>
 
