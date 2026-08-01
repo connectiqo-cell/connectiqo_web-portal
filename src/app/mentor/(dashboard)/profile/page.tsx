@@ -1,20 +1,25 @@
 "use client";
 
-import { Award, Plus, Star, Users, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Award, Camera, Plus, Star, Trash2, Users, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
+import { CameraCaptureModal } from "@/components/CameraCaptureModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { profileApi, type MentorProfileFields } from "@/lib/api/profileApi";
 import { MENTOR_CATEGORIES } from "@/lib/constants/mentorCategories";
 
 export default function MentorProfileDashboardPage() {
-  const { user } = useAuth();
+  const { user, profile: authProfile, refreshProfile } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState<MentorProfileFields | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
 
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [specialization, setSpecialization] = useState("");
   const [category, setCategory] = useState("");
   const [bio, setBio] = useState("");
@@ -36,7 +41,7 @@ export default function MentorProfileDashboardPage() {
       try {
         const data = await profileApi.getMentorProfile(user.id);
         if (cancelled) return;
-        
+
         setProfile(data);
         setSpecialization(data.specialization || "");
         setCategory(data.category || "");
@@ -60,6 +65,48 @@ export default function MentorProfileDashboardPage() {
       cancelled = true;
     };
   }, [user]);
+
+  const uploadAvatarFile = async (file: File) => {
+    if (!user) return;
+    setUploading(true);
+    setError("");
+    try {
+      const url = await profileApi.uploadAvatar({ userId: user.id, file });
+      setAvatarUrl(url);
+      refreshProfile();
+    } catch (err) {
+      setError((err as Error)?.message || "Could not upload photo");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    await uploadAvatarFile(file);
+  };
+
+  const handleCameraCapture = async (file: File) => {
+    setShowCamera(false);
+    await uploadAvatarFile(file);
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!user) return;
+    if (!window.confirm("Remove your profile photo?")) return;
+    setUploading(true);
+    setError("");
+    try {
+      await profileApi.removeAvatar({ userId: user.id });
+      setAvatarUrl(null);
+      refreshProfile();
+    } catch (err) {
+      setError((err as Error)?.message || "Could not remove photo");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!user) return;
@@ -107,7 +154,67 @@ export default function MentorProfileDashboardPage() {
   if (loading) return <p className="text-sm text-text-muted">Loading…</p>;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 max-w-2xl">
+      {/* Avatar Section */}
+      <div className="flex items-center gap-4 pb-6 border-b border-border-light">
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-surface-chip"
+          aria-label="Change photo"
+        >
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
+          ) : (
+            <Users size={28} className="text-text-muted" />
+          )}
+        </button>
+        <div className="flex flex-col items-start gap-1.5">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="text-sm font-semibold text-accent-link disabled:opacity-60"
+          >
+            {uploading ? "Uploading…" : "Upload from device"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowCamera(true)}
+            disabled={uploading}
+            className="flex items-center gap-1.5 text-sm font-semibold text-text-secondary hover:text-text-primary disabled:opacity-60"
+          >
+            <Camera size={14} />
+            Take a photo
+          </button>
+          {avatarUrl ? (
+            <button
+              type="button"
+              onClick={handleRemoveAvatar}
+              disabled={uploading}
+              className="flex items-center gap-1.5 text-sm font-semibold text-accent-error hover:opacity-80 disabled:opacity-60"
+            >
+              <Trash2 size={14} />
+              Remove photo
+            </button>
+          ) : null}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleAvatarChange}
+            className="hidden"
+          />
+        </div>
+      </div>
+
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-text-primary">Manage Profile</h1>
+        <p className="text-sm text-text-muted">Keep your mentor profile up to date</p>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatTile icon={Star} label="Rating" value={(profile?.rating ?? 0).toFixed(1)} />
         <StatTile icon={Users} label="Sessions" value={String(profile?.total_sessions ?? 0)} />
@@ -290,6 +397,10 @@ export default function MentorProfileDashboardPage() {
         </button>
         </div>
       </div>
+
+      {showCamera ? (
+        <CameraCaptureModal onCapture={handleCameraCapture} onClose={() => setShowCamera(false)} />
+      ) : null}
     </div>
   );
 }
