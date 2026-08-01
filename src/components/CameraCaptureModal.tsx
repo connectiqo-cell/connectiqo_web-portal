@@ -74,6 +74,17 @@ export function CameraCaptureModal({
     onCapture(new File([capturedBlob], `avatar-${Date.now()}.jpg`, { type: "image/jpeg" }));
   };
 
+  const handleRetryPermission = async () => {
+    setError("");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+      streamRef.current = stream;
+      if (videoRef.current) videoRef.current.srcObject = stream;
+    } catch {
+      setError("Camera access denied. Please check your browser permissions and try again.");
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
       <div
@@ -88,7 +99,20 @@ export function CameraCaptureModal({
         </div>
 
         {error ? (
-          <p className="text-sm text-accent-error">{error}</p>
+          <div className="flex flex-col gap-4">
+            <div className="rounded-xl bg-accent-error/10 p-4">
+              <p className="text-sm text-accent-error font-semibold mb-2">Camera Access Required</p>
+              <p className="text-xs text-accent-error/80 mb-3">{error}</p>
+              <div className="text-xs text-accent-error/70 space-y-1">
+                <p><strong>To enable camera:</strong></p>
+                <ul className="list-disc list-inside ml-1">
+                  <li>Chrome/Edge: Settings → Privacy → Camera → Allow</li>
+                  <li>Firefox: Permissions → Camera → Allow</li>
+                  <li>Safari: Preferences → Websites → Camera → Allow</li>
+                </ul>
+              </div>
+            </div>
+          </div>
         ) : (
           <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-black">
             {capturedUrl ? (
@@ -107,7 +131,17 @@ export function CameraCaptureModal({
         )}
 
         <div className="flex gap-2">
-          {capturedUrl ? (
+          {error ? (
+            <button
+              type="button"
+              onClick={handleRetryPermission}
+              className="flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold text-text-on-accent"
+              style={{ backgroundImage: "var(--gradient-button-primary)" }}
+            >
+              <Camera size={16} />
+              Request Permission
+            </button>
+          ) : capturedUrl ? (
             <>
               <button
                 type="button"
@@ -130,8 +164,7 @@ export function CameraCaptureModal({
             <button
               type="button"
               onClick={handleCapture}
-              disabled={!!error}
-              className="flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold text-text-on-accent disabled:opacity-50"
+              className="flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold text-text-on-accent"
               style={{ backgroundImage: "var(--gradient-button-primary)" }}
             >
               <Camera size={16} />
