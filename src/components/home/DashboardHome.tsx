@@ -22,6 +22,7 @@ import { ROUTES } from "@/lib/routes";
 import { TopCategories } from "@/components/home/TopCategories";
 import { PopularCreatorsCarousel } from "@/components/home/PopularCreatorsCarousel";
 import { HeroBannerFromDb } from "@/components/home/HeroBannerFromDb";
+import { DownloadAppCard } from "@/components/home/DownloadAppCard";
 
 function formatCount(n: number): string {
   if (n >= 1000) return `${Math.floor(n / 100) / 10}K+`;
@@ -319,6 +320,8 @@ export function DashboardHome({
                 <p className="text-[11px] text-text-muted">Avg. Rating</p>
               </div>
             </div>
+
+            <DownloadAppCard />
 
             {!isMentor ? (
               <Link
