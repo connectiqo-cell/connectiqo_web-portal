@@ -42,7 +42,7 @@ export function PopularCreatorsCarousel({
     if (!card) return;
 
     const cardWidth = card.offsetWidth;
-    const gap = 12; // gap-3
+    const gap = 16; // gap-4
     const scrollAmount = cardWidth + gap;
 
     container.scrollBy({
@@ -89,10 +89,10 @@ export function PopularCreatorsCarousel({
                 key={creator.id}
                 href={ROUTES.mentorProfile(creator.id)}
                 data-card
-                className="group flex w-48 shrink-0 flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white hover:shadow-lg transition-all duration-300"
+                className="group flex h-32 w-80 shrink-0 flex-row items-center gap-4 overflow-hidden rounded-2xl border border-gray-100 bg-white p-4 hover:shadow-lg transition-all duration-300"
               >
                 {/* Photo Section */}
-                <div className="relative h-56 w-full overflow-hidden bg-linear-to-br from-indigo-100 to-indigo-200">
+                <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-linear-to-br from-indigo-100 to-indigo-200">
                   {creator.profiles?.avatar_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -102,16 +102,16 @@ export function PopularCreatorsCarousel({
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center">
-                      <User className="h-12 w-12 text-indigo-300" />
+                      <User className="h-8 w-8 text-indigo-300" />
                     </div>
                   )}
                 </div>
 
                 {/* Content Section */}
-                <div className="flex flex-1 flex-col justify-between gap-3 p-3">
+                <div className="flex flex-1 flex-col justify-between gap-2 min-w-0">
                   {/* Header */}
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-1">
+                  <div className="flex flex-col gap-0.5">
+                    <div className="flex items-center gap-1.5">
                       <span className="text-sm font-bold text-gray-900 truncate">
                         {creator.profiles?.name}
                       </span>
@@ -138,10 +138,10 @@ export function PopularCreatorsCarousel({
                   </div>
 
                   {/* Footer */}
-                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-100">
-                    <span className="text-sm font-bold text-gray-900">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
                       ₹{creator.price_per_hour}
-                      <span className="text-xs font-normal text-gray-500 block">/session</span>
+                      <span className="text-xs font-normal text-gray-500 ml-1">/session</span>
                     </span>
                     <button
                       type="button"
@@ -149,7 +149,7 @@ export function PopularCreatorsCarousel({
                         e.preventDefault();
                         e.stopPropagation();
                       }}
-                      className="rounded-lg bg-indigo-600 px-3 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition-colors shrink-0"
+                      className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-indigo-700 transition-colors shrink-0 whitespace-nowrap"
                     >
                       Book Now
                     </button>
