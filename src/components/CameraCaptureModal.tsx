@@ -141,8 +141,7 @@ export function CameraCaptureModal({
             <button
               type="button"
               onClick={handleCapture}
-              disabled={!!error}
-              className="flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold text-text-on-accent disabled:opacity-50"
+              className="flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold text-text-on-accent"
               style={{ backgroundImage: "var(--gradient-button-primary)" }}
             >
               <Camera size={16} />
