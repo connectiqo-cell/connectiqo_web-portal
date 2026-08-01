@@ -244,7 +244,7 @@ export default function EditProfilePage() {
   if (!user) return null;
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-12 sm:px-6 lg:px-12">
+    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6">
       <Link
         href={ROUTES.editProfile}
         className="flex w-fit items-center gap-1.5 text-sm font-semibold text-text-secondary hover:text-text-primary"
@@ -310,7 +310,7 @@ export default function EditProfilePage() {
       {error ? <p className="text-sm text-accent-error">{error}</p> : null}
       {saved ? <p className="text-sm text-accent-success">Saved.</p> : null}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
             Name
@@ -318,7 +318,7 @@ export default function EditProfilePage() {
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="rounded-xl border border-border-light bg-surface-sheet px-4 py-3 text-base text-text-primary focus:outline-none"
+            className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary focus:outline-none"
           />
         </label>
 
@@ -329,7 +329,7 @@ export default function EditProfilePage() {
           <input
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="rounded-xl border border-border-light bg-surface-sheet px-4 py-3 text-base text-text-primary focus:outline-none"
+            className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary focus:outline-none"
           />
         </label>
       </div>
@@ -361,7 +361,7 @@ export default function EditProfilePage() {
               value={specialization}
               onChange={(e) => setSpecialization(e.target.value)}
               placeholder="e.g. Senior Frontend Engineer"
-              className="rounded-xl border border-border-light bg-surface-sheet px-3.5 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
+              className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
             />
           </label>
 
@@ -372,7 +372,7 @@ export default function EditProfilePage() {
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="rounded-xl border border-border-light bg-surface-sheet px-3.5 py-2.5 text-sm text-text-primary focus:outline-none"
+              className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary focus:outline-none"
             >
               <option value="">Select a category</option>
               {MENTOR_CATEGORIES.map((c) => (
@@ -390,13 +390,13 @@ export default function EditProfilePage() {
             <textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              rows={4}
+              rows={3}
               placeholder="Tell learners about your background and how you can help them."
-              className="rounded-xl border border-border-light bg-surface-sheet px-3.5 py-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
+              className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
             />
           </label>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
                 Experience (years)
@@ -406,7 +406,7 @@ export default function EditProfilePage() {
                 min={0}
                 value={experienceYears}
                 onChange={(e) => setExperienceYears(e.target.value)}
-                className="rounded-xl border border-border-light bg-surface-sheet px-4 py-3 text-base text-text-primary focus:outline-none"
+                className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary focus:outline-none"
               />
             </label>
             <label className="flex flex-col gap-1.5">
@@ -418,7 +418,7 @@ export default function EditProfilePage() {
                 min={0}
                 value={pricePerHour}
                 onChange={(e) => setPricePerHour(e.target.value)}
-                className="rounded-xl border border-border-light bg-surface-sheet px-4 py-3 text-base text-text-primary focus:outline-none"
+                className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary focus:outline-none"
               />
             </label>
             <label className="flex flex-col gap-1.5">
@@ -429,7 +429,7 @@ export default function EditProfilePage() {
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="e.g. Pune, Maharashtra"
-                className="rounded-xl border border-border-light bg-surface-sheet px-4 py-3 text-base text-text-primary placeholder:text-text-muted focus:outline-none"
+                className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
               />
             </label>
           </div>
@@ -442,7 +442,7 @@ export default function EditProfilePage() {
               value={website}
               onChange={(e) => setWebsite(e.target.value)}
               placeholder="e.g. www.example.com"
-              className="rounded-xl border border-border-light bg-surface-sheet px-4 py-3 text-base text-text-primary placeholder:text-text-muted focus:outline-none"
+              className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
             />
           </label>
 
@@ -492,7 +492,7 @@ export default function EditProfilePage() {
             </div>
           </label>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
                 LinkedIn
@@ -501,7 +501,7 @@ export default function EditProfilePage() {
                 value={linkedinUrl}
                 onChange={(e) => setLinkedinUrl(e.target.value)}
                 placeholder="https://linkedin.com/in/…"
-                className="rounded-xl border border-border-light bg-surface-sheet px-4 py-3 text-base text-text-primary placeholder:text-text-muted focus:outline-none"
+                className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
               />
             </label>
             <label className="flex flex-col gap-1.5">
@@ -512,7 +512,7 @@ export default function EditProfilePage() {
                 value={twitterUrl}
                 onChange={(e) => setTwitterUrl(e.target.value)}
                 placeholder="https://x.com/…"
-                className="rounded-xl border border-border-light bg-surface-sheet px-4 py-3 text-base text-text-primary placeholder:text-text-muted focus:outline-none"
+                className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
               />
             </label>
             <label className="flex flex-col gap-1.5">
@@ -523,7 +523,7 @@ export default function EditProfilePage() {
                 value={instagramUrl}
                 onChange={(e) => setInstagramUrl(e.target.value)}
                 placeholder="https://instagram.com/…"
-                className="rounded-xl border border-border-light bg-surface-sheet px-4 py-3 text-base text-text-primary placeholder:text-text-muted focus:outline-none"
+                className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
               />
             </label>
             <label className="flex flex-col gap-1.5">
@@ -534,7 +534,7 @@ export default function EditProfilePage() {
                 value={youtubeUrl}
                 onChange={(e) => setYoutubeUrl(e.target.value)}
                 placeholder="https://youtube.com/@…"
-                className="rounded-xl border border-border-light bg-surface-sheet px-4 py-3 text-base text-text-primary placeholder:text-text-muted focus:outline-none"
+                className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
               />
             </label>
           </div>
