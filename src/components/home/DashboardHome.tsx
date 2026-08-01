@@ -1,6 +1,16 @@
 "use client";
 
-import { Calendar, ChevronRight, PlayCircle, ShieldCheck, Star, Users, Video } from "lucide-react";
+import {
+  Calendar,
+  ChevronRight,
+  Lock,
+  MonitorPlay,
+  PlayCircle,
+  ShieldCheck,
+  Star,
+  Users,
+  Video,
+} from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
@@ -11,6 +21,7 @@ import { type PublicVideo, videoLibraryApi } from "@/lib/api/videoLibraryApi";
 import { ROUTES } from "@/lib/routes";
 import { TopCategories } from "@/components/home/TopCategories";
 import { PopularCreatorsCarousel } from "@/components/home/PopularCreatorsCarousel";
+import { HeroBannerFromDb } from "@/components/home/HeroBannerFromDb";
 
 function formatCount(n: number): string {
   if (n >= 1000) return `${Math.floor(n / 100) / 10}K+`;
@@ -40,7 +51,8 @@ export function DashboardHome({
   trending: MentorProfileRow[];
   stats: PlatformStats;
 }) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const isMentor = profile?.role === "mentor" || profile?.role === "both";
   const [upcoming, setUpcoming] = useState<BookingRow[]>([]);
   const [recommendedVideos, setRecommendedVideos] = useState<PublicVideo[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -116,38 +128,13 @@ export function DashboardHome({
     }
   };
 
-  const spotlightMentor = trending[0];
-
   return (
     <>
       <main className="flex flex-1 flex-col">
-        <div className="flex w-full flex-1 flex-col gap-4 px-6 py-6 xl:flex-row xl:items-start xl:gap-6">
-          <div className="flex flex-1 flex-col gap-4">
-            {spotlightMentor ? (
-              <Link
-                href={ROUTES.mentorProfile(spotlightMentor.id)}
-                className="relative flex min-h-70 max-w-4xl flex-col justify-center gap-3 overflow-hidden rounded-2xl px-8 py-8 text-white"
-                style={{ backgroundImage: "var(--gradient-button-primary)" }}
-              >
-                <span className="w-fit rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">
-                  1-on-1 Sessions
-                </span>
-                <h2 className="max-w-md text-3xl font-extrabold leading-tight">
-                  Join a session with{" "}
-                  <span className="text-accent-warning">
-                    {spotlightMentor.profiles?.name || "our top creator"}
-                  </span>
-                  !
-                </h2>
-                <p className="max-w-md text-sm text-white/80">
-                  {spotlightMentor.specialization || "Book a live 1-on-1 video session today."}
-                </p>
-                <span className="mt-1 flex w-fit items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-bold text-accent-link">
-                  Connect Now
-                  <ChevronRight size={16} />
-                </span>
-              </Link>
-            ) : null}
+        <div className="flex w-full flex-1 flex-col gap-4 px-4 py-6 xl:gap-6 sm:px-6">
+          <div className="mx-auto w-full max-w-7xl flex flex-1 flex-col xl:flex-row xl:items-start gap-4 xl:gap-6">
+            <div className="flex flex-1 flex-col gap-4">
+            <HeroBannerFromDb />
 
             <TopCategories selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
 
@@ -229,18 +216,48 @@ export function DashboardHome({
                   <p className="text-xs text-text-muted">Discover · Book · Connect</p>
                 </div>
               </div>
-              <ul className="flex flex-col gap-2.5 text-xs text-text-secondary">
-                <li className="flex items-center gap-2">
-                  <Video size={14} className="text-accent-link" />
-                  1-on-1 sessions — personalized time with experts
+              <Link
+                href={ROUTES.videos}
+                className="mb-4 flex h-10 w-full items-center justify-center rounded-xl bg-accent-link/10 text-sm font-semibold text-accent-link hover:bg-accent-link/15"
+              >
+                Watch Now
+              </Link>
+              <ul className="flex flex-col gap-3 text-xs text-text-secondary">
+                <li className="flex items-start gap-2.5">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent-link/10 text-accent-link">
+                    <Video size={14} />
+                  </span>
+                  <span>
+                    <p className="font-semibold text-text-primary">1-on-1 Sessions</p>
+                    <p className="text-text-muted">Personalized time with experts</p>
+                  </span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <ShieldCheck size={14} className="text-accent-link" />
-                  Verified mentors — background checked
+                <li className="flex items-start gap-2.5">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent-link/10 text-accent-link">
+                    <ShieldCheck size={14} />
+                  </span>
+                  <span>
+                    <p className="font-semibold text-text-primary">Verified Mentors</p>
+                    <p className="text-text-muted">Background verified</p>
+                  </span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <Users size={14} className="text-accent-link" />
-                  Secure payments — 100% safe &amp; secure
+                <li className="flex items-start gap-2.5">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent-link/10 text-accent-link">
+                    <Lock size={14} />
+                  </span>
+                  <span>
+                    <p className="font-semibold text-text-primary">Secure Payments</p>
+                    <p className="text-text-muted">100% safe &amp; secure</p>
+                  </span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent-link/10 text-accent-link">
+                    <MonitorPlay size={14} />
+                  </span>
+                  <span>
+                    <p className="font-semibold text-text-primary">HD Quality</p>
+                    <p className="text-text-muted">Crystal clear video</p>
+                  </span>
                 </li>
               </ul>
             </div>
@@ -302,7 +319,25 @@ export function DashboardHome({
                 <p className="text-[11px] text-text-muted">Avg. Rating</p>
               </div>
             </div>
+
+            {!isMentor ? (
+              <Link
+                href={ROUTES.mentorProfileDashboard}
+                className="flex flex-col gap-2 rounded-2xl p-4 text-white"
+                style={{ backgroundImage: "var(--gradient-button-primary)" }}
+              >
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15">
+                  <Users size={16} />
+                </span>
+                <p className="text-sm font-bold">Become a Creator</p>
+                <p className="text-xs text-white/80">Share your knowledge, grow your brand and earn.</p>
+                <span className="mt-1 flex w-fit items-center rounded-full bg-white px-4 py-1.5 text-xs font-bold text-accent-link">
+                  Start Now
+                </span>
+              </Link>
+            ) : null}
           </aside>
+          </div>
         </div>
       </main>
     </>

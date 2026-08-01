@@ -1,37 +1,11 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import {
-  Gamepad2,
-  Rocket,
-  BarChart3,
-  Cpu,
-  Briefcase,
-  Dumbbell,
-  MonitorPlay,
-  Sparkles,
-  ChevronRight,
-  ChevronLeft,
-} from "lucide-react";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { ROUTES } from "@/lib/routes";
-
-type Category = {
-  label: string;
-  icon: React.ElementType;
-  color: string;
-};
-
-const categories: Category[] = [
-  { label: "Gaming & Esports", icon: Gamepad2, color: "text-violet-500" },
-  { label: "Business & Startup", icon: Rocket, color: "text-amber-500" },
-  { label: "Stock Market", icon: BarChart3, color: "text-violet-500" },
-  { label: "AI & Technology", icon: Cpu, color: "text-blue-500" },
-  { label: "Career Growth", icon: Briefcase, color: "text-violet-500" },
-  { label: "Fitness & Wellness", icon: Dumbbell, color: "text-teal-500" },
-  { label: "Content Creation", icon: MonitorPlay, color: "text-pink-500" },
-  { label: "Spirituality & Astrology", icon: Sparkles, color: "text-amber-500" },
-];
+import { fetchActiveCategories, type MentorCategoryRow } from "@/lib/api/contentApi";
+import { getCategoryIcon } from "@/lib/utils/categoryIcons";
 
 export function TopCategories({
   selectedCategory,
@@ -43,6 +17,16 @@ export function TopCategories({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [categories, setCategories] = useState<MentorCategoryRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const data = await fetchActiveCategories();
+      setCategories(data);
+      setLoading(false);
+    })();
+  }, []);
 
   const updateArrows = () => {
     const el = scrollRef.current;
@@ -61,7 +45,7 @@ export function TopCategories({
       el.removeEventListener("scroll", updateArrows);
       window.removeEventListener("resize", updateArrows);
     };
-  }, []);
+  }, [categories]);
 
   const scrollByAmount = (direction: "left" | "right") => {
     const el = scrollRef.current;
@@ -72,6 +56,24 @@ export function TopCategories({
       behavior: "smooth",
     });
   };
+
+  if (loading) {
+    return (
+      <section className="w-full py-3">
+        <div className="mb-3 h-6 w-32 animate-pulse rounded-lg bg-gray-200" />
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1.5">
+            {[...Array(8)].map((_, i) => (
+              <div
+                key={i}
+                className="h-24 w-22 shrink-0 animate-pulse rounded-2xl bg-gray-100"
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="w-full py-3">
@@ -87,50 +89,53 @@ export function TopCategories({
       </div>
 
       <div className="flex items-center gap-2">
-        <button
-          type="button"
-          aria-label="Scroll left"
-          onClick={() => scrollByAmount("left")}
-          disabled={!canScrollLeft}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white"
-        >
-          <ChevronLeft className="w-4 h-4 text-gray-500" />
-        </button>
+        {canScrollLeft ? (
+          <button
+            type="button"
+            aria-label="Scroll left"
+            onClick={() => scrollByAmount("left")}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50"
+          >
+            <ChevronLeft className="w-4 h-4 text-gray-500" />
+          </button>
+        ) : null}
 
         <div
           ref={scrollRef}
-          className="flex flex-1 gap-2 overflow-x-auto scroll-smooth px-1 scrollbar-none [&::-webkit-scrollbar]:hidden"
+          className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto scroll-smooth px-1 scrollbar-none [&::-webkit-scrollbar]:hidden"
         >
-          {categories.map(({ label, icon: Icon, color }) => {
-            const isSelected = selectedCategory === label;
+          {categories.map(({ id, name, icon }) => {
+            const isSelected = selectedCategory === name;
+            const IconComponent = getCategoryIcon(icon || name);
             return (
               <button
-                key={label}
-                onClick={() => onSelectCategory(isSelected ? "" : label)}
-                className={`flex shrink-0 w-18 flex-col items-center justify-center gap-0.5 rounded-md border transition hover:shadow-sm px-1 py-1.5 text-center ${
+                key={id}
+                onClick={() => onSelectCategory(isSelected ? "" : name)}
+                className={`flex w-28 shrink-0 flex-col items-center justify-center gap-3 rounded-2xl border-2 transition-all px-3 py-4 text-center hover:shadow-md ${
                   isSelected
                     ? "border-indigo-600 bg-indigo-50"
                     : "border-gray-200 bg-white"
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${color}`} strokeWidth={1.75} />
-                <span className={`text-[9px] font-medium leading-tight ${isSelected ? "text-indigo-600" : "text-gray-700"}`}>
-                  {label}
+                <IconComponent className={`w-8 h-8 shrink-0 ${isSelected ? "text-indigo-600" : "text-indigo-500"}`} strokeWidth={1.5} />
+                <span className={`text-sm font-semibold leading-snug ${isSelected ? "text-indigo-600" : "text-gray-900"}`}>
+                  {name}
                 </span>
               </button>
             );
           })}
         </div>
 
-        <button
-          type="button"
-          aria-label="Scroll right"
-          onClick={() => scrollByAmount("right")}
-          disabled={!canScrollRight}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white"
-        >
-          <ChevronRight className="w-4 h-4 text-gray-500" />
-        </button>
+        {canScrollRight ? (
+          <button
+            type="button"
+            aria-label="Scroll right"
+            onClick={() => scrollByAmount("right")}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50"
+          >
+            <ChevronRight className="w-4 h-4 text-gray-500" />
+          </button>
+        ) : null}
       </div>
     </section>
   );

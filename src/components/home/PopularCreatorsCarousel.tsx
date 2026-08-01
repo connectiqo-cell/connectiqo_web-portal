@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Star, BadgeCheck } from "lucide-react";
+import { ChevronLeft, ChevronRight, Star, BadgeCheck, User } from "lucide-react";
 import Link from "next/link";
 import { type MentorProfileRow } from "@/lib/api/mentorApi";
 import { ROUTES } from "@/lib/routes";
@@ -42,7 +42,7 @@ export function PopularCreatorsCarousel({
     if (!card) return;
 
     const cardWidth = card.offsetWidth;
-    const gap = 24; // 24px gap
+    const gap = 12; // gap-3
     const scrollAmount = cardWidth + gap;
 
     container.scrollBy({
@@ -68,79 +68,80 @@ export function PopularCreatorsCarousel({
 
       <div className="flex items-center gap-4">
         {/* Previous Button */}
-        <button
-          onClick={() => scroll("left")}
-          disabled={!canScrollLeft}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-          aria-label="Previous creators"
-        >
-          <ChevronLeft className="w-5 h-5 text-gray-600" />
-        </button>
+        {canScrollLeft ? (
+          <button
+            onClick={() => scroll("left")}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50 transition-all"
+            aria-label="Previous creators"
+          >
+            <ChevronLeft className="w-5 h-5 text-gray-600" />
+          </button>
+        ) : null}
 
         {/* Carousel Container */}
-        <div className="relative flex-1 overflow-hidden">
+        <div className="relative min-w-0 flex-1 overflow-hidden">
           <div
             ref={scrollContainerRef}
-            className="flex gap-6 overflow-x-hidden scroll-smooth"
+            className="flex gap-4 overflow-x-hidden scroll-smooth"
           >
             {creators.map((creator) => (
               <Link
                 key={creator.id}
                 href={ROUTES.mentorProfile(creator.id)}
                 data-card
-                className="flex shrink-0 overflow-hidden rounded-2xl border border-gray-200 bg-white hover:shadow-lg transition-shadow duration-300 cursor-pointer"
-                style={{
-                  flex: "0 0 calc((100% - 48px) / 2)",
-                  height: "140px",
-                }}
+                className="group flex w-48 shrink-0 flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white hover:shadow-lg transition-all duration-300"
               >
-                {/* Avatar Section */}
-                <div className="relative flex h-full w-24 shrink-0 items-center justify-center bg-indigo-100">
+                {/* Photo Section */}
+                <div className="relative h-56 w-full overflow-hidden bg-linear-to-br from-indigo-100 to-indigo-200">
                   {creator.profiles?.avatar_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={creator.profiles.avatar_url}
                       alt={creator.profiles?.name || ""}
-                      className="w-full h-full object-cover"
+                      className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
-                    <span className="text-sm font-bold text-indigo-600">
-                      {creator.profiles?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                    </span>
+                    <div className="flex h-full w-full items-center justify-center">
+                      <User className="h-12 w-12 text-indigo-300" />
+                    </div>
                   )}
                 </div>
 
                 {/* Content Section */}
-                <div className="flex flex-1 flex-col justify-between p-2.5">
-                  <div>
-                    <div className="flex items-center gap-0.5">
-                      <span className="text-xs font-bold text-gray-900 truncate">
+                <div className="flex flex-1 flex-col justify-between gap-3 p-3">
+                  {/* Header */}
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm font-bold text-gray-900 truncate">
                         {creator.profiles?.name}
                       </span>
                       <BadgeCheck
-                        className="w-3 h-3 text-indigo-600 shrink-0"
+                        className="w-4 h-4 text-indigo-600 shrink-0"
                         strokeWidth={2}
                         fill="currentColor"
                       />
                     </div>
-                    <p className="mt-0.5 text-[10px] text-gray-600 truncate">
+                    <p className="text-xs text-gray-600 truncate">
                       {creator.specialization || "Mentor"}
                     </p>
-
-                    <div className="mt-1 flex items-center gap-0.5 text-[10px]">
-                      <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                      <span className="font-semibold text-gray-800">
-                        {creator.rating?.toFixed(1) || "0"}
-                      </span>
-                      <span className="text-gray-500">
-                        ({((creator.total_sessions || 0) / 1000).toFixed(1)}k)
-                      </span>
-                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between gap-1.5">
-                    <span className="text-xs font-bold text-gray-900 whitespace-nowrap">
+                  {/* Rating */}
+                  <div className="flex items-center gap-1">
+                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    <span className="text-sm font-semibold text-gray-800">
+                      {creator.rating?.toFixed(1) || "0"}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      ({((creator.total_sessions || 0) / 1000).toFixed(1)}k)
+                    </span>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-100">
+                    <span className="text-sm font-bold text-gray-900">
                       ₹{creator.price_per_hour}
+                      <span className="text-xs font-normal text-gray-500 block">/session</span>
                     </span>
                     <button
                       type="button"
@@ -148,9 +149,9 @@ export function PopularCreatorsCarousel({
                         e.preventDefault();
                         e.stopPropagation();
                       }}
-                      className="rounded-md bg-indigo-600 px-2.5 py-0.5 text-[10px] font-semibold text-white hover:bg-indigo-700 transition-colors shrink-0 whitespace-nowrap"
+                      className="rounded-lg bg-indigo-600 px-3 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition-colors shrink-0"
                     >
-                      Book now
+                      Book Now
                     </button>
                   </div>
                 </div>
@@ -160,14 +161,15 @@ export function PopularCreatorsCarousel({
         </div>
 
         {/* Next Button */}
-        <button
-          onClick={() => scroll("right")}
-          disabled={!canScrollRight}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-          aria-label="Next creators"
-        >
-          <ChevronRight className="w-5 h-5 text-gray-600" />
-        </button>
+        {canScrollRight ? (
+          <button
+            onClick={() => scroll("right")}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50 transition-all"
+            aria-label="Next creators"
+          >
+            <ChevronRight className="w-5 h-5 text-gray-600" />
+          </button>
+        ) : null}
       </div>
     </section>
   );
