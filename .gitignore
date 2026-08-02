@@ -43,10 +43,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Docker & deployment
+# Docker & deployment (local-only overrides — .dockerignore itself is a
+# real project file and must stay tracked)
 .env.docker
 docker-compose.override.yml
-.dockerignore
 
 # Backup and temporary files
 *.tar.gz
