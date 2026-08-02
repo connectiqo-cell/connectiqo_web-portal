@@ -34,7 +34,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
   if (!user || !profile?.is_admin) return null;
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-10">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
       <div>
         <h1 className="text-2xl font-bold text-text-primary">Admin</h1>
         <p className="mt-1 text-sm text-text-secondary">Manage categories and user accounts.</p>

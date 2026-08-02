@@ -33,3 +33,31 @@ export async function fetchActiveCategoryNames(): Promise<string[]> {
   const rows = await fetchActiveCategories();
   return rows.map((r) => r.name).filter(Boolean);
 }
+
+export type HeroSlideRow = {
+  id: string;
+  image_url: string;
+  position: number;
+};
+
+/** Home banner carousel — admin-managed promotional slides. */
+export async function fetchActiveHeroSlides(): Promise<HeroSlideRow[]> {
+  const supabase = createClient();
+  try {
+    const { data, error } = await supabase
+      .from("hero_slides")
+      .select("id, image_url, position")
+      .eq("is_active", true)
+      .order("position", { ascending: true })
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.warn("hero_slides:", error.message);
+      return [];
+    }
+    return data || [];
+  } catch (e) {
+    console.warn("hero_slides fetch failed:", (e as Error)?.message);
+    return [];
+  }
+}

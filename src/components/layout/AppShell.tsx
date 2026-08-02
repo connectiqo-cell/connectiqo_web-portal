@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 import { DashboardSidebar } from "@/components/home/DashboardSidebar";
 import { AppTopBar } from "@/components/layout/AppTopBar";
@@ -19,6 +20,16 @@ const NO_SIDEBAR_PREFIXES = [
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, loading } = useAuth();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  // Close the mobile drawer whenever the route changes (e.g. browser back/forward while
+  // it's open) — compared during render rather than in an effect, per React's guidance on
+  // adjusting state when a prop changes without an extra render pass.
+  const [lastPathname, setLastPathname] = useState(pathname);
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname);
+    setMobileNavOpen(false);
+  }
 
   const showSidebar =
     !loading && !!user && !NO_SIDEBAR_PREFIXES.some((prefix) => pathname.startsWith(prefix));
@@ -27,9 +38,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex flex-1 flex-col">
-      <AppTopBar />
+      <AppTopBar onMenuClick={() => setMobileNavOpen(true)} />
       <div className="flex flex-1">
-        <DashboardSidebar />
+        <DashboardSidebar mobileOpen={mobileNavOpen} onMobileClose={() => setMobileNavOpen(false)} />
         <div className="flex min-w-0 flex-1 flex-col">{children}</div>
       </div>
     </div>

@@ -130,7 +130,7 @@ export default function AdminCategoriesPage() {
                 type="button"
                 onClick={() => handleDelete(category)}
                 aria-label="Delete category"
-                className="text-text-muted hover:text-accent-error"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-text-muted hover:bg-surface-chip hover:text-accent-error"
               >
                 <Trash2 size={16} />
               </button>

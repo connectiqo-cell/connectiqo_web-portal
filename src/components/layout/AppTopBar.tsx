@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, LogOut, Settings as SettingsIcon, Shield, User, Zap } from "lucide-react";
+import { ChevronDown, LogOut, Menu, Settings as SettingsIcon, Shield, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -11,7 +11,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROUTES } from "@/lib/routes";
 
-export function AppTopBar() {
+export function AppTopBar({ onMenuClick }: { onMenuClick?: () => void }) {
   const router = useRouter();
   const { profile, signOut } = useAuth();
   const [open, setOpen] = useState(false);
@@ -29,13 +29,19 @@ export function AppTopBar() {
   return (
     <header className="sticky top-0 z-30 flex h-14 sm:h-16 shrink-0 items-center border-b border-border-light bg-surface-page/95 px-3 sm:px-6 backdrop-blur">
       <div className="flex w-full items-center gap-2 sm:gap-4">
-        <Link href={ROUTES.home} className="flex shrink-0 items-center gap-2">
-          <span
-            className="flex h-8 w-8 items-center justify-center rounded-xl text-white"
-            style={{ backgroundImage: "var(--gradient-button-primary)" }}
+        {onMenuClick ? (
+          <button
+            type="button"
+            onClick={onMenuClick}
+            aria-label="Open menu"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-chip hover:text-text-primary lg:hidden"
           >
-            <Zap size={16} className="fill-current" />
-          </span>
+            <Menu size={20} />
+          </button>
+        ) : null}
+        <Link href={ROUTES.home} className="flex shrink-0 items-center gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element -- local static asset, plain img matches the rest of the codebase's convention */}
+          <img src="/connectiqo_logo.png" alt="" className="h-10 w-10 sm:h-11 sm:w-11" />
           <span className="hidden text-lg font-extrabold text-text-primary sm:block">
             Connect<span className="text-accent-link">iqo</span>
           </span>

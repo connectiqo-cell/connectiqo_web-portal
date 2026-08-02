@@ -140,3 +140,24 @@ body {
   background: var(--color-void);
   color: var(--color-text-primary);
 }
+
+button,
+[role="button"] {
+  cursor: pointer;
+}
+
+button:disabled,
+[role="button"][aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+/* Used across horizontal carousels (category/mentor/video strips) to hide
+   the native scrollbar while keeping the element scrollable. */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

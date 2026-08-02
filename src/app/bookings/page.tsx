@@ -160,16 +160,16 @@ export default function BookingsPage() {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_300px] lg:items-start">
         <div className="flex flex-col gap-6">
-          <div className="flex gap-2 border-b border-border-light">
+          <div className="flex gap-2 overflow-x-auto border-b border-border-light">
             <a
               href="#upcoming-sessions"
-              className="border-b-2 border-accent-link px-4 py-2.5 text-sm font-semibold text-accent-link"
+              className="shrink-0 border-b-2 border-accent-link px-4 py-2.5 text-sm font-semibold text-accent-link"
             >
               Upcoming
             </a>
             <a
               href="#session-history"
-              className="px-4 py-2.5 text-sm font-semibold text-text-muted hover:text-text-secondary"
+              className="shrink-0 px-4 py-2.5 text-sm font-semibold text-text-muted hover:text-text-secondary"
             >
               History
             </a>

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, Grid3x3, Heart, Play, PlayCircle, Search, ShieldCheck, Star, User, Users, Video } from "lucide-react";
+import { ChevronRight, Grid3x3, Heart, PlayCircle, ShieldCheck, Star, User, Users, Video, Volume2, VolumeX } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
@@ -9,28 +9,48 @@ import { HomeSearchBar } from "@/components/HomeSearchBar";
 import { LanguageMenu } from "@/components/LanguageMenu";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { MentorCard } from "@/components/mentor/MentorCard";
+import { fetchActiveCategories, type MentorCategoryRow } from "@/lib/api/contentApi";
 import type { MentorProfileRow, PlatformStats } from "@/lib/api/mentorApi";
 import { ROUTES } from "@/lib/routes";
 import { getCategoryIcon } from "@/lib/utils/categoryIcons";
 
-const HOME_CATEGORIES = [
-  "Business",
-  "Finance & Investing",
-  "AI & Machine Learning",
-  "Health & Wellness",
-  "Education & Coaching",
-  "Content Creation",
-  "Personal Development",
-] as const;
-
 const NAV_LINKS = [
-  { href: ROUTES.home, label: "Home" },
   { href: ROUTES.discover, label: "Discover Creators" },
   { href: "#categories", label: "Categories" },
   { href: "#how-it-works", label: "How It Works" },
-  { href: "#pricing", label: "Pricing" },
-  { href: ROUTES.login, label: "Become a Creator" },
 ];
+
+/** Hero-flanking mentor cards. */
+const HERO_PROFILE_CARDS = [
+  { label: "Music Mentor", rating: 4.9, image: "/music_mentor.png" },
+  { label: "Stock Trader", rating: 4.9, image: "/stocktrader.png" },
+  { label: "Wellness Coach", rating: 4.8, image: "/wellness_coach.png" },
+  { label: "AI Expert", rating: 4.8, image: "/ai_expert.png" },
+] as const;
+
+function HeroProfileCard({
+  label,
+  rating,
+  image,
+}: {
+  label: string;
+  rating: number;
+  image: string;
+}) {
+  return (
+    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-surface-chip shadow-md">
+      {/* eslint-disable-next-line @next/next/no-img-element -- local static asset, plain img matches the rest of the codebase's convention */}
+      <img src={image} alt={label} className="h-full w-full object-cover" />
+      <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/75 to-transparent p-2">
+        <p className="truncate text-[11px] font-bold text-white">{label}</p>
+        <p className="flex items-center gap-0.5 text-[10px] font-semibold text-white/90">
+          <Star size={10} className="fill-accent-warning text-accent-warning" />
+          {rating}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 function TrendingCreatorsCarousel({
   trending,
@@ -121,11 +141,11 @@ function TrendingCreatorsCarousel({
               <Link
                 key={mentor.id}
                 href={ROUTES.mentorProfile(mentor.id)}
-                className="group flex flex-col sm:flex-row gap-4 sm:gap-5 w-[20rem] sm:w-[28rem] shrink-0 rounded-xl border border-border-light bg-surface-panel p-4 sm:p-5 transition-all hover:border-accent-link hover:shadow-lg"
+                className="group flex flex-col sm:flex-row gap-3 sm:gap-4 w-64 sm:w-80 shrink-0 rounded-xl border border-border-light bg-surface-panel p-3 sm:p-4 transition-all hover:border-accent-link hover:shadow-lg"
               >
                 {/* Avatar - Left Side */}
                 <div className="shrink-0">
-                  <div className="flex h-28 w-28 sm:h-40 sm:w-40 items-center justify-center overflow-hidden rounded-lg bg-linear-to-br from-surface-chip to-surface-panel">
+                  <div className="flex h-20 w-20 sm:h-28 sm:w-28 items-center justify-center overflow-hidden rounded-lg bg-linear-to-br from-surface-chip to-surface-panel">
                     {avatarUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -134,38 +154,38 @@ function TrendingCreatorsCarousel({
                         className="h-full w-full object-cover group-hover:scale-105 transition-transform"
                       />
                     ) : (
-                      <User size={24} className="sm:size-10 text-text-muted" />
+                      <User size={20} className="sm:size-8 text-text-muted" />
                     )}
                   </div>
                 </div>
 
                 {/* Content - Right Side */}
-                <div className="flex flex-1 flex-col justify-between gap-2">
+                <div className="flex flex-1 flex-col justify-between gap-1.5">
                   <div>
                     <div className="flex items-center gap-1">
-                      <p className="truncate font-bold text-text-primary text-sm sm:text-base">{name}</p>
+                      <p className="truncate font-bold text-text-primary text-xs sm:text-sm">{name}</p>
                       {mentor.rating && mentor.rating >= 4.5 && (
-                        <span className="text-sm sm:text-base">✓</span>
+                        <span className="text-xs sm:text-sm">✓</span>
                       )}
                     </div>
-                    <p className="truncate text-xs sm:text-sm text-text-muted">
+                    <p className="truncate text-[11px] sm:text-xs text-text-muted">
                       {mentor.specialization || "Mentor"}
                     </p>
                   </div>
 
                   <div className="flex items-center gap-1">
-                    <Star size={14} className="sm:size-4 fill-accent-secondary text-accent-secondary" />
-                    <span className="text-xs sm:text-sm font-semibold text-text-primary">
+                    <Star size={12} className="sm:size-3.5 fill-accent-secondary text-accent-secondary" />
+                    <span className="text-[11px] sm:text-xs font-semibold text-text-primary">
                       {mentor.rating?.toFixed(1) || "0"}
                     </span>
-                    <span className="text-xs sm:text-sm text-text-muted">
+                    <span className="text-[11px] sm:text-xs text-text-muted">
                       ({(reviewCount / 1000).toFixed(1)}k)
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between gap-2">
                     {mentor.price_per_hour && (
-                      <span className="text-xs sm:text-base font-bold text-accent-secondary">
+                      <span className="text-xs sm:text-sm font-bold text-accent-secondary">
                         ₹{mentor.price_per_hour}
                       </span>
                     )}
@@ -174,7 +194,7 @@ function TrendingCreatorsCarousel({
                         e.preventDefault();
                         e.stopPropagation();
                       }}
-                      className="shrink-0 rounded-md bg-accent-primary px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white hover:bg-accent-primary-hover transition-colors whitespace-nowrap"
+                      className="shrink-0 rounded-md bg-accent-primary px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs font-semibold text-white hover:bg-accent-primary-hover transition-colors whitespace-nowrap"
                     >
                       Book
                     </button>
@@ -229,13 +249,26 @@ export function MarketingHome({
   trending?: MentorProfileRow[];
   stats?: PlatformStats;
 }) {
+  const heroVideoRef = useRef<HTMLVideoElement>(null);
+  const [heroMuted, setHeroMuted] = useState(true);
+  const [categories, setCategories] = useState<MentorCategoryRow[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchActiveCategories().then((rows) => {
+      if (!cancelled) setCategories(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <main className="flex flex-1 flex-col">
       <header className="sticky top-0 z-20 border-b border-border-light bg-surface-page/95 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-4 sm:px-6 py-3 sm:py-4">
-          <Link href={ROUTES.home} className="shrink-0 text-xl sm:text-2xl font-extrabold text-accent-link">
-            Connectiqo
+          <Link href={ROUTES.home} className="shrink-0 text-xl sm:text-2xl font-extrabold text-text-primary">
+            Connect<span className="text-accent-link">iqo</span>
           </Link>
           <nav className="hidden items-center gap-3 sm:gap-4 text-xs sm:text-sm font-medium text-text-secondary xl:flex">
             {NAV_LINKS.map((link) => (
@@ -245,13 +278,6 @@ export function MarketingHome({
             ))}
           </nav>
           <div className="flex shrink-0 items-center gap-1 sm:gap-3 whitespace-nowrap">
-            <Link
-              href={ROUTES.discover}
-              aria-label="Search"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-text-secondary hover:bg-surface-chip hover:text-text-primary"
-            >
-              <Search size={16} />
-            </Link>
             <LanguageMenu />
             <Link
               href={ROUTES.signup}
@@ -267,15 +293,16 @@ export function MarketingHome({
         </div>
       </header>
 
-      <section className="mx-auto grid w-full max-w-6xl gap-8 sm:gap-10 px-4 sm:px-6 py-12 sm:py-16 lg:grid-cols-2 lg:items-center">
+      <section className="mx-auto grid w-full max-w-6xl gap-8 sm:gap-10 px-4 sm:px-6 pt-4 pb-12 sm:pt-6 sm:pb-16 lg:grid-cols-2 lg:items-center">
         <div className="flex flex-col gap-4 sm:gap-5">
           <span className="w-fit rounded-full border border-accent-link/30 bg-accent-link/10 px-3 sm:px-3.5 py-1 sm:py-1.5 text-xs font-semibold text-accent-link">
             Connect · Learn · Grow · Earn
           </span>
-          <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-text-primary sm:text-6xl">
-            Connect with <span className="text-accent-link">Connectiqo</span>
+          <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-text-primary sm:text-4xl">
+            Connect with
+            <span className="-mt-1 block text-4xl text-accent-link sm:text-5xl">Connectiqo</span>
           </h1>
-          <p className="max-w-lg text-base sm:text-lg text-text-secondary">
+          <p className="max-w-lg text-justify text-base sm:text-lg text-text-secondary">
             Join 1-on-1 video sessions with your favorite creators, mentors &amp; experts. Build
             real connections and grow together.
           </p>
@@ -297,78 +324,98 @@ export function MarketingHome({
           </div>
         </div>
 
-        {/* Video Testimonial Card */}
-        <div className="relative">
-          <div className="group relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-3xl bg-black shadow-2xl">
-            <video
-              src="/videos/testimonial-1.mp4"
-              poster="/videos/testimonial-1.jpg"
-              className="absolute inset-0 h-full w-full object-cover"
-              playsInline
-            />
+        <div className="mx-auto grid w-full max-w-xs grid-cols-1 items-center gap-3 sm:max-w-sm lg:max-w-none lg:grid-cols-[1fr_2.6fr_1fr]">
+          {/* Left profile cards */}
+          <div className="hidden flex-col gap-3 lg:flex">
+            <HeroProfileCard {...HERO_PROFILE_CARDS[0]} />
+            <HeroProfileCard {...HERO_PROFILE_CARDS[2]} />
+          </div>
 
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent" />
+          {/* Video Testimonial Card, with peeking layers behind to suggest more videos */}
+          <div className="relative">
+            <div className="absolute inset-0 -rotate-6 rounded-2xl bg-surface-panel/70 shadow-lg" />
+            <div className="absolute inset-0 -rotate-3 rounded-2xl bg-surface-panel/90 shadow-lg" />
 
-            {/* Play Button */}
-            <button
-              type="button"
-              className="relative z-10 flex h-16 w-16 items-center justify-center rounded-full bg-white/90 text-accent-link transition-transform hover:scale-110"
-              aria-label="Play testimonial"
-              onClick={(e) => {
-                e.preventDefault();
-                const video = (e.currentTarget.parentElement as HTMLElement)?.querySelector('video') as HTMLVideoElement;
-                if (video) video.play();
-              }}
-            >
-              <Play size={28} className="ml-1 fill-current" />
-            </button>
+            <div className="group relative flex aspect-[400/368] rotate-2 flex-col items-center justify-center overflow-hidden rounded-2xl bg-black shadow-2xl">
+              <video
+                ref={heroVideoRef}
+                src="/videos/welcome.mp4"
+                className="absolute inset-0 h-full w-full object-contain"
+                autoPlay
+                loop
+                muted={heroMuted}
+                playsInline
+              />
 
-            {/* Like Button */}
-            <button
-              type="button"
-              className="absolute bottom-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-red-500 transition-transform hover:scale-110"
-              aria-label="Like"
-            >
-              <Heart size={20} className="fill-current" />
-            </button>
+              {/* Gradient Overlay */}
+              <div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent" />
 
-            {/* Stats Badge */}
-            <div className="absolute bottom-4 left-4 flex items-center gap-2.5 rounded-2xl bg-white/95 px-3.5 py-2.5 backdrop-blur z-10">
-              <div className="flex -space-x-2">
-                {[...Array(3)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-6 w-6 rounded-full border-2 border-white bg-accent-link/20 flex items-center justify-center"
-                  >
-                    <Users size={11} className="text-accent-link" />
-                  </div>
-                ))}
-              </div>
-              <div>
-                <p className="text-xs font-bold text-text-primary">
-                  59+ Happy Users
-                </p>
-                <p className="text-[10px] text-text-muted">Successful Connections Made</p>
+              {/* Mute Toggle */}
+              <button
+                type="button"
+                className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-accent-link opacity-0 transition-all hover:scale-110 group-hover:opacity-100"
+                aria-label={heroMuted ? "Unmute testimonial" : "Mute testimonial"}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setHeroMuted((m) => !m);
+                }}
+              >
+                {heroMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+              </button>
+
+              {/* Like Button */}
+              <button
+                type="button"
+                className="absolute bottom-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-red-500 transition-transform hover:scale-110"
+                aria-label="Like"
+              >
+                <Heart size={16} className="fill-current" />
+              </button>
+
+              {/* Stats Badge */}
+              <div className="absolute bottom-3 left-3 flex items-center gap-2 rounded-xl bg-white/95 px-2.5 py-2 backdrop-blur z-10">
+                <div className="flex -space-x-2">
+                  {[...Array(3)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-5 w-5 rounded-full border-2 border-white bg-accent-link/20 flex items-center justify-center"
+                    >
+                      <Users size={9} className="text-accent-link" />
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <p className="text-[11px] font-bold text-text-primary">
+                    59+ Happy Users
+                  </p>
+                  <p className="text-[9px] text-text-muted">Successful Connections Made</p>
+                </div>
               </div>
             </div>
+          </div>
+
+          {/* Right profile cards */}
+          <div className="hidden flex-col gap-3 lg:flex">
+            <HeroProfileCard {...HERO_PROFILE_CARDS[1]} />
+            <HeroProfileCard {...HERO_PROFILE_CARDS[3]} />
           </div>
         </div>
       </section>
 
       <section id="categories" className="mx-auto w-full max-w-6xl px-6 py-10">
+        <h2 className="mb-4 text-xl sm:text-2xl font-bold text-text-primary">Categories</h2>
         <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
-          {HOME_CATEGORIES.map((category) => {
-            const Icon = getCategoryIcon(category);
+          {categories.map(({ id, name, icon }) => {
+            const Icon = getCategoryIcon(icon, name);
             return (
               <Link
-                key={category}
-                href={ROUTES.category(category)}
+                key={id}
+                href={ROUTES.category(name)}
                 className="flex flex-col items-center justify-center gap-3 w-32 shrink-0 rounded-xl border border-border-light bg-surface-panel p-4 text-center transition-all hover:border-accent-link hover:shadow-md"
               >
                 <Icon size={28} className="text-accent-link" />
                 <span className="text-xs font-semibold text-text-secondary line-clamp-2">
-                  {category}
+                  {name}
                 </span>
               </Link>
             );

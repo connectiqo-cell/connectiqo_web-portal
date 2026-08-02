@@ -1,49 +1,64 @@
 import {
+  Bot,
   Briefcase,
   Camera,
-  ClipboardList,
   Cloud,
   Code2,
   Database,
+  Gavel,
   GraduationCap,
   Grid3x3,
-  Handshake,
   HeartPulse,
-  Laptop,
+  Landmark,
+  LineChart,
   type LucideIcon,
   Megaphone,
   Palette,
-  Rocket,
-  Scale,
   Shield,
   Sparkles,
+  Star,
   TrendingUp,
+  Users,
 } from "lucide-react";
 
-/** Cosmetic icon lookup for category chips/rows — purely presentational, has no DB dependency. */
-const CATEGORY_ICON_MAP: Record<string, LucideIcon> = {
-  Technology: Laptop,
-  "Software Development": Code2,
-  "AI & Machine Learning": Sparkles,
-  "Data Science": Database,
-  Cybersecurity: Shield,
-  "Cloud Computing": Cloud,
-  Business: Briefcase,
-  Entrepreneurship: Rocket,
-  "Product Management": ClipboardList,
-  "Finance & Investing": TrendingUp,
-  "Digital Marketing": Megaphone,
-  "Content Creation": Camera,
-  "Design & UX": Palette,
-  "Photography & Video": Camera,
-  "Personal Development": Sparkles,
-  "Health & Wellness": HeartPulse,
-  "Education & Coaching": GraduationCap,
-  Legal: Scale,
-  Sales: Handshake,
-  Other: Grid3x3,
+/**
+ * mentor_categories.icon stores Google Material Symbols names (ported from
+ * the mobile app's Android icon set), not Lucide names — map the ones
+ * currently in use to their closest Lucide equivalent.
+ */
+const MATERIAL_ICON_MAP: Record<string, LucideIcon> = {
+  smart_toy: Bot,
+  developer_mode: Code2,
+  cloud: Cloud,
+  work: Briefcase,
+  trending_up: TrendingUp,
+  supervisor_account: Users,
+  account_balance: Landmark,
+  campaign: Megaphone,
+  star: Star,
+  photo_camera: Camera,
+  self_improvement: Sparkles,
+  school: GraduationCap,
+  gavel: Gavel,
+  insights: LineChart,
 };
 
-export function getCategoryIcon(category: string): LucideIcon {
-  return CATEGORY_ICON_MAP[category] || Grid3x3;
+/** Name-based fallback for categories whose `icon` is still the unset "category" placeholder. */
+const CATEGORY_NAME_ICON_MAP: Record<string, LucideIcon> = {
+  "Data Science": Database,
+  Cybersecurity: Shield,
+  "Design & UX": Palette,
+  "Health & Wellness": HeartPulse,
+};
+
+/**
+ * Resolve a category's display icon. `icon` is the raw DB value (a Material
+ * Symbols name — sometimes unset/"category", occasionally whitespace-
+ * corrupted); `name` is the category's display name, used as a fallback.
+ */
+export function getCategoryIcon(icon?: string | null, name?: string | null): LucideIcon {
+  const key = icon?.trim();
+  if (key && MATERIAL_ICON_MAP[key]) return MATERIAL_ICON_MAP[key];
+  if (name && CATEGORY_NAME_ICON_MAP[name]) return CATEGORY_NAME_ICON_MAP[name];
+  return Grid3x3;
 }

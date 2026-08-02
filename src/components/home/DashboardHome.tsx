@@ -12,17 +12,17 @@ import {
   Video,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { type BookingRow, bookingApi } from "@/lib/api/bookingApi";
 import { type MentorProfileRow, type PlatformStats } from "@/lib/api/mentorApi";
 import { type PublicVideo, videoLibraryApi } from "@/lib/api/videoLibraryApi";
 import { ROUTES } from "@/lib/routes";
+import { useHorizontalScroll } from "@/lib/hooks/useHorizontalScroll";
+import { HeroBanner } from "@/components/home/HeroBanner";
 import { TopCategories } from "@/components/home/TopCategories";
 import { PopularCreatorsCarousel } from "@/components/home/PopularCreatorsCarousel";
-import { HeroBannerFromDb } from "@/components/home/HeroBannerFromDb";
-import { DownloadAppCard } from "@/components/home/DownloadAppCard";
 
 function formatCount(n: number): string {
   if (n >= 1000) return `${Math.floor(n / 100) / 10}K+`;
@@ -57,9 +57,12 @@ export function DashboardHome({
   const [upcoming, setUpcoming] = useState<BookingRow[]>([]);
   const [recommendedVideos, setRecommendedVideos] = useState<PublicVideo[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const videosScrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollVideosLeft, setCanScrollVideosLeft] = useState(false);
-  const [canScrollVideosRight, setCanScrollVideosRight] = useState(false);
+  const {
+    scrollRef: videosScrollRef,
+    canScrollLeft: canScrollVideosLeft,
+    canScrollRight: canScrollVideosRight,
+    scroll: scrollVideos,
+  } = useHorizontalScroll(recommendedVideos, "[data-video]");
 
   const filteredTrending = selectedCategory
     ? trending.filter(
@@ -68,7 +71,6 @@ export function DashboardHome({
           creator.profiles?.name?.toLowerCase().includes(selectedCategory.toLowerCase())
       )
     : trending;
-
 
   useEffect(() => {
     if (!user) return;
@@ -93,49 +95,12 @@ export function DashboardHome({
     };
   }, []);
 
-  const checkVideosScroll = () => {
-    if (videosScrollRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = videosScrollRef.current;
-      setCanScrollVideosLeft(scrollLeft > 0);
-      setCanScrollVideosRight(scrollLeft < scrollWidth - clientWidth - 10);
-    }
-  };
-
-  useEffect(() => {
-    checkVideosScroll();
-    const container = videosScrollRef.current;
-    container?.addEventListener("scroll", checkVideosScroll);
-    window.addEventListener("resize", checkVideosScroll);
-
-    return () => {
-      container?.removeEventListener("scroll", checkVideosScroll);
-      window.removeEventListener("resize", checkVideosScroll);
-    };
-  }, [recommendedVideos]);
-
-  const scrollVideos = (direction: "left" | "right") => {
-    if (videosScrollRef.current) {
-      const container = videosScrollRef.current;
-      const firstVideo = container.querySelector('[data-video]') as HTMLElement;
-      if (firstVideo) {
-        const videoWidth = firstVideo.offsetWidth;
-        const gap = 16;
-        const scrollAmount = videoWidth + gap;
-        container.scrollBy({
-          left: direction === "left" ? -scrollAmount : scrollAmount,
-          behavior: "smooth",
-        });
-      }
-    }
-  };
-
   return (
-    <>
-      <main className="flex flex-1 flex-col">
-        <div className="flex w-full flex-1 flex-col gap-4 px-4 py-6 xl:gap-6 sm:px-6">
-          <div className="mx-auto w-full max-w-7xl flex flex-1 flex-col xl:flex-row xl:items-start gap-4 xl:gap-6">
-            <div className="flex flex-1 flex-col gap-4">
-            <HeroBannerFromDb />
+    <main className="flex flex-1 flex-col">
+      <div className="flex w-full flex-1 flex-col gap-4 px-4 py-6 xl:gap-6 sm:px-6">
+        <div className="mx-auto w-full max-w-7xl flex flex-1 flex-col xl:flex-row xl:items-start gap-4 xl:gap-6">
+          <div className="flex min-w-0 flex-1 flex-col gap-4">
+            <HeroBanner />
 
             <TopCategories selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
 
@@ -143,7 +108,7 @@ export function DashboardHome({
 
             <section className="w-full mt-4">
               <div className="mb-6 flex items-center justify-between">
-                <h3 className="text-lg font-bold text-gray-900">Recommended For You</h3>
+                <h2 className="text-lg font-bold text-text-primary">Recommended For You</h2>
                 <Link href={ROUTES.videos} className="flex items-center gap-1 text-sm font-semibold text-accent-link">
                   View all <ChevronRight size={16} />
                 </Link>
@@ -183,29 +148,30 @@ export function DashboardHome({
                     </Link>
                   ))}
                 </div>
-        {canScrollVideosLeft && (
-          <button
-            onClick={() => scrollVideos("left")}
-            className="absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 rounded-full bg-white shadow-md p-2 hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 z-10 pointer-events-auto"
-            aria-label="Scroll left"
-          >
-            <ChevronRight size={18} className="rotate-180 text-text-primary" />
-          </button>
-        )}
 
-        {canScrollVideosRight && (
-          <button
-            onClick={() => scrollVideos("right")}
-            className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 rounded-full bg-white shadow-md p-2 hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 z-10 pointer-events-auto"
-            aria-label="Scroll right"
-          >
-            <ChevronRight size={18} className="text-text-primary" />
-          </button>
-        )}
+                {canScrollVideosLeft && (
+                  <button
+                    onClick={() => scrollVideos("left")}
+                    className="absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 rounded-full bg-surface-panel shadow-md p-2 hover:bg-surface-chip z-10 pointer-events-auto"
+                    aria-label="Scroll left"
+                  >
+                    <ChevronRight size={18} className="rotate-180 text-text-primary" />
+                  </button>
+                )}
+
+                {canScrollVideosRight && (
+                  <button
+                    onClick={() => scrollVideos("right")}
+                    className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 rounded-full bg-surface-panel shadow-md p-2 hover:bg-surface-chip z-10 pointer-events-auto"
+                    aria-label="Scroll right"
+                  >
+                    <ChevronRight size={18} className="text-text-primary" />
+                  </button>
+                )}
               </div>
             </section>
-
           </div>
+
           <aside className="flex w-full flex-col gap-4 xl:w-72 xl:shrink-0">
             <div className="rounded-2xl border border-border-light bg-surface-panel p-4">
               <div className="mb-3 flex items-center gap-3">
@@ -265,7 +231,7 @@ export function DashboardHome({
 
             <div className="rounded-2xl border border-border-light bg-surface-panel p-4">
               <div className="mb-3 flex items-center justify-between">
-                <h4 className="text-sm font-bold text-text-primary">Upcoming Sessions</h4>
+                <h3 className="text-sm font-bold text-text-primary">Upcoming Sessions</h3>
                 <Link href={ROUTES.bookings} className="text-xs font-semibold text-accent-link">
                   View all
                 </Link>
@@ -321,8 +287,6 @@ export function DashboardHome({
               </div>
             </div>
 
-            <DownloadAppCard />
-
             {!isMentor ? (
               <Link
                 href={ROUTES.mentorProfileDashboard}
@@ -340,9 +304,8 @@ export function DashboardHome({
               </Link>
             ) : null}
           </aside>
-          </div>
         </div>
-      </main>
-    </>
+      </div>
+    </main>
   );
 }

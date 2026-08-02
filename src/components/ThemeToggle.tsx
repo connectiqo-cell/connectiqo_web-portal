@@ -1,7 +1,8 @@
 "use client";
 
+import { Moon, Sun } from "lucide-react";
+
 import { useTheme } from "@/contexts/ThemeContext";
-import { SunMoonIcon } from "@/components/SunMoonIcon";
 
 export function ThemeToggle() {
   const { mode, toggleTheme } = useTheme();
@@ -11,14 +12,10 @@ export function ThemeToggle() {
       type="button"
       onClick={toggleTheme}
       suppressHydrationWarning
-      className={`inline-flex items-center justify-center rounded-lg p-2 transition-colors ${
-        mode === "dark"
-          ? "text-yellow-300 hover:bg-accent-primary/20"
-          : "text-purple-600 hover:bg-yellow-300/20"
-      }`}
+      className="inline-flex items-center justify-center rounded-lg p-2 text-text-secondary transition-colors hover:bg-surface-chip hover:text-text-primary"
       aria-label={`Switch to ${mode === "dark" ? "light" : "dark"} mode`}
     >
-      <SunMoonIcon className="h-7 w-7" />
+      {mode === "dark" ? <Moon size={18} /> : <Sun size={18} />}
     </button>
   );
 }

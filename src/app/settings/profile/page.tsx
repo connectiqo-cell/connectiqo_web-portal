@@ -578,17 +578,17 @@ export default function ProfileChannelPage() {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   aria-label="Play recording"
-                                  className="flex h-7 w-7 items-center justify-center rounded-full bg-accent-link/15 text-accent-link hover:bg-accent-link/25"
+                                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-link/15 text-accent-link hover:bg-accent-link/25"
                                 >
-                                  <Play size={12} />
+                                  <Play size={14} />
                                 </a>
                                 <a
                                   href={playbackUrl}
                                   download
                                   aria-label="Download recording"
-                                  className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-chip text-text-secondary hover:text-text-primary"
+                                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-chip text-text-secondary hover:text-text-primary"
                                 >
-                                  <Download size={12} />
+                                  <Download size={14} />
                                 </a>
                               </div>
                             ) : (

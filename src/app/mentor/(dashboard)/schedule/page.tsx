@@ -281,12 +281,12 @@ export default function MentorSchedulePage() {
       </div>
 
       <div className="flex flex-col gap-5 rounded-2xl border border-border-light bg-surface-panel p-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h3 className="text-sm font-semibold text-text-primary">{formatDateLabel(selectedDate)}</h3>
             <p className="text-xs text-text-muted">Tap to toggle · 20 min sessions</p>
           </div>
-          <div className="flex items-center gap-3 text-[11px] text-text-muted">
+          <div className="flex flex-wrap items-center gap-3 text-[11px] text-text-muted">
             <span className="flex items-center gap-1">
               <span className="h-2 w-2 rounded-full border border-border-default bg-surface-chip" /> Available
             </span>

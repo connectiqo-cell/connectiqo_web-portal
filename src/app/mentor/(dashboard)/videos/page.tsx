@@ -387,7 +387,7 @@ export default function MentorVideosPage() {
                   type="button"
                   onClick={() => setEditingVideo(video)}
                   aria-label="Edit video"
-                  className="text-text-muted hover:text-accent-link"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-text-muted hover:bg-surface-chip hover:text-accent-link"
                 >
                   <Pencil size={16} />
                 </button>
@@ -395,7 +395,7 @@ export default function MentorVideosPage() {
                   type="button"
                   onClick={() => handleDelete(video)}
                   aria-label="Delete video"
-                  className="text-text-muted hover:text-accent-error"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-text-muted hover:bg-surface-chip hover:text-accent-error"
                 >
                   <Trash2 size={16} />
                 </button>

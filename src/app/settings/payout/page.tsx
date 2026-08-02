@@ -126,7 +126,7 @@ export default function PayoutSetupPage() {
               className="rounded-xl border border-border-light bg-surface-sheet px-3.5 py-2.5 text-sm text-text-primary focus:outline-none"
             />
           </Field>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="City">
               <input
                 value={city}
@@ -142,7 +142,7 @@ export default function PayoutSetupPage() {
               />
             </Field>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Postal code">
               <input
                 value={postalCode}

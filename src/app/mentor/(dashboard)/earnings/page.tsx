@@ -120,7 +120,7 @@ export default function MentorEarningsPage() {
         </svg>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <StatTile icon={Receipt} label="Transactions" value={String(earnings.length)} />
         <StatTile icon={Clock} label="Peak Earning" value={`₹${peak.toFixed(0)}`} />
         <StatTile icon={TrendingUp} label={PERIOD_TOTAL_LABEL[period]} value={`₹${periodTotal.toFixed(0)}`} />

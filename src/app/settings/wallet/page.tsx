@@ -206,10 +206,10 @@ export default function WalletPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-border-light">
+      <div className="flex gap-2 overflow-x-auto border-b border-border-light">
         <Link
           href={ROUTES.mentorProfileDashboard}
-          className="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-text-muted hover:text-text-primary"
+          className="flex shrink-0 items-center gap-2 px-4 py-3 text-sm font-semibold text-text-muted hover:text-text-primary"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -219,7 +219,7 @@ export default function WalletPage() {
         </Link>
         <Link
           href={ROUTES.mentorSessions}
-          className="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-text-muted hover:text-text-primary"
+          className="flex shrink-0 items-center gap-2 px-4 py-3 text-sm font-semibold text-text-muted hover:text-text-primary"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -229,7 +229,7 @@ export default function WalletPage() {
         </Link>
         <Link
           href={ROUTES.mentorEarnings}
-          className="flex items-center gap-2 border-b-2 border-accent-link px-4 py-3 text-sm font-semibold text-accent-link"
+          className="flex shrink-0 items-center gap-2 border-b-2 border-accent-link px-4 py-3 text-sm font-semibold text-accent-link"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
@@ -238,7 +238,7 @@ export default function WalletPage() {
         </Link>
         <Link
           href={ROUTES.mentorSchedule}
-          className="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-text-muted hover:text-text-primary"
+          className="flex shrink-0 items-center gap-2 px-4 py-3 text-sm font-semibold text-text-muted hover:text-text-primary"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -283,7 +283,7 @@ export default function WalletPage() {
 
           {error ? <p className="text-sm text-accent-error">{error}</p> : null}
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <StatTile icon={Receipt} label="Transactions" value={String(earnings.length)} />
             <StatTile icon={Clock} label="Peak Earning" value={fmtCompact(peak)} />
             <StatTile icon={TrendingUp} label="This Month" value={fmtCompact(thisMonthTotal)} />
