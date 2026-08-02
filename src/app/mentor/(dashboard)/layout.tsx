@@ -14,6 +14,11 @@ const NAV_ITEMS = [
 
 const PAGE_HEADERS: Record<string, { title: string; subtitle: string }> = {
   [ROUTES.mentorSessions]: { title: "Sessions", subtitle: "Track your teaching sessions" },
+  [ROUTES.mentorAvailability]: { title: "Availability", subtitle: "Manage when you're free for sessions" },
+  [ROUTES.mentorEarnings]: { title: "Earnings", subtitle: "Track your income and transactions" },
+  [ROUTES.mentorProfileDashboard]: { title: "Profile", subtitle: "Manage your public mentor profile" },
+  [ROUTES.mentorSchedule]: { title: "Schedule", subtitle: "Set your available time slots" },
+  [ROUTES.mentorVideos]: { title: "Videos", subtitle: "Manage your video library" },
 };
 
 export default function MentorDashboardLayout({ children }: { children: React.ReactNode }) {
