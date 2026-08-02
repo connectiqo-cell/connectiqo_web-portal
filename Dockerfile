@@ -12,7 +12,9 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build the application
+# Build the application (next.config.ts has output: "standalone", so this
+# also produces .next/standalone — a minimal server bundle with only the
+# production deps actually used, traced via webpack).
 RUN npm run build
 
 # Production stage
@@ -20,31 +22,28 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+ENV NODE_ENV=production
+
 # Install dumb-init for proper signal handling
 RUN apk add --no-cache dumb-init
-
-# Copy package files
-COPY package*.json ./
-
-# Install only production dependencies
-RUN npm ci --only=production
-
-# Copy built application from builder
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.ts ./
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
 
-# Set ownership
-RUN chown -R nextjs:nodejs /app
+# Copy the standalone server output (includes its own minimal node_modules —
+# no separate `npm ci --only=production` needed, avoiding that install
+# failing independently of the builder stage's install).
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 # Switch to non-root user
 USER nextjs
 
 # Expose port
 EXPOSE 3000
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
@@ -53,5 +52,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 # Use dumb-init to handle signals properly
 ENTRYPOINT ["dumb-init", "--"]
 
-# Start the application
-CMD ["npm", "start"]
+# Start the standalone server directly (no npm/next CLI needed at runtime)
+CMD ["node", "server.js"]

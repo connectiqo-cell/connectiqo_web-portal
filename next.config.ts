@@ -4,6 +4,12 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
+  // Bundles a minimal self-contained server (.next/standalone) with only the
+  // production deps actually used, traced via webpack. The Docker production
+  // stage copies that instead of running a second `npm ci --only=production`
+  // — avoids the whole class of "works in the builder, fails in prod install"
+  // Docker issues from re-installing with a different flag/environment.
+  output: "standalone",
   // VideoSDK's MeetingProvider joins a live WebRTC session (grabs the
   // camera/mic, opens a signaling socket) from a plain mount effect that
   // isn't idempotent. Strict Mode's intentional dev-only double-invoke of
