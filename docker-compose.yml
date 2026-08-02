@@ -1,10 +1,17 @@
-version: "3.8"
-
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
+      # NEXT_PUBLIC_* vars must reach the image at build time (see Dockerfile
+      # comment) — the runtime `environment:` block below does NOT do this,
+      # it only affects the running container, after the build already
+      # happened. Sourced from a `.env` file in this same directory.
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN}
+        SENTRY_AUTH_TOKEN: ${SENTRY_AUTH_TOKEN}
     container_name: connectweb
     restart: unless-stopped
 

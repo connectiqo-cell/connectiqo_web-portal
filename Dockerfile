@@ -14,6 +14,20 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# NEXT_PUBLIC_* vars are statically inlined into the compiled output by
+# `next build` — they must be present here, at build time. Passing them only
+# as container runtime env vars (e.g. in docker-compose's `environment:`)
+# has no effect: the build already baked in empty strings by then. Supplied
+# via `docker build --build-arg` / docker-compose's `build.args`.
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ARG NEXT_PUBLIC_SENTRY_DSN
+ARG SENTRY_AUTH_TOKEN
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
+ENV SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN
+
 # Build the application (next.config.ts has output: "standalone", so this
 # also produces .next/standalone — a minimal server bundle with only the
 # production deps actually used, traced via webpack).
