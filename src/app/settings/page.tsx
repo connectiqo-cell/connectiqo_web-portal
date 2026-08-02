@@ -156,7 +156,7 @@ export default function SettingsHubPage() {
             <div className="flex flex-1 flex-col items-center gap-0.5">
               <span className="text-sm font-bold text-text-primary">{walletLabel}</span>
               <span className="text-[10px] font-semibold uppercase tracking-wide text-text-muted">
-                Wallet
+                Earnings
               </span>
             </div>
             <div className="h-8 w-px bg-border-light" />
@@ -311,7 +311,7 @@ export default function SettingsHubPage() {
         {/* Right sidebar */}
         <aside className="flex flex-col gap-4">
           <div className="rounded-xl border border-border-light bg-surface-panel p-4">
-            <SectionHeader title="Payments & Earnings" subtitle="Wallet, payouts, and transaction history" />
+            <SectionHeader title="Payments & Earnings" subtitle="Earnings, payouts, and transaction history" />
             <div className="mt-3 flex flex-col gap-0">
               <Link
                 href={ROUTES.wallet}
@@ -319,7 +319,7 @@ export default function SettingsHubPage() {
               >
                 <Wallet size={16} className="shrink-0 text-accent-link" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-text-primary">My Wallet</p>
+                  <p className="text-sm font-semibold text-text-primary">Earnings</p>
                   <p className="text-xs text-text-muted">View balance and transaction history</p>
                 </div>
               </Link>
@@ -334,23 +334,13 @@ export default function SettingsHubPage() {
                 </div>
               </Link>
               <Link
-                href={ROUTES.mentorEarnings}
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
-              >
-                <CreditCard size={16} className="shrink-0 text-accent-link" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-text-primary">Earnings</p>
-                  <p className="text-xs text-text-muted">View your earning summary</p>
-                </div>
-              </Link>
-              <Link
                 href={ROUTES.transactions}
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
               >
                 <CreditCard size={16} className="shrink-0 text-accent-link" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-text-primary">Transaction History</p>
-                  <p className="text-xs text-text-muted">All your wallet transactions</p>
+                  <p className="text-xs text-text-muted">All your earnings transactions</p>
                 </div>
               </Link>
             </div>

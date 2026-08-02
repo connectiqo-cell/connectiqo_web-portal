@@ -85,6 +85,7 @@ export function BookingListItem({
   onCancel,
   reviewed,
   recordingUrl,
+  showMoreMenu = true,
 }: {
   booking: BookingRow;
   /** "learner" shows the mentor's identity (default); "mentor" shows the learner's. */
@@ -94,6 +95,8 @@ export function BookingListItem({
   reviewed?: boolean;
   /** Playback URL for a recorded session, if one exists. */
   recordingUrl?: string;
+  /** Report-user "more options" menu — on by default. */
+  showMoreMenu?: boolean;
 }) {
   const label = statusLabelFor(booking);
   const canCancel = onCancel && (booking.status === "pending" || booking.status === "confirmed") && label === "Booked";
@@ -147,7 +150,8 @@ export function BookingListItem({
           {label === "Booked" ? (
             <Link
               href={ROUTES.call(booking.id)}
-              className="flex items-center justify-center gap-1 rounded-full bg-accent-link/15 px-3 py-2 sm:px-2.5 sm:py-1 text-xs font-semibold text-accent-link min-h-10 sm:min-h-0"
+              className="flex items-center justify-center gap-1 rounded-full px-3 py-2 sm:px-2.5 sm:py-1 text-xs font-semibold text-text-on-accent shadow-sm min-h-10 sm:min-h-0"
+              style={{ backgroundImage: "var(--gradient-button-primary)" }}
             >
               <Video size={14} className="sm:size-3" />
               <span className="sm:hidden">Join Call</span>
@@ -195,9 +199,11 @@ export function BookingListItem({
             </button>
           ) : null}
         </div>
-        <div className="ml-auto sm:ml-0">
-          <MoreMenu otherPartyId={otherParty?.id} bookingId={booking.id} />
-        </div>
+        {showMoreMenu ? (
+          <div className="ml-auto sm:ml-0">
+            <MoreMenu otherPartyId={otherParty?.id} bookingId={booking.id} />
+          </div>
+        ) : null}
       </div>
     </div>
   );

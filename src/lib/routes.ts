@@ -30,7 +30,6 @@ export const ROUTES = {
   // Mentor
   mentorProfileDashboard: "/mentor/profile",
   mentorSessions: "/mentor/sessions",
-  mentorEarnings: "/mentor/earnings",
   mentorSchedule: "/mentor/schedule",
   mentorAvailability: "/mentor/availability",
   mentorVideos: "/mentor/videos",

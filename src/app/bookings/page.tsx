@@ -48,6 +48,7 @@ export default function BookingsPage() {
   const [recordingByBooking, setRecordingByBooking] = useState<Map<string, string>>(new Map());
   const [showAllUpcoming, setShowAllUpcoming] = useState(false);
   const [showAllHistory, setShowAllHistory] = useState(false);
+  const [activeTab, setActiveTab] = useState<"upcoming" | "history">("upcoming");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [monthCursor, setMonthCursor] = useState(() => {
@@ -98,15 +99,6 @@ export default function BookingsPage() {
   }, [user, loadBookings]);
 
   useBookingsRealtime(user?.id, loadBookings);
-
-  const handleCancel = async (bookingId: string) => {
-    try {
-      await bookingApi.cancelBooking(bookingId);
-      await loadBookings();
-    } catch (err) {
-      setError((err as Error)?.message || "Could not cancel booking");
-    }
-  };
 
   const reschedulePending = upcoming.filter((b) => b.status === "reschedule_pending");
   const regularUpcoming = upcoming.filter((b) => b.status !== "reschedule_pending");
@@ -161,114 +153,117 @@ export default function BookingsPage() {
       <div className="grid gap-6 lg:grid-cols-[1fr_300px] lg:items-start">
         <div className="flex flex-col gap-6">
           <div className="flex gap-2 overflow-x-auto border-b border-border-light">
-            <a
-              href="#upcoming-sessions"
-              className="shrink-0 border-b-2 border-accent-link px-4 py-2.5 text-sm font-semibold text-accent-link"
+            <button
+              type="button"
+              onClick={() => setActiveTab("upcoming")}
+              className={`shrink-0 border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors ${
+                activeTab === "upcoming"
+                  ? "border-accent-link text-accent-link"
+                  : "border-transparent text-text-muted hover:text-text-secondary"
+              }`}
             >
               Upcoming
-            </a>
-            <a
-              href="#session-history"
-              className="shrink-0 px-4 py-2.5 text-sm font-semibold text-text-muted hover:text-text-secondary"
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("history")}
+              className={`shrink-0 border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors ${
+                activeTab === "history"
+                  ? "border-accent-link text-accent-link"
+                  : "border-transparent text-text-muted hover:text-text-secondary"
+              }`}
             >
               History
-            </a>
+            </button>
           </div>
 
           {error ? <p className="text-sm text-accent-error">{error}</p> : null}
 
           {loading ? (
             <p className="py-8 text-center text-sm text-text-muted">Loading bookings…</p>
+          ) : activeTab === "upcoming" ? (
+            <section className="flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4">
+              <div className="flex items-center justify-between">
+                <h2 className="flex items-center gap-1.5 text-sm font-bold text-text-primary">
+                  <CalendarCheck size={15} className="text-accent-link" />
+                  Upcoming Sessions
+                </h2>
+                {upcomingCount > PREVIEW_COUNT ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllUpcoming((v) => !v)}
+                    className="text-xs font-semibold text-accent-link"
+                  >
+                    {showAllUpcoming ? "Show less" : "View all"}
+                  </button>
+                ) : null}
+              </div>
+              {upcomingCount === 0 ? (
+                <div className="flex flex-col items-center gap-3 py-10 text-center">
+                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-accent-link/10 text-accent-link">
+                    <CalendarCheck size={24} />
+                  </span>
+                  <p className="text-sm font-semibold text-text-primary">No upcoming sessions</p>
+                  <p className="max-w-xs text-xs text-text-muted">
+                    Book a session with your favorite mentor and it will appear here.
+                  </p>
+                  <Link
+                    href={ROUTES.discover}
+                    className="mt-1 rounded-full px-5 py-2.5 text-sm font-semibold text-text-on-accent"
+                    style={{ backgroundImage: "var(--gradient-button-primary)" }}
+                  >
+                    Explore Mentors
+                  </Link>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {reschedulePending.map((booking) => (
+                    <RescheduleBanner
+                      key={booking.id}
+                      booking={booking}
+                      variant="learner"
+                      proposal={proposalByBookingId.get(booking.id) || null}
+                    />
+                  ))}
+                  {visibleActiveUpcoming.map((booking) => (
+                    <BookingListItem key={booking.id} booking={booking} showMoreMenu={false} />
+                  ))}
+                </div>
+              )}
+            </section>
           ) : (
-            <>
-              <section
-                id="upcoming-sessions"
-                className="flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4 scroll-mt-6"
-              >
-                <div className="flex items-center justify-between">
-                  <h2 className="flex items-center gap-1.5 text-sm font-bold text-text-primary">
-                    <CalendarCheck size={15} className="text-accent-link" />
-                    Upcoming Sessions
-                  </h2>
-                  {upcomingCount > PREVIEW_COUNT ? (
-                    <button
-                      type="button"
-                      onClick={() => setShowAllUpcoming((v) => !v)}
-                      className="text-xs font-semibold text-accent-link"
-                    >
-                      {showAllUpcoming ? "Show less" : "View all"}
-                    </button>
-                  ) : null}
+            <section className="flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4">
+              <div className="flex items-center justify-between">
+                <h2 className="flex items-center gap-1.5 text-sm font-bold text-text-primary">
+                  <History size={15} className="text-accent-link" />
+                  Session History
+                </h2>
+                {combinedHistory.length > PREVIEW_COUNT ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllHistory((v) => !v)}
+                    className="text-xs font-semibold text-accent-link"
+                  >
+                    {showAllHistory ? "Show less" : "View all"}
+                  </button>
+                ) : null}
+              </div>
+              {combinedHistory.length === 0 ? (
+                <p className="py-8 text-center text-sm text-text-muted">No past sessions yet.</p>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {visibleHistory.map((booking) => (
+                    <BookingListItem
+                      key={booking.id}
+                      booking={booking}
+                      reviewed={booking.status === "completed" ? reviewedIds.has(booking.id) : undefined}
+                      recordingUrl={recordingByBooking.get(booking.id)}
+                      showMoreMenu={false}
+                    />
+                  ))}
                 </div>
-                {upcomingCount === 0 ? (
-                  <div className="flex flex-col items-center gap-3 py-10 text-center">
-                    <span className="flex h-14 w-14 items-center justify-center rounded-full bg-accent-link/10 text-accent-link">
-                      <CalendarCheck size={24} />
-                    </span>
-                    <p className="text-sm font-semibold text-text-primary">No upcoming sessions</p>
-                    <p className="max-w-xs text-xs text-text-muted">
-                      Book a session with your favorite mentor and it will appear here.
-                    </p>
-                    <Link
-                      href={ROUTES.discover}
-                      className="mt-1 rounded-full px-5 py-2.5 text-sm font-semibold text-text-on-accent"
-                      style={{ backgroundImage: "var(--gradient-button-primary)" }}
-                    >
-                      Explore Mentors
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-3">
-                    {reschedulePending.map((booking) => (
-                      <RescheduleBanner
-                        key={booking.id}
-                        booking={booking}
-                        variant="learner"
-                        proposal={proposalByBookingId.get(booking.id) || null}
-                      />
-                    ))}
-                    {visibleActiveUpcoming.map((booking) => (
-                      <BookingListItem key={booking.id} booking={booking} onCancel={handleCancel} />
-                    ))}
-                  </div>
-                )}
-              </section>
-
-              <section
-                id="session-history"
-                className="flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4 scroll-mt-6"
-              >
-                <div className="flex items-center justify-between">
-                  <h2 className="flex items-center gap-1.5 text-sm font-bold text-text-primary">
-                    <History size={15} className="text-accent-link" />
-                    Session History
-                  </h2>
-                  {combinedHistory.length > PREVIEW_COUNT ? (
-                    <button
-                      type="button"
-                      onClick={() => setShowAllHistory((v) => !v)}
-                      className="text-xs font-semibold text-accent-link"
-                    >
-                      {showAllHistory ? "Show less" : "View all"}
-                    </button>
-                  ) : null}
-                </div>
-                {combinedHistory.length === 0 ? (
-                  <p className="py-8 text-center text-sm text-text-muted">No past sessions yet.</p>
-                ) : (
-                  <div className="flex flex-col gap-3">
-                    {visibleHistory.map((booking) => (
-                      <BookingListItem
-                        key={booking.id}
-                        booking={booking}
-                        reviewed={booking.status === "completed" ? reviewedIds.has(booking.id) : undefined}
-                        recordingUrl={recordingByBooking.get(booking.id)}
-                      />
-                    ))}
-                  </div>
-                )}
-              </section>
-            </>
+              )}
+            </section>
           )}
         </div>
 

@@ -37,15 +37,30 @@ export function VideoFeedSlide({
     }
   }, [active, canPlay]);
 
+  // Keep isPaused in sync with the video's actual state regardless of what
+  // triggered the change (autoplay on becoming active, browser-initiated
+  // pause, etc.) — relying only on the click handler let it drift from
+  // reality, e.g. staying "paused" after autoplay actually started.
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    const onPlay = () => setIsPaused(false);
+    const onPause = () => setIsPaused(true);
+    el.addEventListener("play", onPlay);
+    el.addEventListener("pause", onPause);
+    return () => {
+      el.removeEventListener("play", onPlay);
+      el.removeEventListener("pause", onPause);
+    };
+  }, []);
+
   const handleVideoClick = () => {
     const el = videoRef.current;
     if (!el || !canPlay) return;
     if (el.paused) {
       el.play().catch(() => {});
-      setIsPaused(false);
     } else {
       el.pause();
-      setIsPaused(true);
     }
     setShowPlayPauseIcon(true);
     setTimeout(() => setShowPlayPauseIcon(false), 500);
@@ -83,17 +98,21 @@ export function VideoFeedSlide({
               onClick={handleVideoClick}
               className="h-full w-full cursor-pointer object-cover"
             />
-            {/* Play button overlay */}
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/80 text-black hover:bg-white">
-                <Play size={32} className="ml-1" fill="currentColor" />
+            {/* Hover overlay — shows the action a click will perform: Pause while playing, Play while paused. */}
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)]">
+                {isPaused ? (
+                  <Play size={32} className="ml-1" fill="currentColor" />
+                ) : (
+                  <Pause size={32} fill="currentColor" />
+                )}
               </div>
             </div>
 
             {/* Play/Pause icon on click */}
             {showPlayPauseIcon && (
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/90 text-black animate-pulse">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)] animate-pulse">
                   {isPaused ? (
                     <Play size={40} className="ml-1" fill="currentColor" />
                   ) : (

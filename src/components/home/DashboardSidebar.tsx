@@ -25,10 +25,10 @@ const NAV_ITEMS = [
   { href: ROUTES.home, label: "Home", icon: Home },
   { href: ROUTES.discover, label: "Discover", icon: Compass },
   { href: ROUTES.videos, label: "Videos", icon: PlayCircle },
-  { href: ROUTES.bookings, label: "Bookings", icon: Calendar },
+  { href: ROUTES.bookings, label: "My Bookings", icon: Calendar },
   { href: null, label: "Messages", icon: MessageSquare },
   { href: ROUTES.mentorSessions, label: "My Sessions", icon: VideoIcon },
-  { href: ROUTES.wallet, label: "Wallet", icon: WalletIcon },
+  { href: ROUTES.wallet, label: "Earnings", icon: WalletIcon },
 ] as const;
 
 const BOTTOM_ITEMS = [
@@ -53,7 +53,7 @@ function SidebarNavContent({
   };
 
   return (
-    <div className="flex flex-col gap-6 overflow-y-auto overflow-x-hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="flex flex-col gap-4 overflow-y-auto overflow-x-hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <nav className="flex flex-col gap-1">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
@@ -233,12 +233,12 @@ export function DashboardSidebar({
           collapsed ? "w-[72px] px-2" : "w-60 px-4"
         }`}
       >
-        <div className="flex min-h-0 flex-1 flex-col gap-6">
+        <div className="flex min-h-0 flex-1 flex-col gap-2">
           <button
             type="button"
             onClick={() => setCollapsed((c) => !c)}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className={`-mb-4 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-chip hover:text-text-primary ${
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-chip hover:text-text-primary ${
               collapsed ? "mx-auto" : "ml-auto"
             }`}
           >

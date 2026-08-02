@@ -209,12 +209,6 @@ export default function MentorProfileDashboardPage() {
         </div>
       </div>
 
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-text-primary">Manage Profile</h1>
-        <p className="text-sm text-text-muted">Keep your mentor profile up to date</p>
-      </div>
-
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatTile icon={Star} label="Rating" value={(profile?.rating ?? 0).toFixed(1)} />
         <StatTile icon={Users} label="Sessions" value={String(profile?.total_sessions ?? 0)} />

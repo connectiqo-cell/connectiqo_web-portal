@@ -125,7 +125,6 @@ export default function ProfileChannelPage() {
   const [nextSession, setNextSession] = useState<{ booking: BookingRow; date: Date } | null>(null);
   const [learnerBio, setLearnerBio] = useState<{ bio: string | null; interests: string[] } | null>(null);
   const [recordings, setRecordings] = useState<RecordedSession[]>([]);
-  const videoScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace(ROUTES.login);
@@ -195,11 +194,13 @@ export default function ProfileChannelPage() {
   }, [reviews]);
 
   const categories = mentor ? parseMentorCategories(mentor.category) : [];
+  const freeVideos = useMemo(() => videos.filter((v) => v.is_free), [videos]);
+  const paidVideos = useMemo(() => videos.filter((v) => !v.is_free), [videos]);
+  const hasVideos = isMentor && videos.length > 0;
 
   const completionItems = isMentor
     ? [
         { label: "Add profile picture", done: !!profile?.avatar_url },
-        { label: "Add cover photo", done: !!mentor?.cover_image_url },
         { label: "Add about you", done: !!mentor?.bio?.trim() },
         { label: "Add skills", done: (mentor?.skills?.length ?? 0) > 0 },
         {
@@ -234,15 +235,6 @@ export default function ProfileChannelPage() {
             Connect<span className="text-white/40">iqo</span>
           </span>
         )}
-        {isMentor ? (
-          <Link
-            href={ROUTES.mentorProfileDashboard}
-            className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-black/50 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur hover:bg-black/65"
-          >
-            <Camera size={13} />
-            Edit Cover
-          </Link>
-        ) : null}
       </div>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -301,31 +293,9 @@ export default function ProfileChannelPage() {
         </div>
       ) : null}
 
-      {isMentor ? (
-        <nav className="flex gap-1 overflow-x-auto border-b border-border-light">
-          <span className="shrink-0 border-b-2 border-accent-link px-3.5 py-2.5 text-sm font-semibold text-accent-link">
-            Profile
-          </span>
-          {[
-            { label: "Sessions", href: ROUTES.mentorSessions },
-            { label: "Earnings", href: ROUTES.mentorEarnings },
-            { label: "Schedule", href: ROUTES.mentorSchedule },
-            { label: "Videos", href: ROUTES.mentorVideos },
-          ].map((tab) => (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              className="shrink-0 border-b-2 border-transparent px-3.5 py-2.5 text-sm font-semibold text-text-muted hover:border-accent-link/40 hover:text-text-secondary"
-            >
-              {tab.label}
-            </Link>
-          ))}
-        </nav>
-      ) : null}
-
       <div className="grid gap-6 lg:grid-cols-[1fr_300px] lg:items-start">
-        <div className="flex flex-col gap-6">
-          <div className="grid gap-6 lg:grid-cols-[300px_1fr] lg:items-start">
+        <div className="flex min-w-0 flex-col gap-6">
+          <div className={`grid min-w-0 gap-6 lg:items-start ${hasVideos ? "lg:grid-cols-[300px_1fr]" : ""}`}>
           <section className="flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4">
             <h2 className="text-sm font-bold text-text-primary">About Me</h2>
             {isMentor ? (
@@ -453,64 +423,16 @@ export default function ProfileChannelPage() {
             ) : null}
           </section>
 
-          {isMentor && videos.length > 0 ? (
-            <section className="relative flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold text-text-primary">Members Only</h2>
-                <Link href={ROUTES.mentorVideos} className="text-xs font-semibold text-accent-link">
-                  See all
-                </Link>
-              </div>
-              <div
-                ref={videoScrollRef}
-                className="flex gap-3 overflow-x-auto scroll-smooth pb-1"
-              >
-                {videos.map((video) => (
-                  <Link
-                    key={video.id}
-                    href={ROUTES.mentorVideos}
-                    className="flex w-44 shrink-0 flex-col gap-1.5"
-                  >
-                    <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl bg-meeting-canvas">
-                      {video.thumbnail_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-                        <img src={video.thumbnail_url} alt={video.title} className="h-full w-full object-cover" />
-                      ) : (
-                        <VideoIcon size={20} className="text-text-muted" />
-                      )}
-                      {video.is_free ? (
-                        <span className="absolute left-1.5 top-1.5 rounded-full bg-accent-success/90 px-1.5 py-0.5 text-[9px] font-bold text-white">
-                          FREE
-                        </span>
-                      ) : null}
-                      <VideoDurationBadge src={video.video_url} />
-                    </div>
-                    <p className="truncate text-xs font-semibold text-text-primary">{video.title}</p>
-                    {video.description ? (
-                      <p className="line-clamp-2 text-[11px] text-text-muted">{video.description}</p>
-                    ) : null}
-                    <span className="w-fit rounded-full bg-accent-link/10 px-2 py-0.5 text-[10px] font-semibold text-accent-link">
-                      Video
-                    </span>
-                  </Link>
-                ))}
-              </div>
-              {videos.length > 4 ? (
-                <button
-                  type="button"
-                  onClick={() => videoScrollRef.current?.scrollBy({ left: 320, behavior: "smooth" })}
-                  aria-label="Scroll videos"
-                  className="absolute right-2 top-1/2 flex h-8 w-8 items-center justify-center rounded-full border border-border-light bg-surface-panel text-text-secondary shadow-sm hover:text-text-primary"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              ) : null}
-            </section>
+          {hasVideos ? (
+            <div className="flex min-w-0 flex-col gap-6">
+              <VideoRow title="Free Videos" videos={freeVideos} />
+              <VideoRow title="Members Only" videos={paidVideos} />
+            </div>
           ) : null}
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
-          <section className="flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4">
+          <div className="grid min-w-0 gap-6 lg:grid-cols-2 lg:items-start">
+          <section className="flex min-w-0 flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold text-text-primary">Recent Sessions</h2>
               <Link href={ROUTES.bookings} className="text-xs font-semibold text-accent-link">
@@ -783,5 +705,59 @@ function StatTile({
       <span className="text-sm font-bold text-text-primary">{value}</span>
       <span className="text-[11px] text-text-muted">{label}</span>
     </div>
+  );
+}
+
+function VideoRow({ title, videos }: { title: string; videos: MentorVideo[] }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  if (videos.length === 0) return null;
+
+  return (
+    <section className="relative flex min-w-0 flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-bold text-text-primary">{title}</h2>
+        <Link href={ROUTES.mentorVideos} className="text-xs font-semibold text-accent-link">
+          See all
+        </Link>
+      </div>
+      <div ref={scrollRef} className="flex gap-3 overflow-x-auto scroll-smooth pb-1">
+        {videos.map((video) => (
+          <Link key={video.id} href={ROUTES.mentorVideos} className="flex w-44 shrink-0 flex-col gap-1.5">
+            <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl bg-meeting-canvas">
+              {video.thumbnail_url ? (
+                // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
+                <img src={video.thumbnail_url} alt={video.title} className="h-full w-full object-cover" />
+              ) : (
+                <VideoIcon size={20} className="text-text-muted" />
+              )}
+              {video.is_free ? (
+                <span className="absolute left-1.5 top-1.5 rounded-full bg-accent-success/90 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                  FREE
+                </span>
+              ) : null}
+              <VideoDurationBadge src={video.video_url} />
+            </div>
+            <p className="truncate text-xs font-semibold text-text-primary">{video.title}</p>
+            {video.description ? (
+              <p className="line-clamp-2 text-[11px] text-text-muted">{video.description}</p>
+            ) : null}
+            <span className="w-fit rounded-full bg-accent-link/10 px-2 py-0.5 text-[10px] font-semibold text-accent-link">
+              Video
+            </span>
+          </Link>
+        ))}
+      </div>
+      {videos.length > 4 ? (
+        <button
+          type="button"
+          onClick={() => scrollRef.current?.scrollBy({ left: 320, behavior: "smooth" })}
+          aria-label="Scroll videos"
+          className="absolute right-2 top-1/2 flex h-8 w-8 items-center justify-center rounded-full border border-border-light bg-surface-panel text-text-secondary shadow-sm hover:text-text-primary"
+        >
+          <ChevronRight size={16} />
+        </button>
+      ) : null}
+    </section>
   );
 }

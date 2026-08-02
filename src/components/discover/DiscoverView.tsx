@@ -21,6 +21,18 @@ export function DiscoverView({
   const [searching, setSearching] = useState(!!initialQuery.trim());
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // DiscoverView stays mounted across repeat navbar searches (same /discover
+  // route, only the ?q= param changes), so `initialQuery` can change without
+  // a remount — `useState(initialQuery)` alone would miss that. Synced here
+  // during render rather than an effect, per React's guidance on adjusting
+  // state when a prop changes.
+  const [lastInitialQuery, setLastInitialQuery] = useState(initialQuery);
+  if (initialQuery !== lastInitialQuery) {
+    setLastInitialQuery(initialQuery);
+    setQuery(initialQuery);
+    setSearching(!!initialQuery.trim());
+  }
+
   const handleQueryChange = (value: string) => {
     setQuery(value);
     if (!value.trim()) {
