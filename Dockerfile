@@ -1,5 +1,7 @@
 # Build stage
-FROM node:20-alpine AS builder
+# Node 22 — @supabase/* packages declare engines.node >=22; Node 20 installs
+# fine but prints EBADENGINE warnings on every build.
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -18,7 +20,7 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM node:20-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 
