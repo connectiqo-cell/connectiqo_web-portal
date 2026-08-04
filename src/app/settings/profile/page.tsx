@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock,
-  Download,
   Globe,
   Mail,
   MapPin,
@@ -20,69 +19,21 @@ import {
   Users,
   UsersRound,
   Video as VideoIcon,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { CountdownTimer } from "@/components/profile/CountdownTimer";
 import { ReviewCard } from "@/components/mentor/ReviewCard";
 import { useAuth } from "@/contexts/AuthContext";
-import { type BookingRow, type RecordedSession, bookingApi } from "@/lib/api/bookingApi";
 import { type MentorProfileRow, mentorApi } from "@/lib/api/mentorApi";
 import { profileApi } from "@/lib/api/profileApi";
 import { type ReviewRow, reviewsApi } from "@/lib/api/reviewsApi";
 import { type MentorVideo, videoLibraryApi } from "@/lib/api/videoLibraryApi";
 import { ROUTES } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/client";
-import { isBookingSessionPast } from "@/lib/utils/bookingSession";
 import { parseMentorCategories } from "@/lib/utils/mentorCategories";
-
-function formatSlotLabel(booking: BookingRow): string {
-  const date = booking.availability_slots?.date;
-  const time = booking.availability_slots?.start_time;
-  if (!date) return "Time to be confirmed";
-  const [y, m, d] = date.split("-").map(Number);
-  const label = new Date(y, m - 1, d).toLocaleDateString("en-IN", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
-  if (!time) return label;
-  const [h, min] = time.split(":").map(Number);
-  const period = h >= 12 ? "PM" : "AM";
-  const hour12 = h % 12 === 0 ? 12 : h % 12;
-  return `${label}, ${hour12}:${String(min).padStart(2, "0")} ${period}`;
-}
-
-function slotDate(booking: BookingRow): Date | null {
-  const date = booking.availability_slots?.date;
-  const time = booking.availability_slots?.start_time;
-  if (!date) return null;
-  return new Date(`${date}T${time || "00:00"}`);
-}
-
-function pickNextSession(
-  bookings: BookingRow[],
-  now: number,
-): { booking: BookingRow; date: Date } | null {
-  const withDates = bookings
-    .map((b) => ({ booking: b, date: slotDate(b) }))
-    .filter((x): x is { booking: BookingRow; date: Date } => !!x.date && x.date.getTime() > now)
-    .sort((a, b) => a.date.getTime() - b.date.getTime());
-  return withDates[0] || null;
-}
-
-function durationLabel(booking: BookingRow): string {
-  const start = booking.availability_slots?.start_time;
-  const end = booking.availability_slots?.end_time;
-  if (!start || !end) return "—";
-  const [sh, sm] = start.split(":").map(Number);
-  const [eh, em] = end.split(":").map(Number);
-  const minutes = eh * 60 + em - (sh * 60 + sm);
-  if (minutes <= 0) return "—";
-  return minutes % 60 === 0 ? `${minutes / 60} hr` : `${minutes} min`;
-}
 
 function formatSeconds(totalSeconds: number): string {
   const minutes = Math.floor(totalSeconds / 60);
@@ -121,10 +72,7 @@ export default function ProfileChannelPage() {
   const [subscriberCount, setSubscriberCount] = useState(0);
   const [videos, setVideos] = useState<MentorVideo[]>([]);
   const [reviews, setReviews] = useState<ReviewRow[]>([]);
-  const [recentSessions, setRecentSessions] = useState<BookingRow[]>([]);
-  const [nextSession, setNextSession] = useState<{ booking: BookingRow; date: Date } | null>(null);
   const [learnerBio, setLearnerBio] = useState<{ bio: string | null; interests: string[] } | null>(null);
-  const [recordings, setRecordings] = useState<RecordedSession[]>([]);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace(ROUTES.login);
@@ -137,35 +85,21 @@ export default function ProfileChannelPage() {
       try {
         const supabase = createClient();
         if (isMentor) {
-          const [mentorRow, subs, vids, revs, hist, upc, recs] = await Promise.all([
+          const [mentorRow, subs, vids, revs] = await Promise.all([
             mentorApi.getMentorWithProfile(supabase, user.id).catch(() => null),
             mentorApi.getMentorActiveSubscriberCount(supabase, user.id).catch(() => 0),
             videoLibraryApi.getMentorVideos(user.id).catch(() => []),
             reviewsApi.getReviewsForMentor(supabase, user.id).catch(() => []),
-            bookingApi.getBookingHistoryByMentor(user.id, 0, 5).catch(() => []),
-            bookingApi.getUpcomingBookingsByMentor(user.id).catch(() => []),
-            bookingApi.getRecordedSessions(user.id).catch(() => []),
           ]);
           if (cancelled) return;
           setMentor(mentorRow);
           setSubscriberCount(subs);
           setVideos(vids);
           setReviews(revs);
-          setRecentSessions(hist);
-          setNextSession(pickNextSession(upc, Date.now()));
-          setRecordings(recs);
         } else {
-          const [learnerProfile, hist, upc, recs] = await Promise.all([
-            profileApi.getLearnerProfile(user.id).catch(() => null),
-            bookingApi.getBookingHistoryByLearner(user.id).catch(() => []),
-            bookingApi.getUpcomingBookingsByLearner(user.id).catch(() => []),
-            bookingApi.getRecordedSessions(user.id).catch(() => []),
-          ]);
+          const learnerProfile = await profileApi.getLearnerProfile(user.id).catch(() => null);
           if (cancelled) return;
           setLearnerBio(learnerProfile);
-          setRecentSessions(hist.slice(0, 5));
-          setNextSession(pickNextSession(upc, Date.now()));
-          setRecordings(recs);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -175,11 +109,6 @@ export default function ProfileChannelPage() {
       cancelled = true;
     };
   }, [user, profile, isMentor]);
-
-  const recordingByBooking = useMemo(
-    () => new Map(recordings.map((r) => [r.id, r.recording_playback_url])),
-    [recordings],
-  );
 
   const ratingBreakdown = useMemo(() => {
     const counts = [0, 0, 0, 0, 0]; // index 0 => 1 star ... index 4 => 5 star
@@ -201,6 +130,7 @@ export default function ProfileChannelPage() {
   const completionItems = isMentor
     ? [
         { label: "Add profile picture", done: !!profile?.avatar_url },
+        { label: "Add cover photo", done: !!mentor?.cover_image_url },
         { label: "Add about you", done: !!mentor?.bio?.trim() },
         { label: "Add skills", done: (mentor?.skills?.length ?? 0) > 0 },
         {
@@ -235,11 +165,20 @@ export default function ProfileChannelPage() {
             Connect<span className="text-white/40">iqo</span>
           </span>
         )}
+        {isMentor ? (
+          <Link
+            href={ROUTES.editProfileForm}
+            className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-black/50 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur hover:bg-black/65"
+          >
+            <Camera size={13} />
+            Edit Cover
+          </Link>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-end gap-4">
-          <div className="relative -mt-16 flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-4 border-surface-page bg-surface-panel sm:h-28 sm:w-28">
+          <div className="relative -mt-16 flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-4 border-void bg-surface-panel sm:h-28 sm:w-28">
             {profile?.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
               <img src={profile.avatar_url} alt={profile.name} className="h-full w-full object-cover" />
@@ -289,13 +228,83 @@ export default function ProfileChannelPage() {
           <StatTile icon={Calendar} label="Sessions" value={String(mentor?.total_sessions ?? 0)} />
           <StatTile icon={Star} label="Rating" value={(mentor?.rating ?? 0).toFixed(1)} />
           <StatTile icon={Award} label="Experience" value={`${mentor?.experience_years ?? 0} yrs`} />
-          <StatTile icon={Clock} label="Rate" value={mentor?.price_per_hour ? `₹${mentor.price_per_hour}/hr` : "—"} />
+          <StatTile icon={Clock} label="Price/session" value={mentor?.price_per_hour ? `₹${mentor.price_per_hour}/session` : "—"} />
         </div>
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_300px] lg:items-start">
         <div className="flex min-w-0 flex-col gap-6">
-          <div className={`grid min-w-0 gap-6 lg:items-start ${hasVideos ? "lg:grid-cols-[300px_1fr]" : ""}`}>
+          {hasVideos ? (
+            <>
+              <VideoRow title="Free Videos" videos={freeVideos} />
+              <VideoRow title="Members Only" videos={paidVideos} />
+            </>
+          ) : null}
+
+          {isMentor ? (
+            <section className="flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-bold text-text-primary">Reviews</h2>
+                {reviews.length > 0 ? (
+                  <Link
+                    href={ROUTES.mentorReviews(user.id)}
+                    className="text-xs font-semibold text-accent-link"
+                  >
+                    See all
+                  </Link>
+                ) : null}
+              </div>
+              {reviews.length === 0 ? (
+                <p className="text-sm text-text-muted">No reviews yet.</p>
+              ) : (
+                <>
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                    <div className="flex shrink-0 flex-col items-center gap-1 sm:w-28">
+                      <p className="text-3xl font-extrabold text-text-primary">
+                        {ratingBreakdown.average.toFixed(1)}
+                      </p>
+                      <div className="flex gap-0.5 text-accent-warning">
+                        {Array.from({ length: 5 }, (_, i) => (
+                          <Star
+                            key={i}
+                            size={13}
+                            className={i < Math.round(ratingBreakdown.average) ? "fill-current" : "text-border-default"}
+                          />
+                        ))}
+                      </div>
+                      <p className="text-[11px] text-text-muted">Based on {reviews.length} reviews</p>
+                    </div>
+                    <div className="flex flex-1 flex-col gap-1.5">
+                      {[5, 4, 3, 2, 1].map((star) => {
+                        const count = ratingBreakdown.counts[star - 1];
+                        const pct = reviews.length ? Math.round((count / reviews.length) * 100) : 0;
+                        return (
+                          <div key={star} className="flex items-center gap-2 text-xs text-text-secondary">
+                            <span className="w-8 shrink-0">{star} Star</span>
+                            <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-chip">
+                              <span
+                                className="block h-full rounded-full bg-accent-warning"
+                                style={{ width: `${pct}%` }}
+                              />
+                            </span>
+                            <span className="w-4 shrink-0 text-right">{count}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-3 border-t border-border-light pt-3">
+                    {reviews.slice(0, 3).map((review) => (
+                      <ReviewCard key={review.id} review={review} />
+                    ))}
+                  </div>
+                </>
+              )}
+            </section>
+          ) : null}
+        </div>
+
+        <aside className="flex flex-col gap-4">
           <section className="flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4">
             <h2 className="text-sm font-bold text-text-primary">About Me</h2>
             {isMentor ? (
@@ -423,217 +432,6 @@ export default function ProfileChannelPage() {
             ) : null}
           </section>
 
-          {hasVideos ? (
-            <div className="flex min-w-0 flex-col gap-6">
-              <VideoRow title="Free Videos" videos={freeVideos} />
-              <VideoRow title="Members Only" videos={paidVideos} />
-            </div>
-          ) : null}
-          </div>
-
-          <div className="grid min-w-0 gap-6 lg:grid-cols-2 lg:items-start">
-          <section className="flex min-w-0 flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold text-text-primary">Recent Sessions</h2>
-              <Link href={ROUTES.bookings} className="text-xs font-semibold text-accent-link">
-                See all
-              </Link>
-            </div>
-            {recentSessions.length === 0 ? (
-              <p className="text-sm text-text-muted">No sessions yet.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-120 border-collapse text-left text-sm">
-                  <thead>
-                    <tr className="text-[11px] uppercase tracking-wide text-text-muted">
-                      <th className="pb-2 font-semibold">{isMentor ? "Learner" : "Mentor"}</th>
-                      <th className="pb-2 font-semibold">Date &amp; Time</th>
-                      <th className="pb-2 font-semibold">Duration</th>
-                      <th className="pb-2 font-semibold">Status</th>
-                      <th className="pb-2 text-right font-semibold">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentSessions.map((booking) => {
-                      const otherParty = isMentor ? booking.learner_profile : booking.profiles;
-                      const past = isBookingSessionPast(booking);
-                      const playbackUrl = recordingByBooking.get(booking.id);
-                      return (
-                        <tr key={booking.id} className="border-t border-border-light">
-                          <td className="py-3 pr-3">
-                            <div className="flex min-w-0 items-center gap-2.5">
-                              <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
-                                {otherParty?.avatar_url ? (
-                                  // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-                                  <img src={otherParty.avatar_url} alt="" className="h-full w-full object-cover" />
-                                ) : (
-                                  <User size={14} className="text-text-muted" />
-                                )}
-                              </span>
-                              <span className="truncate font-semibold text-text-primary">
-                                {otherParty?.name || (isMentor ? "Learner" : "Mentor")}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="py-3 pr-3 text-xs text-text-secondary">{formatSlotLabel(booking)}</td>
-                          <td className="py-3 pr-3 text-xs text-text-secondary">{durationLabel(booking)}</td>
-                          <td className="py-3 pr-3">
-                            <span
-                              className={`w-fit rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                                booking.status === "completed"
-                                  ? "bg-accent-success/15 text-accent-success"
-                                  : booking.status === "cancelled" || booking.status === "rejected"
-                                    ? "bg-accent-error/15 text-accent-error"
-                                    : past
-                                      ? "bg-text-disabled/20 text-text-muted"
-                                      : "bg-accent-info/15 text-accent-info"
-                              }`}
-                            >
-                              {booking.status}
-                            </span>
-                          </td>
-                          <td className="py-3 text-right">
-                            {playbackUrl ? (
-                              <div className="flex items-center justify-end gap-1.5">
-                                <a
-                                  href={playbackUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  aria-label="Play recording"
-                                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-link/15 text-accent-link hover:bg-accent-link/25"
-                                >
-                                  <Play size={14} />
-                                </a>
-                                <a
-                                  href={playbackUrl}
-                                  download
-                                  aria-label="Download recording"
-                                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-chip text-text-secondary hover:text-text-primary"
-                                >
-                                  <Download size={14} />
-                                </a>
-                              </div>
-                            ) : (
-                              <span className="text-xs text-text-muted">—</span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-
-          {isMentor ? (
-            <section className="flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold text-text-primary">Reviews</h2>
-                {reviews.length > 0 ? (
-                  <Link
-                    href={ROUTES.mentorReviews(user.id)}
-                    className="text-xs font-semibold text-accent-link"
-                  >
-                    See all
-                  </Link>
-                ) : null}
-              </div>
-              {reviews.length === 0 ? (
-                <p className="text-sm text-text-muted">No reviews yet.</p>
-              ) : (
-                <>
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                    <div className="flex shrink-0 flex-col items-center gap-1 sm:w-28">
-                      <p className="text-3xl font-extrabold text-text-primary">
-                        {ratingBreakdown.average.toFixed(1)}
-                      </p>
-                      <div className="flex gap-0.5 text-accent-warning">
-                        {Array.from({ length: 5 }, (_, i) => (
-                          <Star
-                            key={i}
-                            size={13}
-                            className={i < Math.round(ratingBreakdown.average) ? "fill-current" : "text-border-default"}
-                          />
-                        ))}
-                      </div>
-                      <p className="text-[11px] text-text-muted">Based on {reviews.length} reviews</p>
-                    </div>
-                    <div className="flex flex-1 flex-col gap-1.5">
-                      {[5, 4, 3, 2, 1].map((star) => {
-                        const count = ratingBreakdown.counts[star - 1];
-                        const pct = reviews.length ? Math.round((count / reviews.length) * 100) : 0;
-                        return (
-                          <div key={star} className="flex items-center gap-2 text-xs text-text-secondary">
-                            <span className="w-8 shrink-0">{star} Star</span>
-                            <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-chip">
-                              <span
-                                className="block h-full rounded-full bg-accent-warning"
-                                style={{ width: `${pct}%` }}
-                              />
-                            </span>
-                            <span className="w-4 shrink-0 text-right">{count}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-3 border-t border-border-light pt-3">
-                    {reviews.slice(0, 3).map((review) => (
-                      <ReviewCard key={review.id} review={review} />
-                    ))}
-                  </div>
-                </>
-              )}
-            </section>
-          ) : null}
-          </div>
-        </div>
-
-        <aside className="flex flex-col gap-4">
-          <div className="rounded-2xl border border-border-light bg-surface-panel p-4">
-            <h3 className="mb-3 text-sm font-bold text-text-primary">Upcoming Session</h3>
-            {!nextSession ? (
-              <p className="text-xs text-text-muted">No upcoming sessions.</p>
-            ) : (
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-2.5">
-                  {(() => {
-                    const otherParty = isMentor
-                      ? nextSession.booking.learner_profile
-                      : nextSession.booking.profiles;
-                    return (
-                      <>
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
-                          {otherParty?.avatar_url ? (
-                            // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-                            <img src={otherParty.avatar_url} alt="" className="h-full w-full object-cover" />
-                          ) : (
-                            <User size={14} className="text-text-muted" />
-                          )}
-                        </span>
-                        <div className="min-w-0">
-                          <p className="truncate text-xs font-semibold text-text-primary">
-                            {otherParty?.name || (isMentor ? "Learner" : "Mentor")}
-                          </p>
-                          <p className="text-[11px] text-text-muted">{formatSlotLabel(nextSession.booking)}</p>
-                        </div>
-                      </>
-                    );
-                  })()}
-                </div>
-                <CountdownTimer target={nextSession.date} />
-                <Link
-                  href={ROUTES.call(nextSession.booking.id)}
-                  className="flex h-10 w-full items-center justify-center rounded-full text-sm font-bold text-text-on-accent"
-                  style={{ backgroundImage: "var(--gradient-button-primary)" }}
-                >
-                  Join Session
-                </Link>
-              </div>
-            )}
-          </div>
-
           <div className="rounded-2xl border border-border-light bg-surface-panel p-4">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-sm font-bold text-text-primary">Profile Completion</h3>
@@ -710,6 +508,7 @@ function StatTile({
 
 function VideoRow({ title, videos }: { title: string; videos: MentorVideo[] }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [playingVideo, setPlayingVideo] = useState<MentorVideo | null>(null);
 
   if (videos.length === 0) return null;
 
@@ -723,14 +522,22 @@ function VideoRow({ title, videos }: { title: string; videos: MentorVideo[] }) {
       </div>
       <div ref={scrollRef} className="flex gap-3 overflow-x-auto scroll-smooth pb-1">
         {videos.map((video) => (
-          <Link key={video.id} href={ROUTES.mentorVideos} className="flex w-44 shrink-0 flex-col gap-1.5">
+          <button
+            key={video.id}
+            type="button"
+            onClick={() => setPlayingVideo(video)}
+            className="flex w-44 shrink-0 flex-col gap-1.5 text-left"
+          >
             <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl bg-meeting-canvas">
               {video.thumbnail_url ? (
                 // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
                 <img src={video.thumbnail_url} alt={video.title} className="h-full w-full object-cover" />
-              ) : (
-                <VideoIcon size={20} className="text-text-muted" />
-              )}
+              ) : null}
+              <span className="absolute inset-0 flex items-center justify-center bg-black/20">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90">
+                  <Play size={16} className="ml-0.5 fill-black text-black" />
+                </span>
+              </span>
               {video.is_free ? (
                 <span className="absolute left-1.5 top-1.5 rounded-full bg-accent-success/90 px-1.5 py-0.5 text-[9px] font-bold text-white">
                   FREE
@@ -745,7 +552,7 @@ function VideoRow({ title, videos }: { title: string; videos: MentorVideo[] }) {
             <span className="w-fit rounded-full bg-accent-link/10 px-2 py-0.5 text-[10px] font-semibold text-accent-link">
               Video
             </span>
-          </Link>
+          </button>
         ))}
       </div>
       {videos.length > 4 ? (
@@ -757,6 +564,38 @@ function VideoRow({ title, videos }: { title: string; videos: MentorVideo[] }) {
         >
           <ChevronRight size={16} />
         </button>
+      ) : null}
+
+      {playingVideo ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setPlayingVideo(null)}
+        >
+          <div
+            className="flex w-full max-w-2xl flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="truncate text-sm font-semibold text-text-primary">{playingVideo.title}</h3>
+              <button
+                type="button"
+                onClick={() => setPlayingVideo(null)}
+                aria-label="Close"
+                className="shrink-0 text-text-muted hover:text-text-primary"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="aspect-video w-full overflow-hidden rounded-xl bg-black">
+              <video
+                src={playingVideo.video_url}
+                controls
+                autoPlay
+                className="h-full w-full"
+              />
+            </div>
+          </div>
+        </div>
       ) : null}
     </section>
   );

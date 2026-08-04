@@ -27,7 +27,7 @@ export function AppTopBar({ onMenuClick }: { onMenuClick?: () => void }) {
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 sm:h-16 shrink-0 items-center border-b border-border-light bg-surface-page/95 px-3 sm:px-6 backdrop-blur">
+    <header className="sticky top-0 z-30 flex h-14 sm:h-16 shrink-0 items-center border-b border-border-light bg-void/95 px-3 sm:px-6 backdrop-blur">
       <div className="flex w-full items-center gap-2 sm:gap-4">
         {onMenuClick ? (
           <button

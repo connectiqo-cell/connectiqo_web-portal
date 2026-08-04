@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Camera, Check, ChevronRight, Plus, Trash2, User } from "lucide-react";
+import { ArrowLeft, Camera, Check, Plus, Trash2, User, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -34,9 +34,26 @@ export default function EditProfilePage() {
   const [categories, setCategories] = useState<string[]>([...MENTOR_CATEGORIES]);
   const [interests, setInterests] = useState<string[]>([]);
   const [interestsLoaded, setInterestsLoaded] = useState(false);
-  const [savingInterests, setSavingInterests] = useState(false);
-  const [interestsSaved, setInterestsSaved] = useState(false);
-  const [interestsError, setInterestsError] = useState("");
+
+  // Mentor profile fields
+  const [mentorLoading, setMentorLoading] = useState(!isMentor);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [showCoverCamera, setShowCoverCamera] = useState(false);
+  const coverFileInputRef = useRef<HTMLInputElement>(null);
+  const [specialization, setSpecialization] = useState("");
+  const [category, setCategory] = useState("");
+  const [bio, setBio] = useState("");
+  const [experienceYears, setExperienceYears] = useState("0");
+  const [pricePerHour, setPricePerHour] = useState("0");
+  const [location, setLocation] = useState("");
+  const [website, setWebsite] = useState("");
+  const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [twitterUrl, setTwitterUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [skills, setSkills] = useState<string[]>([]);
+  const [skillInput, setSkillInput] = useState("");
 
   useEffect(() => {
     if (!authLoading && !user) router.replace(ROUTES.login);
@@ -71,24 +88,39 @@ export default function EditProfilePage() {
     };
   }, [user, isLearner]);
 
+  useEffect(() => {
+    if (!user || !isMentor) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await profileApi.getMentorProfile(user.id);
+        if (cancelled) return;
+        setCoverUrl(data.cover_image_url || null);
+        setSpecialization(data.specialization || "");
+        setCategory(data.category || "");
+        setBio(data.bio || "");
+        setExperienceYears(String(data.experience_years ?? 0));
+        setPricePerHour(String(data.price_per_hour ?? 0));
+        setLocation(data.location || "");
+        setWebsite(data.website || "");
+        setLinkedinUrl(data.linkedin_url || "");
+        setTwitterUrl(data.twitter_url || "");
+        setInstagramUrl(data.instagram_url || "");
+        setYoutubeUrl(data.youtube_url || "");
+        setSkills((data.skills as string[]) || []);
+      } catch (err) {
+        console.error("Could not load mentor profile:", err);
+      } finally {
+        if (!cancelled) setMentorLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, isMentor]);
+
   const handleToggleInterest = (category: string) => {
     setInterests((prev) => toggleMentorCategory(prev, category));
-  };
-
-  const handleSaveInterests = async () => {
-    if (!user) return;
-    setSavingInterests(true);
-    setInterestsError("");
-    setInterestsSaved(false);
-    try {
-      await profileApi.updateLearnerProfile({ userId: user.id, interests });
-      setInterestsSaved(true);
-      setTimeout(() => setInterestsSaved(false), 2500);
-    } catch (err) {
-      setInterestsError((err as Error)?.message || "Could not save interests");
-    } finally {  
-      setSavingInterests(false);
-    }
   };
 
   const uploadAvatarFile = async (file: File) => {
@@ -133,13 +165,91 @@ export default function EditProfilePage() {
     }
   };
 
+  const uploadCoverFile = async (file: File) => {
+    if (!user) return;
+    setUploadingCover(true);
+    setError("");
+    try {
+      const url = await profileApi.uploadCoverImage({ userId: user.id, file });
+      setCoverUrl(url);
+    } catch (err) {
+      setError((err as Error)?.message || "Could not upload cover photo");
+    } finally {
+      setUploadingCover(false);
+    }
+  };
+
+  const handleCoverChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    await uploadCoverFile(file);
+  };
+
+  const handleCoverCameraCapture = async (file: File) => {
+    setShowCoverCamera(false);
+    await uploadCoverFile(file);
+  };
+
+  const handleRemoveCover = async () => {
+    if (!user) return;
+    if (!window.confirm("Remove your cover photo?")) return;
+    setUploadingCover(true);
+    setError("");
+    try {
+      await profileApi.removeCoverImage({ userId: user.id });
+      setCoverUrl(null);
+    } catch (err) {
+      setError((err as Error)?.message || "Could not remove cover photo");
+    } finally {
+      setUploadingCover(false);
+    }
+  };
+
+  const handleAddSkill = () => {
+    const value = skillInput.trim();
+    if (!value) return;
+    if (!skills.some((s) => s.toLowerCase() === value.toLowerCase())) {
+      setSkills((prev) => [...prev, value]);
+    }
+    setSkillInput("");
+  };
+
+  const handleRemoveSkill = (skill: string) => {
+    setSkills((prev) => prev.filter((s) => s !== skill));
+  };
+
+  const sectionsLoading = (isMentor && mentorLoading) || (isLearner && !interestsLoaded);
+
   const handleSave = async () => {
     if (!user) return;
     setSaving(true);
     setError("");
     setSaved(false);
     try {
-      await profileApi.updateProfile({ userId: user.id, name, username });
+      const tasks: Promise<unknown>[] = [profileApi.updateProfile({ userId: user.id, name, username })];
+      if (isMentor) {
+        tasks.push(
+          profileApi.updateMentorProfile({
+            userId: user.id,
+            specialization: specialization.trim(),
+            bio: bio.trim(),
+            category,
+            experienceYears: Number(experienceYears) || 0,
+            pricePerHour: Number(pricePerHour) || 0,
+            location: location.trim(),
+            website: website.trim(),
+            linkedinUrl: linkedinUrl.trim(),
+            twitterUrl: twitterUrl.trim(),
+            instagramUrl: instagramUrl.trim(),
+            youtubeUrl: youtubeUrl.trim(),
+            skills,
+          }),
+        );
+      }
+      if (isLearner) {
+        tasks.push(profileApi.updateLearnerProfile({ userId: user.id, interests }));
+      }
+      await Promise.all(tasks);
       refreshProfile();
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
@@ -162,6 +272,60 @@ export default function EditProfilePage() {
         Back to profile
       </Link>
       <h1 className="text-2xl font-bold text-text-primary">Edit Profile</h1>
+
+      {isMentor && !mentorLoading ? (
+        <div className="flex flex-col gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+            Cover Photo
+          </span>
+          <div
+            className="relative flex h-32 w-full items-center justify-center overflow-hidden rounded-2xl bg-surface-chip sm:h-40"
+            style={!coverUrl ? { backgroundImage: "var(--gradient-button-primary)" } : undefined}
+          >
+            {coverUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
+              <img src={coverUrl} alt="Cover" className="h-full w-full object-cover" />
+            ) : null}
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => coverFileInputRef.current?.click()}
+              disabled={uploadingCover}
+              className="text-sm font-semibold text-accent-link disabled:opacity-60"
+            >
+              {uploadingCover ? "Uploading…" : "Upload from device"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowCoverCamera(true)}
+              disabled={uploadingCover}
+              className="flex items-center gap-1.5 text-sm font-semibold text-text-secondary hover:text-text-primary disabled:opacity-60"
+            >
+              <Camera size={14} />
+              Take a photo
+            </button>
+            {coverUrl ? (
+              <button
+                type="button"
+                onClick={handleRemoveCover}
+                disabled={uploadingCover}
+                className="flex items-center gap-1.5 text-sm font-semibold text-accent-error hover:opacity-80 disabled:opacity-60"
+              >
+                <Trash2 size={14} />
+                Remove photo
+              </button>
+            ) : null}
+            <input
+              ref={coverFileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleCoverChange}
+              className="hidden"
+            />
+          </div>
+        </div>
+      ) : null}
 
       <div className="flex items-center gap-4">
         <button
@@ -216,9 +380,6 @@ export default function EditProfilePage() {
         </div>
       </div>
 
-      {error ? <p className="text-sm text-accent-error">{error}</p> : null}
-      {saved ? <p className="text-sm text-accent-success">Saved.</p> : null}
-
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
@@ -243,29 +404,201 @@ export default function EditProfilePage() {
         </label>
       </div>
 
-      <button
-        type="button"
-        onClick={handleSave}
-        disabled={saving}
-        className="flex h-11 w-fit items-center justify-center rounded-full px-6 text-sm font-semibold text-text-on-accent disabled:opacity-60"
-        style={{ backgroundImage: "var(--gradient-button-primary)" }}
-      >
-        {saving ? "Saving…" : "Save changes"}
-      </button>
-
-      {isMentor ? (
-        <Link
-          href={ROUTES.mentorProfileDashboard}
-          className="flex items-center justify-between gap-3 rounded-2xl border border-border-light bg-surface-sheet px-4 py-3.5 text-left hover:border-border-default"
-        >
+      {isMentor && !mentorLoading ? (
+        <div className="flex flex-col gap-4 border-t border-border-light pt-6">
           <div>
-            <p className="text-sm font-semibold text-text-primary">Manage your mentor profile</p>
+            <h2 className="text-lg font-bold text-text-primary">Mentor Profile</h2>
             <p className="mt-0.5 text-xs text-text-muted">
-              Specialization, bio, pricing, skills and social links
+              Manage your mentor profile and pricing
             </p>
           </div>
-          <ChevronRight size={16} className="shrink-0 text-text-muted" />
-        </Link>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+              Specialization
+            </span>
+            <input
+              value={specialization}
+              onChange={(e) => setSpecialization(e.target.value)}
+              placeholder="e.g. Senior Frontend Engineer"
+              className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
+            />
+          </label>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+              Category
+            </span>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary focus:outline-none"
+            >
+              <option value="">Select a category</option>
+              {MENTOR_CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+              Bio
+            </span>
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              rows={3}
+              placeholder="Tell learners about your background and how you can help them."
+              className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
+            />
+          </label>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+                Experience (years)
+              </span>
+              <input
+                type="number"
+                min={0}
+                value={experienceYears}
+                onChange={(e) => setExperienceYears(e.target.value)}
+                className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary focus:outline-none"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+                Price per session (₹)
+              </span>
+              <input
+                type="number"
+                min={0}
+                value={pricePerHour}
+                onChange={(e) => setPricePerHour(e.target.value)}
+                className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary focus:outline-none"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+                Location
+              </span>
+              <input
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="e.g. Pune, Maharashtra"
+                className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
+              />
+            </label>
+          </div>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+              Website
+            </span>
+            <input
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+              placeholder="e.g. www.example.com"
+              className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
+            />
+          </label>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+              Skills
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {skills.map((skill) => (
+                <span
+                  key={skill}
+                  className="flex items-center gap-1.5 rounded-full border border-accent-link/50 bg-accent-link/15 px-3 py-1.5 text-xs font-semibold text-accent-link"
+                >
+                  {skill}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveSkill(skill)}
+                    aria-label={`Remove ${skill}`}
+                    className="hover:opacity-70"
+                  >
+                    <X size={12} />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <input
+                value={skillInput}
+                onChange={(e) => setSkillInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddSkill();
+                  }
+                }}
+                placeholder="e.g. React, Public Speaking"
+                className="flex-1 rounded-xl border border-border-light bg-surface-sheet px-3.5 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleAddSkill}
+                className="flex shrink-0 items-center gap-1 rounded-xl border border-border-light px-3.5 py-2.5 text-sm font-semibold text-text-secondary hover:text-text-primary"
+              >
+                <Plus size={14} />
+                Add
+              </button>
+            </div>
+          </label>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+                LinkedIn
+              </span>
+              <input
+                value={linkedinUrl}
+                onChange={(e) => setLinkedinUrl(e.target.value)}
+                placeholder="https://linkedin.com/in/…"
+                className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+                Twitter / X
+              </span>
+              <input
+                value={twitterUrl}
+                onChange={(e) => setTwitterUrl(e.target.value)}
+                placeholder="https://x.com/…"
+                className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+                Instagram
+              </span>
+              <input
+                value={instagramUrl}
+                onChange={(e) => setInstagramUrl(e.target.value)}
+                placeholder="https://instagram.com/…"
+                className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+                YouTube
+              </span>
+              <input
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                placeholder="https://youtube.com/@…"
+                className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
+              />
+            </label>
+          </div>
+        </div>
       ) : null}
 
       {isLearner ? (
@@ -318,25 +651,30 @@ export default function EditProfilePage() {
                     ))}
                 </div>
               </div>
-
-              {interestsError ? <p className="text-sm text-accent-error">{interestsError}</p> : null}
-              {interestsSaved ? <p className="text-sm text-accent-success">Saved.</p> : null}
-
-              <button
-                type="button"
-                onClick={handleSaveInterests}
-                disabled={savingInterests}
-                className="flex h-11 w-fit items-center justify-center rounded-full border border-border-light px-6 text-sm font-semibold text-text-secondary disabled:opacity-60"
-              >
-                {savingInterests ? "Saving…" : "Save interests"}
-              </button>
             </>
           )}
         </div>
       ) : null}
 
+      <div className="flex flex-col gap-2 border-t border-border-light pt-6">
+        {error ? <p className="text-sm text-accent-error">{error}</p> : null}
+        {saved ? <p className="text-sm text-accent-success">Saved.</p> : null}
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={saving || sectionsLoading}
+          className="flex h-11 w-fit items-center justify-center rounded-full px-6 text-sm font-semibold text-text-on-accent disabled:opacity-60"
+          style={{ backgroundImage: "var(--gradient-button-primary)" }}
+        >
+          {saving ? "Saving…" : "Save changes"}
+        </button>
+      </div>
+
       {showCamera ? (
         <CameraCaptureModal onCapture={handleCameraCapture} onClose={() => setShowCamera(false)} />
+      ) : null}
+      {showCoverCamera ? (
+        <CameraCaptureModal onCapture={handleCoverCameraCapture} onClose={() => setShowCoverCamera(false)} />
       ) : null}
     </main>
   );

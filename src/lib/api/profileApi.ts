@@ -23,7 +23,6 @@ export interface MentorProfileFields {
 
 /**
  * Ported (subset used by auth/onboarding/dashboard) from connectfront/src/api/profileApi.js.
- * Avatar/cover upload lands with the Settings phase.
  */
 export const profileApi = {
   getProfile: async (userId: string) => {
@@ -210,6 +209,52 @@ export const profileApi = {
       await supabase.storage
         .from("connectiqo_avatar")
         .remove(["jpg", "jpeg", "png", "webp"].map((ext) => `${userId}/avatar.${ext}`))
+        .catch(() => undefined);
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  /** Same pattern as uploadAvatar, but writes mentor_profiles.cover_image_url instead. */
+  uploadCoverImage: async ({ userId, file }: { userId: string; file: File }): Promise<string> => {
+    const supabase = createClient();
+    try {
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const filePath = `${userId}/cover.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("cover_image")
+        .upload(filePath, file, { contentType: file.type || "image/jpeg", upsert: true });
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from("cover_image").getPublicUrl(filePath);
+      const coverUrl = `${data.publicUrl}?t=${Date.now()}`;
+
+      const { error: profileError } = await supabase
+        .from("mentor_profiles")
+        .update({ cover_image_url: coverUrl })
+        .eq("id", userId);
+      if (profileError) throw profileError;
+
+      return coverUrl;
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  /** Clears the cover photo — best-effort storage cleanup, DB pointer is the source of truth. */
+  removeCoverImage: async ({ userId }: { userId: string }): Promise<void> => {
+    const supabase = createClient();
+    try {
+      const { error } = await supabase
+        .from("mentor_profiles")
+        .update({ cover_image_url: null })
+        .eq("id", userId);
+      if (error) throw error;
+
+      await supabase.storage
+        .from("cover_image")
+        .remove(["jpg", "jpeg", "png", "webp"].map((ext) => `${userId}/cover.${ext}`))
         .catch(() => undefined);
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));

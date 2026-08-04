@@ -97,8 +97,8 @@ export default async function MentorProfilePage({ params }: PageProps) {
         <StatTile icon={Award} label="Experience" value={`${mentor.experience_years ?? 0} yrs`} />
         <StatTile
           icon={Clock}
-          label="Rate"
-          value={mentor.price_per_hour ? `₹${mentor.price_per_hour}/hr` : "—"}
+          label="Price/session"
+          value={mentor.price_per_hour ? `₹${mentor.price_per_hour}/session` : "—"}
         />
       </div>
 

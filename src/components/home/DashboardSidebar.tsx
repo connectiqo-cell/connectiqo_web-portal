@@ -208,7 +208,11 @@ function SidebarAccountButton({
             {profile?.name || "My Account"}
           </span>
           <span className="truncate text-xs text-text-muted">
-            {profile?.role === "mentor" ? "Creator" : "Member"}
+            {profile?.role === "both"
+              ? "Creator & Member"
+              : profile?.role === "mentor"
+                ? "Creator"
+                : "Member"}
           </span>
         </span>
       )}

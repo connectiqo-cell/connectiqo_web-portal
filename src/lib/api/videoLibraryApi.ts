@@ -21,7 +21,7 @@ export interface MentorVideo {
 
 export type PublicVideo = MentorVideo & {
   profiles: { id: string; name: string | null; avatar_url: string | null } | null;
-  mentor_profiles: { specialization: string | null; unlock_price: number | null };
+  mentor_profiles: { specialization: string | null; unlock_price: number | null; category: string | null };
 };
 
 export interface CreateVideoOrderResponse {
@@ -202,7 +202,7 @@ export const videoLibraryApi = {
       const mentorIds = [...new Set(videos.map((v) => v.mentor_id))];
       const { data: mentorProfiles } = await supabase
         .from("mentor_profiles")
-        .select("id, specialization, unlock_price")
+        .select("id, specialization, unlock_price, category")
         .in("id", mentorIds);
 
       const profileMap = new Map((mentorProfiles || []).map((mp) => [mp.id, mp]));
@@ -210,7 +210,7 @@ export const videoLibraryApi = {
       return (videos as unknown as MentorVideo[]).map((v) => ({
         ...v,
         profiles: v.profiles ?? null,
-        mentor_profiles: profileMap.get(v.mentor_id) || { specialization: "", unlock_price: null },
+        mentor_profiles: profileMap.get(v.mentor_id) || { specialization: "", unlock_price: null, category: null },
       })) as PublicVideo[];
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));

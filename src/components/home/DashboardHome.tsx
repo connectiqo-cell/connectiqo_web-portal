@@ -3,23 +3,24 @@
 import {
   Calendar,
   ChevronRight,
-  Lock,
-  MonitorPlay,
   PlayCircle,
-  ShieldCheck,
   Star,
   Users,
-  Video,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { type BookingRow, bookingApi } from "@/lib/api/bookingApi";
+import { type HomeVideoRow, fetchIntroVideo } from "@/lib/api/contentApi";
 import { type MentorProfileRow, type PlatformStats } from "@/lib/api/mentorApi";
+import { profileApi } from "@/lib/api/profileApi";
 import { type PublicVideo, videoLibraryApi } from "@/lib/api/videoLibraryApi";
 import { ROUTES } from "@/lib/routes";
 import { useHorizontalScroll } from "@/lib/hooks/useHorizontalScroll";
+import { isBookingSessionPast } from "@/lib/utils/bookingSession";
+import { mentorHasCategory } from "@/lib/utils/mentorCategories";
 import { HeroBanner } from "@/components/home/HeroBanner";
 import { TopCategories } from "@/components/home/TopCategories";
 import { PopularCreatorsCarousel } from "@/components/home/PopularCreatorsCarousel";
@@ -54,9 +55,12 @@ export function DashboardHome({
 }) {
   const { user, profile } = useAuth();
   const isMentor = profile?.role === "mentor" || profile?.role === "both";
+  const isLearner = profile?.role !== "mentor";
   const [upcoming, setUpcoming] = useState<BookingRow[]>([]);
   const [recommendedVideos, setRecommendedVideos] = useState<PublicVideo[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [introVideo, setIntroVideo] = useState<HomeVideoRow | null>(null);
+  const [showIntroVideo, setShowIntroVideo] = useState(false);
   const {
     scrollRef: videosScrollRef,
     canScrollLeft: canScrollVideosLeft,
@@ -64,20 +68,17 @@ export function DashboardHome({
     scroll: scrollVideos,
   } = useHorizontalScroll(recommendedVideos, "[data-video]");
 
-  const filteredTrending = selectedCategory
-    ? trending.filter(
-        (creator) =>
-          creator.specialization?.toLowerCase().includes(selectedCategory.toLowerCase()) ||
-          creator.profiles?.name?.toLowerCase().includes(selectedCategory.toLowerCase())
-      )
+  const categoryMatches = selectedCategory
+    ? trending.filter((creator) => mentorHasCategory(creator.category, selectedCategory))
     : trending;
+  const filteredTrending = categoryMatches.length > 0 ? categoryMatches : trending;
 
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
     (async () => {
       const rows = await bookingApi.getUpcomingBookingsByLearner(user.id).catch(() => []);
-      if (!cancelled) setUpcoming(rows.slice(0, 3));
+      if (!cancelled) setUpcoming(rows.filter((b) => !isBookingSessionPast(b)).slice(0, 3));
     })();
     return () => {
       cancelled = true;
@@ -87,8 +88,28 @@ export function DashboardHome({
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const videos = await videoLibraryApi.getAllPublicVideos({ page: 0, pageSize: 4 }).catch(() => []);
-      if (!cancelled) setRecommendedVideos(videos);
+      const [videos, learnerProfile] = await Promise.all([
+        videoLibraryApi.getAllPublicVideos({ page: 0, pageSize: 20 }).catch(() => []),
+        user && isLearner ? profileApi.getLearnerProfile(user.id).catch(() => null) : Promise.resolve(null),
+      ]);
+      if (cancelled) return;
+
+      const interests: string[] = learnerProfile?.interests || [];
+      const matches = interests.length
+        ? videos.filter((v) => interests.some((i) => mentorHasCategory(v.mentor_profiles.category, i)))
+        : [];
+      setRecommendedVideos((matches.length ? matches : videos).slice(0, 4));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, isLearner]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const video = await fetchIntroVideo();
+      if (!cancelled) setIntroVideo(video);
     })();
     return () => {
       cancelled = true;
@@ -106,7 +127,7 @@ export function DashboardHome({
 
             <PopularCreatorsCarousel creators={filteredTrending} />
 
-            <section className="w-full mt-4">
+            <section className="w-full">
               <div className="mb-6 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-text-primary">Recommended For You</h2>
                 <Link href={ROUTES.videos} className="flex items-center gap-1 text-sm font-semibold text-accent-link">
@@ -133,9 +154,7 @@ export function DashboardHome({
                             alt={video.title}
                             className="h-full w-full object-cover group-hover:scale-105 transition-transform"
                           />
-                        ) : (
-                          <Video size={32} className="text-text-muted" />
-                        )}
+                        ) : null}
                         <div className="absolute inset-0 flex items-center justify-center">
                           <PlayCircle size={40} className="text-white opacity-80 group-hover:opacity-100 transition-opacity" />
                         </div>
@@ -173,61 +192,28 @@ export function DashboardHome({
           </div>
 
           <aside className="flex w-full flex-col gap-4 xl:w-72 xl:shrink-0">
-            <div className="rounded-2xl border border-border-light bg-surface-panel p-4">
-              <div className="mb-3 flex items-center gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent-link/15 text-accent-link">
-                  <PlayCircle size={20} />
-                </span>
-                <div>
-                  <p className="text-sm font-bold text-text-primary">See Connectiqo in 60 sec</p>
-                  <p className="text-xs text-text-muted">Discover · Book · Connect</p>
+            {introVideo ? (
+              <div className="rounded-2xl border border-border-light bg-surface-panel p-4">
+                <div className="mb-3 flex items-center gap-3">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent-link/15 text-accent-link">
+                    <PlayCircle size={20} />
+                  </span>
+                  <div>
+                    <p className="text-sm font-bold text-text-primary">
+                      {introVideo.title || "See Connectiqo in 60 sec"}
+                    </p>
+                    <p className="text-xs text-text-muted">{introVideo.label || "Discover · Book · Connect"}</p>
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setShowIntroVideo(true)}
+                  className="flex h-10 w-full items-center justify-center rounded-xl bg-accent-link/10 text-sm font-semibold text-accent-link hover:bg-accent-link/15"
+                >
+                  Watch Now
+                </button>
               </div>
-              <Link
-                href={ROUTES.videos}
-                className="mb-4 flex h-10 w-full items-center justify-center rounded-xl bg-accent-link/10 text-sm font-semibold text-accent-link hover:bg-accent-link/15"
-              >
-                Watch Now
-              </Link>
-              <ul className="flex flex-col gap-3 text-xs text-text-secondary">
-                <li className="flex items-start gap-2.5">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent-link/10 text-accent-link">
-                    <Video size={14} />
-                  </span>
-                  <span>
-                    <p className="font-semibold text-text-primary">1-on-1 Sessions</p>
-                    <p className="text-text-muted">Personalized time with experts</p>
-                  </span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent-link/10 text-accent-link">
-                    <ShieldCheck size={14} />
-                  </span>
-                  <span>
-                    <p className="font-semibold text-text-primary">Verified Mentors</p>
-                    <p className="text-text-muted">Background verified</p>
-                  </span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent-link/10 text-accent-link">
-                    <Lock size={14} />
-                  </span>
-                  <span>
-                    <p className="font-semibold text-text-primary">Secure Payments</p>
-                    <p className="text-text-muted">100% safe &amp; secure</p>
-                  </span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent-link/10 text-accent-link">
-                    <MonitorPlay size={14} />
-                  </span>
-                  <span>
-                    <p className="font-semibold text-text-primary">HD Quality</p>
-                    <p className="text-text-muted">Crystal clear video</p>
-                  </span>
-                </li>
-              </ul>
-            </div>
+            ) : null}
 
             <div className="rounded-2xl border border-border-light bg-surface-panel p-4">
               <div className="mb-3 flex items-center justify-between">
@@ -306,6 +292,35 @@ export function DashboardHome({
           </aside>
         </div>
       </div>
+
+      {showIntroVideo && introVideo ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setShowIntroVideo(false)}
+        >
+          <div
+            className="flex w-full max-w-2xl flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-sm font-semibold text-text-primary">
+                {introVideo.title || "See Connectiqo in 60 sec"}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowIntroVideo(false)}
+                aria-label="Close"
+                className="shrink-0 text-text-muted hover:text-text-primary"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="aspect-video w-full overflow-hidden rounded-xl bg-black">
+              <video src={introVideo.video_url} controls autoPlay className="h-full w-full" />
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }

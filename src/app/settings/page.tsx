@@ -5,12 +5,16 @@ import {
   Camera,
   ChevronRight,
   CreditCard,
+  FileText,
+  Film,
+  HelpCircle,
   Landmark,
   PlayCircle,
+  Shield,
   Share2,
-  ShieldCheck,
   Sun,
   User,
+  Video as VideoIcon,
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
@@ -19,9 +23,13 @@ import { useEffect, useState } from "react";
 
 import { ThemeToggleSwitch } from "@/components/ThemeToggleSwitch";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/contexts/NotificationContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { paymentApi } from "@/lib/api/paymentApi";
 import { videoLibraryApi } from "@/lib/api/videoLibraryApi";
 import { ROUTES } from "@/lib/routes";
+
+const SUPPORT_EMAIL = "contact@connectiqo.com";
 
 interface Subscription {
   mentor_id: string;
@@ -46,10 +54,15 @@ function formatExpiry(expiresAt: string | null) {
 export default function SettingsHubPage() {
   const router = useRouter();
   const { user, profile, loading } = useAuth();
+  const { unreadCount } = useNotifications();
+  const { isDark } = useTheme();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [subsLoading, setSubsLoading] = useState(true);
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [walletLoading, setWalletLoading] = useState(true);
+  const [shared, setShared] = useState(false);
+  const [subsExpanded, setSubsExpanded] = useState(false);
+  const isMentor = profile?.role === "mentor" || profile?.role === "both";
 
   useEffect(() => {
     if (!loading && !user) router.replace(ROUTES.login);
@@ -101,6 +114,21 @@ export default function SettingsHubPage() {
     : `₹${(walletBalance ?? 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
   const roleLabel =
     profile?.role === "mentor" ? "Mentor" : profile?.role === "learner" ? "Learner" : "Mentor & Learner";
+
+  const handleShare = async () => {
+    const url = window.location.origin;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Connectiqo", url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setShared(true);
+      setTimeout(() => setShared(false), 1500);
+    } catch {
+      // user cancelled share/clipboard prompt — nothing to do
+    }
+  };
 
   if (!user) return null;
 
@@ -207,7 +235,7 @@ export default function SettingsHubPage() {
             </Link>
           ) : (
             <>
-              {subscriptions.map((sub) => (
+              {(subsExpanded ? subscriptions : subscriptions.slice(0, 3)).map((sub) => (
                 <Link
                   key={sub.mentor_id}
                   href={ROUTES.mentorProfile(sub.mentor_id)}
@@ -231,13 +259,15 @@ export default function SettingsHubPage() {
                   </div>
                 </Link>
               ))}
-              <Link
-                href={ROUTES.videos}
-                className="flex items-center justify-center gap-2 rounded-xl border border-border-light bg-surface-panel px-4 py-3 text-sm font-semibold text-accent-link transition-colors hover:border-border-default"
-              >
-                <PlayCircle size={18} />
-                Browse video library
-              </Link>
+              {subscriptions.length > 3 ? (
+                <button
+                  type="button"
+                  onClick={() => setSubsExpanded((v) => !v)}
+                  className="flex items-center justify-center gap-2 rounded-xl border border-border-light bg-surface-panel px-4 py-3 text-sm font-semibold text-accent-link transition-colors hover:border-border-default"
+                >
+                  {subsExpanded ? "Show less" : `Show more (${subscriptions.length - 3})`}
+                </button>
+              ) : null}
             </>
           )}
         </div>
@@ -247,14 +277,16 @@ export default function SettingsHubPage() {
           <SectionHeader title="Preferences" subtitle="Customize your app experience" />
           <div className="flex flex-col gap-0 rounded-xl border border-border-light bg-surface-panel">
             {/* Appearance */}
-            <div className="flex items-center justify-between px-4 py-5 text-left transition-colors hover:bg-surface-chip">
-              <div className="flex items-center gap-4 flex-1">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-100 dark:bg-cyan-900/40 shrink-0">
-                  <Sun size={24} className="text-cyan-600 dark:text-cyan-400" />
+            <div className="flex items-center justify-between px-4 py-4 text-left transition-colors hover:bg-surface-chip">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-100 dark:bg-cyan-900/30 shrink-0">
+                  <Sun size={20} className="text-cyan-600 dark:text-cyan-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-base font-bold text-text-primary">Appearance</p>
-                  <p className="text-xs text-text-muted">Light · tap switch for Dark</p>
+                  <p className="text-sm font-semibold text-text-primary">Appearance</p>
+                  <p className="text-xs text-text-muted">
+                    {isDark ? "Dark · tap switch for Light" : "Light · tap switch for Dark"}
+                  </p>
                 </div>
               </div>
               <div className="shrink-0 ml-4">
@@ -264,9 +296,8 @@ export default function SettingsHubPage() {
             <div className="h-px bg-border-light" />
 
             {/* Notifications */}
-            <button
-              type="button"
-              onClick={() => {}}
+            <Link
+              href={ROUTES.notifications}
               className="flex items-center justify-between px-4 py-4 text-left transition-colors hover:bg-surface-chip"
             >
               <div className="flex items-center gap-3">
@@ -279,18 +310,19 @@ export default function SettingsHubPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-accent-primary text-white text-xs font-semibold">
-                  10
-                </span>
+                {unreadCount > 0 ? (
+                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-accent-primary text-white text-xs font-semibold">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                ) : null}
                 <ChevronRight size={18} className="text-text-muted" />
               </div>
-            </button>
+            </Link>
             <div className="h-px bg-border-light" />
 
             {/* My Bookings */}
-            <button
-              type="button"
-              onClick={() => {}}
+            <Link
+              href={ROUTES.bookings}
               className="flex items-center justify-between px-4 py-4 text-left transition-colors hover:bg-surface-chip"
             >
               <div className="flex items-center gap-3">
@@ -303,9 +335,10 @@ export default function SettingsHubPage() {
                 </div>
               </div>
               <ChevronRight size={18} className="text-text-muted shrink-0" />
-            </button>
+            </Link>
           </div>
         </div>
+
         </div>
 
         {/* Right sidebar */}
@@ -347,60 +380,77 @@ export default function SettingsHubPage() {
           </div>
 
           <div className="rounded-xl border border-border-light bg-surface-panel p-4">
-            <SectionHeader title="Account & Security" subtitle="Manage your account and security settings" />
+            <SectionHeader title="Content & Library" subtitle="Your videos and recorded sessions" />
             <div className="mt-3 flex flex-col gap-0">
               <Link
-                href={ROUTES.editProfileForm}
+                href={ROUTES.recordings}
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
               >
-                <User size={16} className="shrink-0 text-accent-link" />
+                <Film size={16} className="shrink-0 text-accent-link" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-text-primary">Personal Information</p>
-                  <p className="text-xs text-text-muted">Update your personal details</p>
+                  <p className="text-sm font-semibold text-text-primary">Recorded Sessions</p>
+                  <p className="text-xs text-text-muted">Replay past live sessions</p>
+                </div>
+              </Link>
+              {isMentor ? (
+                <Link
+                  href={ROUTES.mentorVideos}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
+                >
+                  <VideoIcon size={16} className="shrink-0 text-accent-link" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-text-primary">My Videos</p>
+                    <p className="text-xs text-text-muted">Manage your mentor video library</p>
+                  </div>
+                </Link>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-border-light bg-surface-panel p-4">
+            <SectionHeader title="Support & Legal" subtitle="Help, policies, and sharing" />
+            <div className="mt-3 flex flex-col gap-0">
+              <a
+                href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Connectiqo Support")}`}
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
+              >
+                <HelpCircle size={16} className="shrink-0 text-accent-link" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-text-primary">Help & Support</p>
+                  <p className="text-xs text-text-muted">Contact us at {SUPPORT_EMAIL}</p>
+                </div>
+              </a>
+              <Link
+                href={ROUTES.privacy}
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
+              >
+                <Shield size={16} className="shrink-0 text-accent-link" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-text-primary">Privacy Policy</p>
+                  <p className="text-xs text-text-muted">How we handle your data</p>
+                </div>
+              </Link>
+              <Link
+                href={ROUTES.terms}
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
+              >
+                <FileText size={16} className="shrink-0 text-accent-link" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-text-primary">Terms of Service</p>
+                  <p className="text-xs text-text-muted">Usage guidelines and policies</p>
                 </div>
               </Link>
               <button
                 type="button"
-                onClick={() => {}}
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
-              >
-                <ShieldCheck size={16} className="shrink-0 text-accent-link" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-text-primary">Change Password</p>
-                  <p className="text-xs text-text-muted">Update your password</p>
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => {}}
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
-              >
-                <Bell size={16} className="shrink-0 text-accent-link" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-text-primary">Email Preferences</p>
-                  <p className="text-xs text-text-muted">Manage email notifications</p>
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => {}}
+                onClick={handleShare}
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
               >
                 <Share2 size={16} className="shrink-0 text-accent-link" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-text-primary">Share Connectiqo</p>
-                  <p className="text-xs text-text-muted">Invite friends to join</p>
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => {}}
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
-              >
-                <ShieldCheck size={16} className="shrink-0 text-accent-link" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-text-primary">Two-Factor Authentication</p>
-                  <p className="text-xs text-text-muted">Add extra security to your account</p>
+                  <p className="text-sm font-semibold text-text-primary">
+                    {shared ? "Link copied!" : "Share Connectiqo"}
+                  </p>
+                  <p className="text-xs text-text-muted">Invite friends to join the platform</p>
                 </div>
               </button>
             </div>

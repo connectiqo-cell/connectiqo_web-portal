@@ -265,7 +265,7 @@ export function MarketingHome({
 
   return (
     <main className="flex flex-1 flex-col">
-      <header className="sticky top-0 z-20 border-b border-border-light bg-surface-page/95 backdrop-blur">
+      <header className="sticky top-0 z-20 border-b border-border-light bg-void/95 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-4 sm:px-6 py-3 sm:py-4">
           <Link href={ROUTES.home} className="shrink-0 text-xl sm:text-2xl font-extrabold text-text-primary">
             Connect<span className="text-accent-link">iqo</span>

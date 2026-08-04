@@ -40,6 +40,38 @@ export type HeroSlideRow = {
   position: number;
 };
 
+export type HomeVideoRow = {
+  id: string;
+  title: string | null;
+  label: string | null;
+  video_url: string;
+  thumbnail_url: string | null;
+};
+
+/** The single admin-managed "how it works" intro clip shown on Home. */
+export async function fetchIntroVideo(): Promise<HomeVideoRow | null> {
+  const supabase = createClient();
+  try {
+    const { data, error } = await supabase
+      .from("home_videos")
+      .select("id, title, label, video_url, thumbnail_url")
+      .eq("type", "intro")
+      .eq("is_active", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.warn("home_videos:", error.message);
+      return null;
+    }
+    return data;
+  } catch (e) {
+    console.warn("home_videos fetch failed:", (e as Error)?.message);
+    return null;
+  }
+}
+
 /** Home banner carousel — admin-managed promotional slides. */
 export async function fetchActiveHeroSlides(): Promise<HeroSlideRow[]> {
   const supabase = createClient();
