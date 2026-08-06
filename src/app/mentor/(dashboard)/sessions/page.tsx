@@ -6,7 +6,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock3,
-  HeadphonesIcon,
   History,
   ListChecks,
   Wallet,
@@ -23,7 +22,6 @@ import { ROUTES } from "@/lib/routes";
 import { useBookingsRealtime } from "@/lib/hooks/useBookingsRealtime";
 import { isBookingSessionPast } from "@/lib/utils/bookingSession";
 
-const SUPPORT_EMAIL = "contact@connectiqo.com";
 const PREVIEW_COUNT = 4;
 
 function toDateStr(d: Date) {
@@ -49,6 +47,7 @@ export default function MentorSessionsPage() {
     d.setDate(1);
     return d;
   });
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const loadSessions = useCallback(async () => {
     if (!user) return;
@@ -85,9 +84,17 @@ export default function MentorSessionsPage() {
   const activeUpcoming = regularUpcoming.filter((b) => !isBookingSessionPast(b));
   const expired = regularUpcoming.filter((b) => isBookingSessionPast(b));
   const upcomingCount = reschedulePending.length + activeUpcoming.length;
-  const visibleActiveUpcoming = showAllUpcoming ? activeUpcoming : activeUpcoming.slice(0, PREVIEW_COUNT);
+  const activeUpcomingFiltered = selectedDate
+    ? activeUpcoming.filter((b) => b.availability_slots?.date === selectedDate)
+    : activeUpcoming;
+  const visibleActiveUpcoming = showAllUpcoming
+    ? activeUpcomingFiltered
+    : activeUpcomingFiltered.slice(0, PREVIEW_COUNT);
   const combinedHistory = [...expired, ...history];
-  const visibleHistory = showAllHistory ? combinedHistory : combinedHistory.slice(0, PREVIEW_COUNT);
+  const combinedHistoryFiltered = selectedDate
+    ? combinedHistory.filter((b) => b.availability_slots?.date === selectedDate)
+    : combinedHistory;
+  const visibleHistory = showAllHistory ? combinedHistoryFiltered : combinedHistoryFiltered.slice(0, PREVIEW_COUNT);
 
   const allBookings = useMemo(() => [...upcoming, ...history], [upcoming, history]);
   const bookingDatesSet = useMemo(
@@ -115,7 +122,7 @@ export default function MentorSessionsPage() {
     ...Array(firstWeekday).fill(null),
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
   ];
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = toDateStr(new Date());
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_300px] lg:items-start">
@@ -145,6 +152,26 @@ export default function MentorSessionsPage() {
           </button>
         </div>
 
+        {selectedDate ? (
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-text-secondary">
+              Showing sessions on{" "}
+              {new Date(`${selectedDate}T00:00:00`).toLocaleDateString("en-IN", {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+              })}
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelectedDate(null)}
+              className="font-semibold text-accent-link hover:underline"
+            >
+              Clear filter
+            </button>
+          </div>
+        ) : null}
+
         {error ? <p className="text-sm text-accent-error">{error}</p> : null}
 
         {loading ? (
@@ -156,7 +183,7 @@ export default function MentorSessionsPage() {
                 <CalendarCheck size={15} className="text-accent-link" />
                 Upcoming Sessions
               </h2>
-              {upcomingCount > PREVIEW_COUNT ? (
+              {activeUpcomingFiltered.length > PREVIEW_COUNT ? (
                 <button
                   type="button"
                   onClick={() => setShowAllUpcoming((v) => !v)}
@@ -176,12 +203,23 @@ export default function MentorSessionsPage() {
                   Open slots for learners to book will appear here once someone schedules a session.
                 </p>
                 <Link
-                  href={ROUTES.mentorAvailability}
+                  href={ROUTES.mentorSchedule}
                   className="mt-1 rounded-full px-5 py-2.5 text-sm font-semibold text-text-on-accent"
                   style={{ backgroundImage: "var(--gradient-button-primary)" }}
                 >
                   Set Availability
                 </Link>
+              </div>
+            ) : selectedDate && activeUpcomingFiltered.length === 0 && reschedulePending.length === 0 ? (
+              <div className="flex flex-col items-center gap-2 py-10 text-center">
+                <p className="text-sm font-semibold text-text-primary">No upcoming sessions on this date</p>
+                <button
+                  type="button"
+                  onClick={() => setSelectedDate(null)}
+                  className="text-xs font-semibold text-accent-link"
+                >
+                  Clear filter
+                </button>
               </div>
             ) : (
               <div className="flex flex-col gap-3">
@@ -201,7 +239,7 @@ export default function MentorSessionsPage() {
                 <History size={15} className="text-accent-link" />
                 Session History
               </h2>
-              {combinedHistory.length > PREVIEW_COUNT ? (
+              {combinedHistoryFiltered.length > PREVIEW_COUNT ? (
                 <button
                   type="button"
                   onClick={() => setShowAllHistory((v) => !v)}
@@ -213,6 +251,17 @@ export default function MentorSessionsPage() {
             </div>
             {combinedHistory.length === 0 ? (
               <p className="py-8 text-center text-sm text-text-muted">No past sessions yet.</p>
+            ) : selectedDate && combinedHistoryFiltered.length === 0 ? (
+              <div className="flex flex-col items-center gap-2 py-10 text-center">
+                <p className="text-sm font-semibold text-text-primary">No past sessions on this date</p>
+                <button
+                  type="button"
+                  onClick={() => setSelectedDate(null)}
+                  className="text-xs font-semibold text-accent-link"
+                >
+                  Clear filter
+                </button>
+              </div>
             ) : (
               <div className="flex flex-col gap-3">
                 {visibleHistory.map((booking) => (
@@ -264,18 +313,25 @@ export default function MentorSessionsPage() {
               const cellStr = toDateStr(new Date(year, month, day));
               const hasBooking = bookingDatesSet.has(cellStr);
               const isToday = cellStr === todayStr;
+              const isSelected = cellStr === selectedDate;
               return (
-                <div
+                <button
                   key={cellStr}
-                  className={`flex flex-col items-center gap-0.5 rounded-lg py-1.5 text-xs ${
-                    isToday ? "bg-accent-link text-text-on-accent font-semibold" : "text-text-secondary"
+                  type="button"
+                  onClick={() => setSelectedDate(isSelected ? null : cellStr)}
+                  className={`flex flex-col items-center gap-0.5 rounded-lg py-1.5 text-xs transition-colors ${
+                    isSelected
+                      ? "bg-accent-link text-text-on-accent font-semibold"
+                      : isToday
+                        ? "border border-accent-link/50 text-text-primary hover:bg-surface-chip"
+                        : "text-text-secondary hover:bg-surface-chip"
                   }`}
                 >
                   {day}
                   <span
-                    className={`h-1 w-1 rounded-full ${hasBooking ? (isToday ? "bg-text-on-accent" : "bg-accent-link") : ""}`}
+                    className={`h-1 w-1 rounded-full ${hasBooking ? (isSelected ? "bg-text-on-accent" : "bg-accent-link") : ""}`}
                   />
-                </div>
+                </button>
               );
             })}
           </div>
@@ -313,24 +369,6 @@ export default function MentorSessionsPage() {
               <span className="text-sm font-bold text-text-primary">₹{totalEarned.toFixed(0)}</span>
             </div>
           </div>
-        </div>
-
-        <div className="flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-link/10 text-accent-link">
-              <HeadphonesIcon size={16} />
-            </span>
-            <h3 className="text-sm font-bold text-text-primary">Need Help?</h3>
-          </div>
-          <p className="text-xs text-text-muted">
-            Our support team is here to help you with your sessions and payouts.
-          </p>
-          <a
-            href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Connectiqo Support")}`}
-            className="rounded-full border border-border-light px-4 py-2 text-center text-xs font-semibold text-text-secondary hover:text-text-primary"
-          >
-            Contact Support
-          </a>
         </div>
       </aside>
     </div>

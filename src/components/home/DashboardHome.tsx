@@ -4,7 +4,6 @@ import {
   Calendar,
   ChevronRight,
   PlayCircle,
-  Star,
   Users,
   X,
 } from "lucide-react";
@@ -14,7 +13,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { type BookingRow, bookingApi } from "@/lib/api/bookingApi";
 import { type HomeVideoRow, fetchIntroVideo } from "@/lib/api/contentApi";
-import { type MentorProfileRow, type PlatformStats } from "@/lib/api/mentorApi";
+import { type MentorProfileRow } from "@/lib/api/mentorApi";
 import { profileApi } from "@/lib/api/profileApi";
 import { type PublicVideo, videoLibraryApi } from "@/lib/api/videoLibraryApi";
 import { ROUTES } from "@/lib/routes";
@@ -24,11 +23,6 @@ import { mentorHasCategory } from "@/lib/utils/mentorCategories";
 import { HeroBanner } from "@/components/home/HeroBanner";
 import { TopCategories } from "@/components/home/TopCategories";
 import { PopularCreatorsCarousel } from "@/components/home/PopularCreatorsCarousel";
-
-function formatCount(n: number): string {
-  if (n >= 1000) return `${Math.floor(n / 100) / 10}K+`;
-  return `${n}`;
-}
 
 function formatSlot(booking: BookingRow): string {
   const date = booking.availability_slots?.date;
@@ -48,10 +42,8 @@ function formatSlot(booking: BookingRow): string {
 
 export function DashboardHome({
   trending,
-  stats,
 }: {
   trending: MentorProfileRow[];
-  stats: PlatformStats;
 }) {
   const { user, profile } = useAuth();
   const isMentor = profile?.role === "mentor" || profile?.role === "both";
@@ -257,20 +249,6 @@ export function DashboardHome({
                   ))}
                 </div>
               )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 rounded-2xl border border-border-light bg-surface-panel p-4 text-center">
-              <div>
-                <p className="text-sm font-extrabold text-text-primary">{formatCount(stats.mentorCount)}</p>
-                <p className="text-[11px] text-text-muted">Creators</p>
-              </div>
-              <div>
-                <p className="flex items-center justify-center gap-0.5 text-sm font-extrabold text-text-primary">
-                  <Star size={12} className="fill-current text-accent-warning" />
-                  {stats.averageRating.toFixed(1)}
-                </p>
-                <p className="text-[11px] text-text-muted">Avg. Rating</p>
-              </div>
             </div>
 
             {!isMentor ? (

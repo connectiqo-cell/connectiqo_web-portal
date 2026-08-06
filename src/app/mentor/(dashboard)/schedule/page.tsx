@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { availabilityApi, type AvailabilitySlot } from "@/lib/api/availabilityApi";
 
 const DAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
-const SLOT_DURATION_MINS = 20;
+const SLOT_DURATION_MINS = 30;
 const SLOT_BUFFER_MINS = 30;
 
 const SLOT_PERIODS = [
@@ -77,7 +77,7 @@ export default function MentorSchedulePage() {
   const [error, setError] = useState("");
   const [justPublished, setJustPublished] = useState(false);
 
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = toDateStr(new Date());
   const [selectedDate, setSelectedDate] = useState(todayStr);
   const [monthCursor, setMonthCursor] = useState(() => {
     const d = new Date();
@@ -284,7 +284,7 @@ export default function MentorSchedulePage() {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h3 className="text-sm font-semibold text-text-primary">{formatDateLabel(selectedDate)}</h3>
-            <p className="text-xs text-text-muted">Tap to toggle · 20 min sessions</p>
+            <p className="text-xs text-text-muted">Tap to toggle · 30 min sessions</p>
           </div>
           <div className="flex flex-wrap items-center gap-3 text-[11px] text-text-muted">
             <span className="flex items-center gap-1">

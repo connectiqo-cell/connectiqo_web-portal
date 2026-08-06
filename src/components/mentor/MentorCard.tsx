@@ -34,7 +34,7 @@ export function MentorCard({ mentor }: { mentor: MentorProfileRow }) {
         <StarRating rating={mentor.rating} />
         {mentor.price_per_hour ? (
           <span className="text-xs font-semibold text-accent-secondary">
-            ₹{mentor.price_per_hour}/hr
+            ₹{mentor.price_per_hour}/session
           </span>
         ) : null}
       </div>

@@ -25,13 +25,11 @@ export const ROUTES = {
   recommended: "/recommended",
   bookings: "/bookings",
   videos: "/videos",
-  bookmarks: "/bookmarks",
 
   // Mentor
   mentorProfileDashboard: "/mentor/profile",
   mentorSessions: "/mentor/sessions",
   mentorSchedule: "/mentor/schedule",
-  mentorAvailability: "/mentor/availability",
   mentorVideos: "/mentor/videos",
   rescheduleRequest: (bookingId: string) => `/mentor/reschedule/${bookingId}`,
 

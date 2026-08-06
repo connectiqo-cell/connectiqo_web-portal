@@ -7,7 +7,6 @@ import { ReportUserModal } from "@/components/ReportUserModal";
 import { MentorProfileCta } from "@/components/mentor/MentorProfileCta";
 import { MentorVideoLibrary } from "@/components/mentor/MentorVideoLibrary";
 import { ReviewCard } from "@/components/mentor/ReviewCard";
-import { SaveMentorButton } from "@/components/mentor/SaveMentorButton";
 import { mentorApi } from "@/lib/api/mentorApi";
 import { reviewsApi } from "@/lib/api/reviewsApi";
 import { videoLibraryApi } from "@/lib/api/videoLibraryApi";
@@ -53,12 +52,19 @@ export default async function MentorProfilePage({ params }: PageProps) {
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-12">
-      {mentor.cover_image_url ? (
-        <div className="-mx-6 -mt-6 h-40 w-[calc(100%+3rem)] overflow-hidden sm:-mt-12 sm:rounded-b-3xl">
-          {/* eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL */}
+      <div
+        className="relative -mx-6 -mt-6 flex h-40 w-[calc(100%+3rem)] items-center justify-center overflow-hidden sm:-mt-12 sm:rounded-b-3xl"
+        style={!mentor.cover_image_url ? { backgroundImage: "var(--gradient-button-primary)" } : undefined}
+      >
+        {mentor.cover_image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
           <img src={mentor.cover_image_url} alt="" className="h-full w-full object-cover" />
-        </div>
-      ) : null}
+        ) : (
+          <span className="select-none text-2xl font-extrabold tracking-wide text-white/25 sm:text-3xl">
+            Connect<span className="text-white/40">iqo</span>
+          </span>
+        )}
+      </div>
 
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
         <div className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-surface-panel">
@@ -113,7 +119,6 @@ export default async function MentorProfilePage({ params }: PageProps) {
         <div className="flex-1 sm:flex-none">
           <MentorProfileCta mentorId={mentorId} />
         </div>
-        <SaveMentorButton mentorId={mentorId} />
       </div>
 
       <MentorVideoLibrary mentorId={mentorId} mentorName={name} unlockPrice={mentor.unlock_price ?? null} />

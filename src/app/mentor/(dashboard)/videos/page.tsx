@@ -1,16 +1,22 @@
 "use client";
 
-import { Pencil, Play, Trash2, Upload, Video as VideoIcon, X } from "lucide-react";
+import { FileVideo, ImageIcon, Pencil, Play, Trash2, Upload, Video as VideoIcon, X } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { profileApi } from "@/lib/api/profileApi";
 import { videoLibraryApi, type MentorVideo } from "@/lib/api/videoLibraryApi";
 import { VIDEO_UNLOCK_PRICE_TIERS } from "@/lib/constants/videoUnlockTiers";
 import { ROUTES } from "@/lib/routes";
+import { captureVideoFrame } from "@/lib/utils/videoThumbnail";
 
 const MAX_VIDEO_MB = 80;
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 function PlayerModal({ video, onClose }: { video: MentorVideo; onClose: () => void }) {
   return (
@@ -138,6 +144,9 @@ export default function MentorVideosPage() {
   const [file, setFile] = useState<File | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
   const [playingVideo, setPlayingVideo] = useState<MentorVideo | null>(null);
   const [editingVideo, setEditingVideo] = useState<MentorVideo | null>(null);
@@ -193,15 +202,18 @@ export default function MentorVideosPage() {
       return;
     }
     setUploading(true);
+    setUploadProgress(0);
     setError("");
     try {
+      const thumbnailToUpload = thumbnailFile || (await captureVideoFrame(file).catch(() => null));
       const uploaded = await videoLibraryApi.uploadVideo({
         mentorId: user.id,
         title: title.trim(),
         description: description.trim(),
         file,
         isFree,
-        thumbnailFile: thumbnailFile || undefined,
+        thumbnailFile: thumbnailToUpload || undefined,
+        onProgress: setUploadProgress,
       });
       setVideos((prev) => [uploaded, ...prev]);
       setTitle("");
@@ -213,6 +225,7 @@ export default function MentorVideosPage() {
       setError((err as Error)?.message || "Upload failed");
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -302,7 +315,29 @@ export default function MentorVideosPage() {
           <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
             Video file (max {MAX_VIDEO_MB} MB)
           </span>
+          <button
+            type="button"
+            onClick={() => videoInputRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-3 rounded-xl border border-dashed border-border-light bg-surface-sheet px-4 py-3 text-left hover:border-border-default disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-link/10 text-accent-link">
+              <FileVideo size={18} />
+            </span>
+            <span className="flex min-w-0 flex-1 flex-col">
+              <span className="truncate text-sm font-semibold text-text-primary">
+                {file ? file.name : "Choose a video file"}
+              </span>
+              <span className="truncate text-xs text-text-muted">
+                {file ? formatFileSize(file.size) : `MP4, MOV, or WebM — up to ${MAX_VIDEO_MB} MB`}
+              </span>
+            </span>
+            <span className="shrink-0 rounded-full border border-border-light px-3 py-1.5 text-xs font-semibold text-text-secondary">
+              Browse
+            </span>
+          </button>
           <input
+            ref={videoInputRef}
             type="file"
             accept="video/*"
             onChange={(e) => {
@@ -315,7 +350,7 @@ export default function MentorVideosPage() {
               setError("");
               setFile(picked);
             }}
-            className="text-sm text-text-secondary"
+            className="hidden"
           />
         </label>
 
@@ -323,15 +358,51 @@ export default function MentorVideosPage() {
           <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
             Thumbnail (optional)
           </span>
+          <button
+            type="button"
+            onClick={() => thumbnailInputRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-3 rounded-xl border border-dashed border-border-light bg-surface-sheet px-4 py-3 text-left hover:border-border-default disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-link/10 text-accent-link">
+              <ImageIcon size={18} />
+            </span>
+            <span className="flex min-w-0 flex-1 flex-col">
+              <span className="truncate text-sm font-semibold text-text-primary">
+                {thumbnailFile ? thumbnailFile.name : "Choose a thumbnail image"}
+              </span>
+              <span className="truncate text-xs text-text-muted">
+                {thumbnailFile
+                  ? formatFileSize(thumbnailFile.size)
+                  : "Skip it and we'll grab a frame from the video"}
+              </span>
+            </span>
+            <span className="shrink-0 rounded-full border border-border-light px-3 py-1.5 text-xs font-semibold text-text-secondary">
+              Browse
+            </span>
+          </button>
           <input
+            ref={thumbnailInputRef}
             type="file"
             accept="image/*"
             onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
-            className="text-sm text-text-secondary"
+            className="hidden"
           />
         </label>
 
         {error ? <p className="text-sm text-accent-error">{error}</p> : null}
+
+        {uploading ? (
+          <div className="flex flex-col gap-1.5">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-surface-chip">
+              <div
+                className="h-full rounded-full bg-accent-link transition-[width] duration-200"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+            <span className="text-xs text-text-muted">Uploading… {uploadProgress}%</span>
+          </div>
+        ) : null}
 
         <button
           type="button"
@@ -341,7 +412,7 @@ export default function MentorVideosPage() {
           style={{ backgroundImage: "var(--gradient-button-primary)" }}
         >
           <Upload size={16} />
-          {uploading ? "Uploading…" : "Upload video"}
+          {uploading ? `Uploading… ${uploadProgress}%` : "Upload video"}
         </button>
       </div>
 

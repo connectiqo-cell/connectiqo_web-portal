@@ -20,6 +20,13 @@ function addMinutes(time: string, minutes: number) {
   return `${hh}:${mm}`;
 }
 
+function toDateStr(d: Date) {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function formatDate(dateStr: string) {
   const [y, m, d] = dateStr.split("-").map(Number);
   return new Date(y, m - 1, d).toLocaleDateString("en-IN", {
@@ -99,7 +106,7 @@ export default function RescheduleRequestPage({ params }: PageProps) {
   const learnerName = booking.learner_profile?.name || "the learner";
   const slot = booking.availability_slots;
   const endTime = startTime ? addMinutes(startTime, SESSION_DURATION_MINUTES) : "";
-  const minDate = new Date().toISOString().split("T")[0];
+  const minDate = toDateStr(new Date());
 
   const handleSubmit = async () => {
     if (!date || !startTime) {

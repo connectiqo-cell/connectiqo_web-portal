@@ -27,7 +27,7 @@ export default async function BookingPage({ params }: PageProps) {
   if (!mentor) notFound();
 
   return (
-    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-6 py-12">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-12">
       <div className="flex flex-col gap-3">
         <Link
           href={ROUTES.mentorProfile(mentorId)}

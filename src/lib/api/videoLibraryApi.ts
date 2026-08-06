@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { getSupabaseErrorMessage } from "@/lib/supabase/errorHandler";
 import { VIDEO_UNLOCK_PRICE_TIERS } from "@/lib/constants/videoUnlockTiers";
+import { uploadFileWithProgress } from "@/lib/utils/uploadWithProgress";
 
 const BUCKET = "mentor-videos";
 const THUMB_BUCKET = "mentor-videos-thumbnail";
@@ -66,6 +67,7 @@ export const videoLibraryApi = {
     file,
     isFree = false,
     thumbnailFile,
+    onProgress,
   }: {
     mentorId: string;
     title: string;
@@ -73,16 +75,14 @@ export const videoLibraryApi = {
     file: File;
     isFree?: boolean;
     thumbnailFile?: File;
+    onProgress?: (pct: number) => void;
   }): Promise<MentorVideo> => {
     const supabase = createClient();
     try {
       const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
       const storagePath = `${mentorId}/${Date.now()}.${ext}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from(BUCKET)
-        .upload(storagePath, file, { contentType: file.type || "video/mp4" });
-      if (uploadError) throw uploadError;
+      await uploadFileWithProgress({ bucket: BUCKET, path: storagePath, file, onProgress });
 
       const { data: publicUrlData } = supabase.storage.from(BUCKET).getPublicUrl(storagePath);
 
@@ -267,19 +267,27 @@ export const videoLibraryApi = {
     }
   },
 
-  checkUnlocked: async ({ learnerId, mentorId }: { learnerId: string; mentorId: string }): Promise<boolean> => {
+  checkUnlocked: async ({
+    learnerId,
+    mentorId,
+  }: {
+    learnerId: string;
+    mentorId: string;
+  }): Promise<{ unlocked: boolean; expiresAt: string | null }> => {
     const supabase = createClient();
     try {
       const iso = new Date().toISOString();
       const { data, error } = await supabase
         .from("learner_unlocks")
-        .select("id")
+        .select("id, expires_at")
         .eq("learner_id", learnerId)
         .eq("mentor_id", mentorId)
         .or(`expires_at.is.null,expires_at.gt.${iso}`)
+        .order("expires_at", { ascending: false, nullsFirst: true })
+        .limit(1)
         .maybeSingle();
       if (error) throw error;
-      return data !== null;
+      return { unlocked: data !== null, expiresAt: data?.expires_at ?? null };
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
     }

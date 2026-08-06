@@ -1,13 +1,150 @@
 "use client";
 
-import { Lock, Play, Video as VideoIcon } from "lucide-react";
+import {
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Lock,
+  Play,
+  Sparkles,
+  Video as VideoIcon,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { videoLibraryApi, type MentorVideo } from "@/lib/api/videoLibraryApi";
+import { useHorizontalScroll } from "@/lib/hooks/useHorizontalScroll";
 import { ROUTES } from "@/lib/routes";
 import { openRazorpayCheckout } from "@/lib/utils/razorpayCheckout";
+
+function formatExpiry(expiresAt: string | null) {
+  if (!expiresAt) return "Lifetime access";
+  return `Access until ${new Date(expiresAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`;
+}
+
+function VideoRow({
+  title,
+  variant,
+  videos,
+  playingId,
+  isUnlocked,
+  onPlayToggle,
+  onLockedClick,
+}: {
+  title: string;
+  variant: "locked" | "free";
+  videos: MentorVideo[];
+  playingId: string | null;
+  isUnlocked: boolean;
+  onPlayToggle: (id: string) => void;
+  onLockedClick: () => void;
+}) {
+  const { scrollRef, canScrollLeft, canScrollRight, scroll } = useHorizontalScroll(
+    videos,
+    "[data-mentor-video-card]",
+  );
+
+  if (videos.length === 0) return null;
+
+  const isFree = variant === "free";
+
+  return (
+    <div className="flex flex-col gap-3">
+      <h3
+        className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide ${
+          isFree ? "text-accent-success" : "text-accent-link"
+        }`}
+      >
+        {isFree ? <Sparkles size={13} /> : <Lock size={13} />}
+        {title}
+      </h3>
+
+      <div className="relative">
+        <div
+          ref={scrollRef}
+          className="flex gap-3 overflow-x-auto scroll-smooth pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {videos.map((video) => {
+            const canPlay = isFree || isUnlocked;
+            const isPlaying = playingId === video.id;
+
+            return (
+              <button
+                key={video.id}
+                data-mentor-video-card
+                type="button"
+                onClick={() => (canPlay ? onPlayToggle(video.id) : onLockedClick())}
+                className="flex w-40 shrink-0 flex-col gap-2 text-left sm:w-44"
+              >
+                <div
+                  className={`relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl bg-meeting-canvas ${
+                    isFree
+                      ? "ring-1 ring-accent-success/30"
+                      : canPlay
+                        ? "ring-1 ring-accent-link/30"
+                        : "ring-1 ring-border-light"
+                  }`}
+                >
+                  {isPlaying && canPlay ? (
+                    <video src={video.video_url} controls autoPlay className="h-full w-full object-cover" />
+                  ) : (
+                    <>
+                      {video.thumbnail_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
+                        <img
+                          src={video.thumbnail_url}
+                          alt={video.title}
+                          className="h-full w-full object-cover opacity-80"
+                        />
+                      ) : (
+                        <VideoIcon size={24} className="text-text-muted" />
+                      )}
+                      {isFree ? (
+                        <span className="absolute left-1.5 top-1.5 rounded-full bg-accent-success/90 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                          FREE
+                        </span>
+                      ) : null}
+                      <span className="absolute inset-0 flex items-center justify-center bg-black/30">
+                        {canPlay ? (
+                          <Play size={22} className="fill-white text-white" />
+                        ) : (
+                          <Lock size={20} className="text-white" />
+                        )}
+                      </span>
+                    </>
+                  )}
+                </div>
+                <p className="truncate text-xs font-medium text-text-secondary">{video.title}</p>
+              </button>
+            );
+          })}
+        </div>
+
+        {canScrollLeft ? (
+          <button
+            type="button"
+            onClick={() => scroll("left")}
+            aria-label="Scroll left"
+            className="absolute -left-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-border-light bg-surface-panel text-text-secondary shadow-sm hover:text-text-primary"
+          >
+            <ChevronLeft size={16} />
+          </button>
+        ) : null}
+        {canScrollRight ? (
+          <button
+            type="button"
+            onClick={() => scroll("right")}
+            aria-label="Scroll right"
+            className="absolute -right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-border-light bg-surface-panel text-text-secondary shadow-sm hover:text-text-primary"
+          >
+            <ChevronRight size={16} />
+          </button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
 
 export function MentorVideoLibrary({
   mentorId,
@@ -24,10 +161,20 @@ export function MentorVideoLibrary({
 
   const [videos, setVideos] = useState<MentorVideo[]>([]);
   const [unlocked, setUnlocked] = useState(false);
+  const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [unlocking, setUnlocking] = useState(false);
   const [error, setError] = useState("");
+
+  const refreshUnlockStatus = async () => {
+    if (!user || user.id === mentorId) return;
+    const status = await videoLibraryApi
+      .checkUnlocked({ learnerId: user.id, mentorId })
+      .catch(() => ({ unlocked: false, expiresAt: null }));
+    setUnlocked(status.unlocked);
+    setExpiresAt(status.expiresAt);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -37,10 +184,13 @@ export function MentorVideoLibrary({
       setVideos(rows);
 
       if (user && user.id !== mentorId) {
-        const isUnlocked = await videoLibraryApi
+        const status = await videoLibraryApi
           .checkUnlocked({ learnerId: user.id, mentorId })
-          .catch(() => false);
-        if (!cancelled) setUnlocked(isUnlocked);
+          .catch(() => ({ unlocked: false, expiresAt: null }));
+        if (!cancelled) {
+          setUnlocked(status.unlocked);
+          setExpiresAt(status.expiresAt);
+        }
       }
       if (!cancelled) setLoading(false);
     })();
@@ -76,7 +226,7 @@ export function MentorVideoLibrary({
         mentorId,
         learnerId: user.id,
       });
-      setUnlocked(true);
+      await refreshUnlockStatus();
     } catch (err) {
       const code = (err as { code?: string })?.code;
       if (code !== "PAYMENT_CANCELLED") {
@@ -93,49 +243,9 @@ export function MentorVideoLibrary({
   const previewVideos = videos.filter((v) => v.is_free);
   const hasLockedVideos = memberVideos.length > 0;
 
-  const renderGrid = (list: MentorVideo[]) => (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-      {list.map((video) => {
-        const canPlay = video.is_free || unlocked || isOwnProfile;
-        const isPlaying = playingId === video.id;
-
-        return (
-          <div key={video.id} className="flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={() => (canPlay ? setPlayingId(isPlaying ? null : video.id) : handleUnlock())}
-              className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl bg-meeting-canvas"
-            >
-              {isPlaying && canPlay ? (
-                <video src={video.video_url} controls autoPlay className="h-full w-full object-cover" />
-              ) : (
-                <>
-                  {video.thumbnail_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-                    <img
-                      src={video.thumbnail_url}
-                      alt={video.title}
-                      className="h-full w-full object-cover opacity-80"
-                    />
-                  ) : (
-                    <VideoIcon size={24} className="text-text-muted" />
-                  )}
-                  <span className="absolute inset-0 flex items-center justify-center bg-black/30">
-                    {canPlay ? (
-                      <Play size={22} className="fill-white text-white" />
-                    ) : (
-                      <Lock size={20} className="text-white" />
-                    )}
-                  </span>
-                </>
-              )}
-            </button>
-            <p className="truncate text-xs font-medium text-text-secondary">{video.title}</p>
-          </div>
-        );
-      })}
-    </div>
-  );
+  const handlePlayToggle = (id: string) => {
+    setPlayingId((prev) => (prev === id ? null : id));
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -146,6 +256,11 @@ export function MentorVideoLibrary({
         {isOwnProfile ? (
           <span className="rounded-full border border-border-light bg-surface-chip px-3 py-1 text-xs font-semibold text-text-secondary">
             Your channel
+          </span>
+        ) : unlocked && hasLockedVideos ? (
+          <span className="flex items-center gap-1.5 rounded-full border border-accent-success/40 bg-accent-success/10 px-3 py-1 text-xs font-semibold text-accent-success">
+            <CheckCircle2 size={14} />
+            Unlocked · {formatExpiry(expiresAt)}
           </span>
         ) : !unlocked && hasLockedVideos && unlockPrice ? (
           <button
@@ -162,23 +277,25 @@ export function MentorVideoLibrary({
 
       {error ? <p className="text-sm text-accent-error">{error}</p> : null}
 
-      {memberVideos.length > 0 ? (
-        <div className="flex flex-col gap-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-text-muted">
-            Members Only
-          </h3>
-          {renderGrid(memberVideos)}
-        </div>
-      ) : null}
+      <VideoRow
+        title="Members Only"
+        variant="locked"
+        videos={memberVideos}
+        playingId={playingId}
+        isUnlocked={unlocked || isOwnProfile}
+        onPlayToggle={handlePlayToggle}
+        onLockedClick={handleUnlock}
+      />
 
-      {previewVideos.length > 0 ? (
-        <div className="flex flex-col gap-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-text-muted">
-            Free Preview Videos
-          </h3>
-          {renderGrid(previewVideos)}
-        </div>
-      ) : null}
+      <VideoRow
+        title="Free Preview Videos"
+        variant="free"
+        videos={previewVideos}
+        playingId={playingId}
+        isUnlocked={unlocked || isOwnProfile}
+        onPlayToggle={handlePlayToggle}
+        onLockedClick={handleUnlock}
+      />
     </div>
   );
 }

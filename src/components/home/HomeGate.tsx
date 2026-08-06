@@ -17,7 +17,7 @@ export function HomeGate({
   const { user, loading } = useAuth();
 
   if (!loading && user) {
-    return <DashboardHome trending={trending} stats={stats} />;
+    return <DashboardHome trending={trending} />;
   }
 
   return <MarketingHome trending={trending} stats={stats} />;

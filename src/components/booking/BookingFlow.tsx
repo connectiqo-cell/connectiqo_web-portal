@@ -1,10 +1,11 @@
 "use client";
 
-import { CalendarCheck, CheckCircle2, Clock, Loader2, Video, VideoOff } from "lucide-react";
+import { CalendarCheck, CheckCircle2, Clock, Loader2, User, Video, VideoOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import { BookingCalendar } from "@/components/booking/BookingCalendar";
 import { useAuth } from "@/contexts/AuthContext";
 import { availabilityApi, type AvailabilitySlot } from "@/lib/api/availabilityApi";
 import type { MentorProfileRow } from "@/lib/api/mentorApi";
@@ -196,7 +197,7 @@ export function BookingFlow({
 
   if (step === "success") {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-2xl border border-border-light bg-surface-panel py-16 text-center">
+      <div className="mx-auto flex w-full max-w-lg flex-col items-center gap-4 rounded-2xl border border-border-light bg-surface-panel py-16 text-center">
         <CheckCircle2 size={48} className="text-accent-success" />
         <h2 className="text-xl font-bold text-text-primary">Session booked!</h2>
         <p className="max-w-sm text-sm text-text-secondary">
@@ -225,7 +226,7 @@ export function BookingFlow({
 
   if (step === "review" && order) {
     return (
-      <div className="flex flex-col gap-5">
+      <div className="mx-auto flex w-full max-w-lg flex-col gap-5">
         <div className="flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-5">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
             Order summary
@@ -277,6 +278,7 @@ export function BookingFlow({
   }
 
   return (
+    <div className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-start">
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-text-muted">
@@ -290,22 +292,7 @@ export function BookingFlow({
             This mentor has no open slots right now. Check back soon.
           </p>
         ) : (
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {dates.map((date) => (
-              <button
-                key={date}
-                type="button"
-                onClick={() => handleSelectDate(date)}
-                className={`shrink-0 rounded-xl border px-4 py-2 text-sm font-medium transition-colors ${
-                  activeDate === date
-                    ? "border-accent-link/50 bg-accent-link/15 text-accent-link"
-                    : "border-border-light text-text-secondary hover:text-text-primary"
-                }`}
-              >
-                {formatDateLabel(date)}
-              </button>
-            ))}
-          </div>
+          <BookingCalendar availableDates={dates} selectedDate={activeDate} onSelectDate={handleSelectDate} />
         )}
       </div>
 
@@ -327,7 +314,7 @@ export function BookingFlow({
             ) : null}
           </div>
           <p className="text-xs text-text-muted">
-            Tap multiple back-to-back slots to book one longer, continuous session.
+            {formatDateLabel(activeDate)} · Tap multiple back-to-back slots to book one longer, continuous session.
           </p>
           <div className="flex flex-wrap gap-2">
             {slotsForDate.map((slot) => {
@@ -343,7 +330,7 @@ export function BookingFlow({
                       : "border-border-light text-text-secondary hover:text-text-primary"
                   }`}
                 >
-                  {formatTime(slot.start_time)}
+                  {formatTime(slot.start_time)} to {formatTime(slot.end_time)}
                 </button>
               );
             })}
@@ -356,14 +343,14 @@ export function BookingFlow({
         <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
           Record this session?
         </h2>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => setRecordingRequested(true)}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium transition-colors ${
+            className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-colors ${
               recordingRequested === true
                 ? "border-accent-link/50 bg-accent-link/15 text-accent-link"
-                : "border-border-light text-text-secondary"
+                : "border-border-light text-text-secondary hover:text-text-primary"
             }`}
           >
             <Video size={16} />
@@ -372,10 +359,10 @@ export function BookingFlow({
           <button
             type="button"
             onClick={() => setRecordingRequested(false)}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium transition-colors ${
+            className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-colors ${
               recordingRequested === false
                 ? "border-accent-link/50 bg-accent-link/15 text-accent-link"
-                : "border-border-light text-text-secondary"
+                : "border-border-light text-text-secondary hover:text-text-primary"
             }`}
           >
             <VideoOff size={16} />
@@ -413,6 +400,61 @@ export function BookingFlow({
             ? "Continue to payment (continuous session)"
             : "Continue to payment"}
       </button>
+    </div>
+
+    <aside className="flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4 lg:sticky lg:top-20">
+      <div className="flex items-center gap-3">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
+          {mentor.profiles?.avatar_url ? (
+            // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
+            <img
+              src={mentor.profiles.avatar_url}
+              alt={mentor.profiles.name || "Mentor"}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <User size={18} className="text-text-muted" />
+          )}
+        </span>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-text-primary">
+            {mentor.profiles?.name || "Mentor"}
+          </p>
+          <p className="truncate text-xs text-text-muted">{mentor.specialization || "Mentor"}</p>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between border-t border-border-light pt-3 text-sm">
+        <span className="text-text-secondary">Price</span>
+        <span className="font-semibold text-text-primary">
+          {mentor.price_per_hour ? `₹${mentor.price_per_hour} / session` : "—"}
+        </span>
+      </div>
+
+      {activeDate ? (
+        <div className="flex flex-col gap-1.5 border-t border-border-light pt-3 text-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-text-secondary">Date</span>
+            <span className="font-medium text-text-primary">{formatDateLabel(activeDate)}</span>
+          </div>
+          {selectedSlots.length > 0 ? (
+            <div className="flex items-center justify-between">
+              <span className="text-text-secondary">Time</span>
+              <span className="font-medium text-text-primary">
+                {formatTime(selectedSlots[0].start_time)} –{" "}
+                {formatTime(selectedSlots[selectedSlots.length - 1].end_time)} · {totalMinutes} min
+              </span>
+            </div>
+          ) : (
+            <p className="text-xs text-text-muted">Pick a time slot to continue.</p>
+          )}
+        </div>
+      ) : (
+        <p className="border-t border-border-light pt-3 text-xs text-text-muted">
+          Pick a date to see available times.
+        </p>
+      )}
+    </aside>
     </div>
   );
 }

@@ -2,7 +2,6 @@
 
 import {
   Bell,
-  Camera,
   ChevronRight,
   CreditCard,
   FileText,
@@ -61,6 +60,7 @@ export default function SettingsHubPage() {
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [walletLoading, setWalletLoading] = useState(true);
   const [shared, setShared] = useState(false);
+  const [supportCopied, setSupportCopied] = useState(false);
   const [subsExpanded, setSubsExpanded] = useState(false);
   const isMentor = profile?.role === "mentor" || profile?.role === "both";
 
@@ -130,6 +130,20 @@ export default function SettingsHubPage() {
     }
   };
 
+  const handleContactSupport = async () => {
+    // mailto: silently does nothing if the machine has no registered mail
+    // client — always try it, but also copy the address so there's a
+    // reliable fallback the user can see worked.
+    window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Connectiqo Support")}`;
+    try {
+      await navigator.clipboard.writeText(SUPPORT_EMAIL);
+      setSupportCopied(true);
+      setTimeout(() => setSupportCopied(false), 1500);
+    } catch {
+      // clipboard unavailable — mailto attempt above is still the primary path
+    }
+  };
+
   if (!user) return null;
 
   return (
@@ -145,19 +159,13 @@ export default function SettingsHubPage() {
           {/* Profile Card */}
           <div className="flex flex-col gap-3 sm:gap-4 rounded-2xl border border-border-light bg-surface-panel p-4 sm:p-5">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="group relative flex h-12 sm:h-16 w-12 sm:w-16 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border-4 border-accent-link bg-surface-chip">
+            <div className="relative flex h-12 sm:h-16 w-12 sm:w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-accent-link bg-surface-chip">
               {profile?.avatar_url ? (
                 // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
                 <img src={profile.avatar_url} alt={profile.name} className="h-full w-full object-cover" />
               ) : (
                 <User size={16} className="sm:size-7 text-text-muted" />
               )}
-              <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none">
-                <Camera size={12} className="sm:size-4.5 text-white" />
-              </div>
-              <div className="absolute -bottom-0.5 -right-0.5 flex h-4 sm:h-5 w-4 sm:w-5 items-center justify-center rounded-full border-1.5 border-white bg-accent-link text-white shadow-md">
-                <Camera size={8} className="sm:size-2.5" />
-              </div>
             </div>
             <div className="flex flex-1 flex-col">
               <p className="text-xs sm:text-sm font-bold text-text-primary">{profile?.name || "User"}</p>
@@ -410,16 +418,19 @@ export default function SettingsHubPage() {
           <div className="rounded-xl border border-border-light bg-surface-panel p-4">
             <SectionHeader title="Support & Legal" subtitle="Help, policies, and sharing" />
             <div className="mt-3 flex flex-col gap-0">
-              <a
-                href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Connectiqo Support")}`}
+              <button
+                type="button"
+                onClick={handleContactSupport}
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
               >
                 <HelpCircle size={16} className="shrink-0 text-accent-link" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-text-primary">Help & Support</p>
-                  <p className="text-xs text-text-muted">Contact us at {SUPPORT_EMAIL}</p>
+                  <p className="text-xs text-text-muted">
+                    {supportCopied ? "Email copied to clipboard!" : `Contact us at ${SUPPORT_EMAIL}`}
+                  </p>
                 </div>
-              </a>
+              </button>
               <Link
                 href={ROUTES.privacy}
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
