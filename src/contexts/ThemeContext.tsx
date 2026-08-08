@@ -23,10 +23,10 @@ export const THEME_STORAGE_KEY = "@connectiqo/theme_mode";
 
 function resolveMode(
   preference: ThemePreference,
-  prefersLight: boolean,
+  prefersDark: boolean,
 ): "dark" | "light" {
   if (preference === THEME_MODES.SYSTEM) {
-    return prefersLight ? "light" : "dark";
+    return prefersDark ? "dark" : "light";
   }
   return preference === THEME_MODES.LIGHT ? "light" : "dark";
 }
@@ -68,17 +68,17 @@ function getPreferenceServerSnapshot(): ThemePreference {
   return THEME_MODES.SYSTEM;
 }
 
-function subscribePrefersLight(listener: Listener) {
-  const media = window.matchMedia("(prefers-color-scheme: light)");
+function subscribePrefersDark(listener: Listener) {
+  const media = window.matchMedia("(prefers-color-scheme: dark)");
   media.addEventListener("change", listener);
   return () => media.removeEventListener("change", listener);
 }
 
-function getPrefersLightSnapshot(): boolean {
-  return window.matchMedia("(prefers-color-scheme: light)").matches;
+function getPrefersDarkSnapshot(): boolean {
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
 }
 
-function getPrefersLightServerSnapshot(): boolean {
+function getPrefersDarkServerSnapshot(): boolean {
   return false;
 }
 
@@ -104,15 +104,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     readStoredPreference,
     getPreferenceServerSnapshot,
   );
-  const prefersLight = useSyncExternalStore(
-    subscribePrefersLight,
-    getPrefersLightSnapshot,
-    getPrefersLightServerSnapshot,
+  const prefersDark = useSyncExternalStore(
+    subscribePrefersDark,
+    getPrefersDarkSnapshot,
+    getPrefersDarkServerSnapshot,
   );
 
   const mode = useMemo(
-    () => resolveMode(preference, prefersLight),
-    [preference, prefersLight],
+    () => resolveMode(preference, prefersDark),
+    [preference, prefersDark],
   );
 
   useEffect(() => {

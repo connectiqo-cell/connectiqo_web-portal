@@ -97,7 +97,7 @@ export default function SignupPage() {
         ]);
       }
 
-      router.push(ROUTES.categoriesOnboarding);
+      router.push(ROUTES.interestsOnboarding);
     } catch (error) {
       setFormError((error as Error)?.message || "Something went wrong. Please try again.");
     } finally {

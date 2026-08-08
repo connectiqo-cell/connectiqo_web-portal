@@ -76,7 +76,7 @@ export function CallShell({
 
   if (permission === "checking") {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 text-text-secondary">
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 text-white/70">
         <Loader2 size={28} className="animate-spin" />
         <p>Requesting camera and microphone access…</p>
       </div>
@@ -86,18 +86,18 @@ export function CallShell({
   if (permission === "denied") {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-6 px-6 text-center">
-        <AlertTriangle size={32} className="text-accent-error" />
+        <AlertTriangle size={32} className="text-red-400" />
         <div>
-          <h1 className="text-lg font-bold text-text-primary mb-2">Camera/mic access blocked</h1>
-          <div className="text-sm text-text-secondary space-y-3">
+          <h1 className="text-lg font-bold text-white mb-2">Camera/mic access blocked</h1>
+          <div className="text-sm text-white/70 space-y-3">
             <p>
-              <strong>Click the lock icon</strong> 🔒 in your browser&apos;s address bar (next to the URL)
+              <strong className="text-white">Click the lock icon</strong> 🔒 in your browser&apos;s address bar (next to the URL)
             </p>
             <p>
-              <strong>Select &quot;Allow&quot;</strong> for both Camera and Microphone in the permission dialog
+              <strong className="text-white">Select &quot;Allow&quot;</strong> for both Camera and Microphone in the permission dialog
             </p>
             <p>
-              <strong>Reload the page</strong> to start your session
+              <strong className="text-white">Reload the page</strong> to start your session
             </p>
             <p className="pt-2 text-xs opacity-75">
               Or go to browser settings → Privacy and security → Site settings → Camera/Microphone and allow this site
@@ -111,11 +111,11 @@ export function CallShell({
   if (permission === "insecure-context") {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
-        <AlertTriangle size={32} className="text-accent-error" />
-        <h1 className="text-lg font-bold text-text-primary">Secure connection required</h1>
-        <p className="text-sm text-text-secondary">
+        <AlertTriangle size={32} className="text-red-400" />
+        <h1 className="text-lg font-bold text-white">Secure connection required</h1>
+        <p className="text-sm text-white/70">
           Camera and microphone access needs a secure connection. Open this page over{" "}
-          <strong>https://</strong>, or via <strong>http://localhost</strong> if you&apos;re on the
+          <strong className="text-white">https://</strong>, or via <strong className="text-white">http://localhost</strong> if you&apos;re on the
           same computer as the server.
         </p>
       </div>
@@ -127,8 +127,8 @@ export function CallShell({
       config={{
         meetingId,
         name,
-        micEnabled: true,
-        webcamEnabled: true,
+        micEnabled: false,
+        webcamEnabled: false,
         debugMode: false,
       }}
       token={token}

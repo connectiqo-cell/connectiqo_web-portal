@@ -31,10 +31,10 @@ const NO_FLASH_THEME_SCRIPT = `
 (function () {
   try {
     var stored = window.localStorage.getItem("@connectiqo/theme_mode");
-    var prefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
+    var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     var mode = stored === "light" || stored === "dark"
       ? stored
-      : (prefersLight ? "light" : "dark");
+      : (prefersDark ? "dark" : "light");
     document.documentElement.dataset.theme = mode;
   } catch (e) {}
 })();

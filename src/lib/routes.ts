@@ -16,7 +16,6 @@ export const ROUTES = {
   signup: "/signup",
   forgotPassword: "/forgot-password",
   onboardingVideo: "/onboarding",
-  categoriesOnboarding: "/onboarding/categories",
   interestsOnboarding: "/onboarding/interests",
 
   // Learner

@@ -148,7 +148,7 @@ function UnifiedAuthForm() {
         ]);
       }
 
-      router.push(ROUTES.categoriesOnboarding);
+      router.push(ROUTES.interestsOnboarding);
     } catch (error) {
       setSignupError((error as Error)?.message || "Something went wrong. Please try again.");
     } finally {

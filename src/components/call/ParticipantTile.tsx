@@ -7,9 +7,12 @@ import { useEffect, useRef } from "react";
 export function ParticipantTile({
   participantId,
   label,
+  fill = false,
 }: {
   participantId: string;
   label: string;
+  /** Fills its parent's box instead of sizing itself via aspect-video — for large/mini views that control their own container size. */
+  fill?: boolean;
 }) {
   const { webcamStream, micStream, webcamOn, micOn, isLocal } = useParticipant(participantId);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -41,7 +44,11 @@ export function ParticipantTile({
   }, [isLocal, micOn, micStream]);
 
   return (
-    <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-2xl bg-meeting-canvas">
+    <div
+      className={`relative flex items-center justify-center overflow-hidden rounded-2xl bg-meeting-canvas ${
+        fill ? "h-full w-full" : "aspect-video w-full"
+      }`}
+    >
       {webcamOn ? (
         <video ref={videoRef} autoPlay playsInline muted={isLocal} className="h-full w-full object-cover" />
       ) : (
@@ -51,7 +58,14 @@ export function ParticipantTile({
       )}
       {!isLocal ? <audio ref={audioRef} autoPlay /> : null}
 
-      <div className="absolute bottom-2 left-2 flex items-center gap-1.5 rounded-full bg-black/50 px-2.5 py-1">
+      <span
+        aria-hidden
+        className="pointer-events-none absolute bottom-2 right-30 select-none text-xs font-bold tracking-wide text-white/70 [text-shadow:0_1px_2px_rgba(0,0,0,0.9),0_2px_6px_rgba(0,0,0,0.7)] sm:text-sm"
+      >
+        Connectiqo
+      </span>
+
+      <div className="absolute bottom-2 left-20 flex items-center gap-1.5 rounded-full bg-black/50 px-2.5 py-1">
         {!micOn ? <MicOff size={12} className="text-white" /> : null}
         <span className="text-xs font-medium text-white">{label}</span>
       </div>

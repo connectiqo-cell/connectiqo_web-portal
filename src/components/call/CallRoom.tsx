@@ -15,6 +15,7 @@ import { bookingApi } from "@/lib/api/bookingApi";
 import { recordingsApi } from "@/lib/api/recordingsApi";
 import { fetchRecordingUrl } from "@/lib/api/videoCallApi";
 import { ROUTES } from "@/lib/routes";
+import { buildOneToOneRecordingConfig } from "@/lib/utils/recordingConfig";
 
 
 const MAX_PARTICIPANTS = 2;
@@ -91,9 +92,13 @@ export function CallRoom({
   slot?: { date?: string | null; start_time?: string | null; end_time?: string | null } | null;
 }) {
   const router = useRouter();
+  const containerRef = useRef<HTMLDivElement>(null);
   const [joined, setJoined] = useState(false);
   const [error, setError] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
+  const [layoutMode, setLayoutMode] = useState<"split" | "minmax">("split");
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [primaryParticipantId, setPrimaryParticipantId] = useState<string | null>(null);
   const [incomingRecordingRequestId, setIncomingRecordingRequestId] = useState<string | null>(null);
   const [awaitingConsent, setAwaitingConsent] = useState(false);
   const [consentDeclined, setConsentDeclined] = useState(false);
@@ -128,6 +133,32 @@ export function CallRoom({
   const participantCount = remoteIds.length + (localParticipant ? 1 : 0);
   const limitExceeded = participantCount > MAX_PARTICIPANTS;
 
+  // Min/max view: whichever participant is "primary" fills the screen, the
+  // other floats as a small tappable PiP card that swaps places when clicked.
+  // Defaults to the remote participant as primary, same as mobile.
+  const mainId = primaryParticipantId || remoteIds[0] || localParticipant?.id || null;
+  const pipId = mainId === localParticipant?.id ? remoteIds[0] : localParticipant?.id;
+  const handleSwapPrimary = () => {
+    if (pipId) setPrimaryParticipantId(pipId);
+  };
+
+  // The fullscreen state can also change via the browser's own UI (Esc key,
+  // F11, a native "exit fullscreen" bar) — listen instead of only toggling
+  // from our own button so the icon never gets out of sync.
+  useEffect(() => {
+    const handleFullscreenChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    } else {
+      containerRef.current?.requestFullscreen().catch(() => {});
+    }
+  };
+
   useEffect(() => {
     if (!limitExceeded || leavingRef.current) return;
     leavingRef.current = true;
@@ -141,7 +172,9 @@ export function CallRoom({
   const beginRecording = useCallback(() => {
     if (recordingStartedRef.current) return;
     recordingStartedRef.current = true;
-    startRecording().catch((err) => console.warn("startRecording failed:", err));
+    startRecording(undefined, undefined, buildOneToOneRecordingConfig(2)).catch((err) =>
+      console.warn("startRecording failed:", err),
+    );
     recordingsApi
       .upsertSessionForBooking({ bookingId, mentorId, learnerId, meetingId })
       .catch((err) => console.warn("Recording session row not created:", err));
@@ -298,10 +331,10 @@ export function CallRoom({
 
   if (!joined) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 text-text-secondary">
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 text-white/70">
         <Loader2 size={28} className="animate-spin" />
         <p>Joining session…</p>
-        {error ? <p className="text-sm text-accent-error">{error}</p> : null}
+        {error ? <p className="text-sm text-red-400">{error}</p> : null}
       </div>
     );
 
@@ -310,9 +343,9 @@ export function CallRoom({
   if (limitExceeded) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
-        <AlertTriangle size={32} className="text-accent-error" />
-        <h1 className="text-lg font-bold text-text-primary">Session is full</h1>
-        <p className="text-sm text-text-secondary">
+        <AlertTriangle size={32} className="text-red-400" />
+        <h1 className="text-lg font-bold text-white">Session is full</h1>
+        <p className="text-sm text-white/70">
           Only {MAX_PARTICIPANTS} participants can join this session at a time.
         </p>
 
@@ -321,48 +354,95 @@ export function CallRoom({
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4">
+    <div
+      ref={containerRef}
+      className="flex flex-1 flex-col gap-4 bg-[#131314] data-[fullscreen]:justify-center data-[fullscreen]:p-4"
+      data-fullscreen={isFullscreen ? "" : undefined}
+    >
       <div className="flex justify-end">
         <CallSessionTimer slot={slot} />
       </div>
 
-      {presenterId ? (
-        <ScreenShareView
-          participantId={presenterId}
-          label={presenterId === localParticipant?.id ? "You" : otherUserName}
-        />
-      ) : null}
-
       <div className="flex flex-1 flex-col gap-4 sm:flex-row">
-        <div className="grid flex-1 grid-cols-1 content-start gap-3 sm:grid-cols-2">
-          {localParticipant ? (
-            <ParticipantTile participantId={localParticipant.id} label="You" />
-          ) : null}
-          {remoteIds.map((id) => (
-
-            <ParticipantTile key={id} participantId={id} label={otherUserName} />
-          ))}
-        </div>
+        {presenterId ? (
+          <div className="relative min-h-[50vh] flex-1">
+            <ScreenShareView
+              participantId={presenterId}
+              label={presenterId === localParticipant?.id ? "You" : otherUserName}
+            />
+            {localParticipant ? (
+              <div className="absolute bottom-4 left-4 h-24 w-20 overflow-hidden rounded-xl shadow-lg ring-2 ring-white/20 sm:h-32 sm:w-24">
+                <ParticipantTile participantId={localParticipant.id} label="You" fill />
+              </div>
+            ) : null}
+            {remoteIds[0] ? (
+              <div className="absolute bottom-4 right-4 h-24 w-20 overflow-hidden rounded-xl shadow-lg ring-2 ring-white/20 sm:h-32 sm:w-24">
+                <ParticipantTile participantId={remoteIds[0]} label={otherUserName} fill />
+              </div>
+            ) : null}
+          </div>
+        ) : layoutMode === "minmax" && mainId ? (
+          <div className="relative min-h-[320px] max-h-[65vh] flex-1">
+            <ParticipantTile
+              participantId={mainId}
+              label={mainId === localParticipant?.id ? "You" : otherUserName}
+              fill
+            />
+            {pipId ? (
+              <button
+                type="button"
+                onClick={handleSwapPrimary}
+                aria-label="Swap to main view"
+                className="absolute bottom-4 right-4 h-32 w-24 overflow-hidden rounded-xl shadow-lg ring-2 ring-white/20 transition-transform hover:scale-[1.03] sm:h-40 sm:w-28"
+              >
+                <ParticipantTile
+                  participantId={pipId}
+                  label={pipId === localParticipant?.id ? "You" : otherUserName}
+                  fill
+                />
+              </button>
+            ) : null}
+          </div>
+        ) : (
+          <div
+            className={`grid flex-1 gap-3 ${
+              participantCount > 1
+                ? "min-h-[60vh] grid-cols-1 sm:grid-cols-2"
+                : "min-h-[60vh] grid-cols-1 place-items-center"
+            }`}
+          >
+            {localParticipant ? (
+              <div className={participantCount > 1 ? "h-full w-full" : "w-full max-w-xl"}>
+                <ParticipantTile participantId={localParticipant.id} label="You" fill={participantCount > 1} />
+              </div>
+            ) : null}
+            {remoteIds.map((id) => (
+              <div key={id} className={participantCount > 1 ? "h-full w-full" : "w-full max-w-xl"}>
+                <ParticipantTile participantId={id} label={otherUserName} fill={participantCount > 1} />
+              </div>
+            ))}
+          </div>
+        )}
 
         {chatOpen ? <ChatPanel onClose={() => setChatOpen(false)} /> : null}
       </div>
 
       {remoteIds.length === 0 ? (
-        <p className="text-center text-sm text-text-muted">
+        <p className="text-center text-sm text-white/50">
           Waiting for {otherUserName} to join…
         </p>
       ) : null}
 
-      {error ? <p className="text-center text-sm text-accent-error">{error}</p> : null}
+      {error ? <p className="text-center text-sm text-red-400">{error}</p> : null}
 
       {awaitingConsent ? (
-        <p className="text-center text-sm text-text-muted">
+        <p className="text-center text-sm text-white/50">
           Waiting for {otherUserName} to approve recording…
         </p>
       ) : null}
 
       {consentDeclined ? (
-        <p className="text-center text-sm text-accent-error">
+        <p className="text-center text-sm text-red-400">
           {otherUserName} declined the recording request.
         </p>
       ) : null}
@@ -383,6 +463,10 @@ export function CallRoom({
         recordingDisabled={remoteIds.length === 0 || awaitingConsent}
         isRecording={isRecording}
         onToggleRecording={handleToggleRecording}
+        layoutMode={layoutMode}
+        onToggleLayout={() => setLayoutMode((m) => (m === "split" ? "minmax" : "split"))}
+        isFullscreen={isFullscreen}
+        onToggleFullscreen={toggleFullscreen}
       />
     </div>
   );

@@ -54,13 +54,13 @@ export function CallSessionTimer({
     : null;
 
   return (
-    <div className="flex items-center gap-2 rounded-full border border-border-light bg-surface-sheet px-3 py-1.5">
+    <div className="flex items-center gap-1.5 rounded-full border border-border-light bg-surface-sheet px-2 py-1">
       {hasSlotTimer && sessionTiming.status === "live" ? (
-        <span className="h-1.5 w-1.5 rounded-full bg-accent-success" />
+        <span className="h-1 w-1 rounded-full bg-accent-success" />
       ) : null}
       <div className="flex flex-col leading-tight">
-        {label ? <span className="text-[10px] font-medium text-text-muted">{label}</span> : null}
-        <span className="font-mono text-sm font-bold tabular-nums text-text-primary">{value}</span>
+        {label ? <span className="text-[9px] font-medium text-text-muted">{label}</span> : null}
+        <span className="font-mono text-xs font-bold tabular-nums text-text-primary">{value}</span>
       </div>
     </div>
   );

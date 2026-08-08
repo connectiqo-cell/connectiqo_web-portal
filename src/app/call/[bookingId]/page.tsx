@@ -178,7 +178,7 @@ export default function CallPage({ params }: PageProps) {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-4 px-4 py-6">
+    <main className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-4 bg-[#131314] px-4 py-6">
       <CallShell
         meetingId={meetingId}
         token={token}

@@ -27,9 +27,9 @@ export function ScreenShareView({
   if (!screenShareOn) return null;
 
   return (
-    <div className="relative flex w-full items-center justify-center overflow-hidden rounded-2xl bg-black">
-      <video ref={videoRef} autoPlay playsInline className="max-h-[60vh] w-full object-contain" />
-      <div className="absolute bottom-2 left-2 rounded-full bg-black/50 px-2.5 py-1 text-xs font-medium text-white">
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-2xl bg-black">
+      <video ref={videoRef} autoPlay playsInline className="h-full w-full object-contain" />
+      <div className="absolute top-2 left-2 rounded-full bg-black/50 px-2.5 py-1 text-xs font-medium text-white">
         {label} is sharing their screen
       </div>
     </div>
