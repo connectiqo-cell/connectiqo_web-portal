@@ -32,6 +32,12 @@ export function ScreenShareView({
       <div className="absolute top-2 left-2 rounded-full bg-black/50 px-2.5 py-1 text-xs font-medium text-white">
         {label} is sharing their screen
       </div>
+      <span
+        aria-hidden
+        className="pointer-events-none absolute bottom-2 right-3 select-none text-xs font-bold tracking-wide text-white/70 [text-shadow:0_1px_2px_rgba(0,0,0,0.9),0_2px_6px_rgba(0,0,0,0.7)] sm:text-sm"
+      >
+        Connectiqo
+      </span>
     </div>
   );
 }

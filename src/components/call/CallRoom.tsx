@@ -359,10 +359,6 @@ export function CallRoom({
       className="flex flex-1 flex-col gap-4 bg-[#131314] data-[fullscreen]:justify-center data-[fullscreen]:p-4"
       data-fullscreen={isFullscreen ? "" : undefined}
     >
-      <div className="flex justify-end">
-        <CallSessionTimer slot={slot} />
-      </div>
-
       <div className="flex flex-1 flex-col gap-4 sm:flex-row">
         {presenterId ? (
           <div className="relative min-h-[50vh] flex-1">
@@ -371,22 +367,24 @@ export function CallRoom({
               label={presenterId === localParticipant?.id ? "You" : otherUserName}
             />
             {localParticipant ? (
-              <div className="absolute bottom-4 left-4 h-24 w-20 overflow-hidden rounded-xl shadow-lg ring-2 ring-white/20 sm:h-32 sm:w-24">
-                <ParticipantTile participantId={localParticipant.id} label="You" fill />
+              <div className="absolute bottom-4 left-12 h-28 w-28 overflow-hidden rounded-lg shadow-lg ring-2 ring-white/20 sm:h-36 sm:w-36">
+                <ParticipantTile participantId={localParticipant.id} label="You" fill showWatermark={false} />
               </div>
             ) : null}
             {remoteIds[0] ? (
-              <div className="absolute bottom-4 right-4 h-24 w-20 overflow-hidden rounded-xl shadow-lg ring-2 ring-white/20 sm:h-32 sm:w-24">
-                <ParticipantTile participantId={remoteIds[0]} label={otherUserName} fill />
+              <div className="absolute bottom-4 right-12 h-28 w-28 overflow-hidden rounded-lg shadow-lg ring-2 ring-white/20 sm:h-36 sm:w-36">
+                <ParticipantTile participantId={remoteIds[0]} label={otherUserName} fill showWatermark={false} />
               </div>
             ) : null}
           </div>
         ) : layoutMode === "minmax" && mainId ? (
-          <div className="relative min-h-[320px] max-h-[65vh] flex-1">
+          <div className="relative min-h-[320px] max-h-[80vh] flex-1">
             <ParticipantTile
               participantId={mainId}
               label={mainId === localParticipant?.id ? "You" : otherUserName}
               fill
+              overlayClassName="inset-x-10 bottom-4 sm:inset-x-14"
+              watermarkClassName="bottom-4 right-10 sm:right-14 sm:text-sm"
             />
             {pipId ? (
               <button
@@ -399,6 +397,8 @@ export function CallRoom({
                   participantId={pipId}
                   label={pipId === localParticipant?.id ? "You" : otherUserName}
                   fill
+                  overlayClassName="inset-x-3 bottom-2"
+                  watermarkClassName="top-2 right-2 text-[10px] sm:text-xs"
                 />
               </button>
             ) : null}
@@ -413,12 +413,24 @@ export function CallRoom({
           >
             {localParticipant ? (
               <div className={participantCount > 1 ? "h-full w-full" : "w-full max-w-xl"}>
-                <ParticipantTile participantId={localParticipant.id} label="You" fill={participantCount > 1} />
+                <ParticipantTile
+                  participantId={localParticipant.id}
+                  label="You"
+                  fill={participantCount > 1}
+                  overlayClassName="inset-x-10 bottom-4 sm:inset-x-14"
+                  watermarkClassName="bottom-4 right-10 sm:right-14 sm:text-sm"
+                />
               </div>
             ) : null}
             {remoteIds.map((id) => (
               <div key={id} className={participantCount > 1 ? "h-full w-full" : "w-full max-w-xl"}>
-                <ParticipantTile participantId={id} label={otherUserName} fill={participantCount > 1} />
+                <ParticipantTile
+                  participantId={id}
+                  label={otherUserName}
+                  fill={participantCount > 1}
+                  overlayClassName="inset-x-10 bottom-4 sm:inset-x-14"
+                  watermarkClassName="bottom-4 right-10 sm:right-14 sm:text-sm"
+                />
               </div>
             ))}
           </div>
@@ -455,19 +467,22 @@ export function CallRoom({
         />
       ) : null}
 
-      <CallControls
-        onLeave={handleLeave}
-        chatOpen={chatOpen}
-        onToggleChat={() => setChatOpen((v) => !v)}
-        canRecord
-        recordingDisabled={remoteIds.length === 0 || awaitingConsent}
-        isRecording={isRecording}
-        onToggleRecording={handleToggleRecording}
-        layoutMode={layoutMode}
-        onToggleLayout={() => setLayoutMode((m) => (m === "split" ? "minmax" : "split"))}
-        isFullscreen={isFullscreen}
-        onToggleFullscreen={toggleFullscreen}
-      />
+      <div className="flex items-center justify-center gap-3">
+        <CallControls
+          onLeave={handleLeave}
+          chatOpen={chatOpen}
+          onToggleChat={() => setChatOpen((v) => !v)}
+          canRecord
+          recordingDisabled={remoteIds.length === 0 || awaitingConsent}
+          isRecording={isRecording}
+          onToggleRecording={handleToggleRecording}
+          layoutMode={layoutMode}
+          onToggleLayout={() => setLayoutMode((m) => (m === "split" ? "minmax" : "split"))}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggleFullscreen}
+        />
+        <CallSessionTimer slot={slot} />
+      </div>
     </div>
   );
 }

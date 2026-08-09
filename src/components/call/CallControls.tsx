@@ -71,7 +71,7 @@ export function CallControls({
     "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors";
 
   return (
-    <div className="mx-auto flex w-fit items-center justify-center gap-1.5 rounded-full border border-border-light bg-surface-sheet px-2.5 py-1.5 sm:gap-2.5 sm:px-4 sm:py-2">
+    <div className="flex w-fit shrink-0 items-center justify-center gap-1.5 rounded-full border border-border-light bg-surface-sheet px-2.5 py-1.5 sm:gap-2.5 sm:px-4 sm:py-2">
       <button
         type="button"
         onClick={() => toggleMic()}

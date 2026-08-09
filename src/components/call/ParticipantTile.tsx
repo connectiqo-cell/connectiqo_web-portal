@@ -8,11 +8,20 @@ export function ParticipantTile({
   participantId,
   label,
   fill = false,
+  showWatermark = true,
+  overlayClassName = "inset-x-2 bottom-2",
+  watermarkClassName = "bottom-2 right-2 sm:text-sm",
 }: {
   participantId: string;
   label: string;
   /** Fills its parent's box instead of sizing itself via aspect-video — for large/mini views that control their own container size. */
   fill?: boolean;
+  /** Off for small tiles (e.g. the screen-share corner thumbnails) where the watermark already lives on the shared screen and there isn't room for both. */
+  showWatermark?: boolean;
+  /** Position of the name pill — each usage (side-by-side, min/max, screen-share) can tune this independently instead of sharing one fixed value. */
+  overlayClassName?: string;
+  /** Position of the "Connectiqo" mark — positioned independently of the name pill so small tiles can put it in a corner that isn't already occupied. */
+  watermarkClassName?: string;
 }) {
   const { webcamStream, micStream, webcamOn, micOn, isLocal } = useParticipant(participantId);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -58,17 +67,21 @@ export function ParticipantTile({
       )}
       {!isLocal ? <audio ref={audioRef} autoPlay /> : null}
 
-      <span
-        aria-hidden
-        className="pointer-events-none absolute bottom-2 right-30 select-none text-xs font-bold tracking-wide text-white/70 [text-shadow:0_1px_2px_rgba(0,0,0,0.9),0_2px_6px_rgba(0,0,0,0.7)] sm:text-sm"
-      >
-        Connectiqo
-      </span>
-
-      <div className="absolute bottom-2 left-20 flex items-center gap-1.5 rounded-full bg-black/50 px-2.5 py-1">
-        {!micOn ? <MicOff size={12} className="text-white" /> : null}
-        <span className="text-xs font-medium text-white">{label}</span>
+      <div className={`absolute flex items-center ${overlayClassName}`}>
+        <div className="flex min-w-0 items-center gap-1.5 rounded-full bg-black/50 px-2.5 py-1">
+          {!micOn ? <MicOff size={12} className="shrink-0 text-white" /> : null}
+          <span className="truncate text-xs font-medium text-white">{label}</span>
+        </div>
       </div>
+
+      {showWatermark ? (
+        <span
+          aria-hidden
+          className={`pointer-events-none absolute select-none text-xs font-bold tracking-wide text-white/70 [text-shadow:0_1px_2px_rgba(0,0,0,0.9),0_2px_6px_rgba(0,0,0,0.7)] ${watermarkClassName}`}
+        >
+          Connectiqo
+        </span>
+      ) : null}
     </div>
   );
 }
