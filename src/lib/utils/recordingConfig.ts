@@ -17,7 +17,13 @@ export interface RecordingConfig {
   mode: "video-and-audio" | "audio";
 }
 
-/** Landscape, side-by-side (2-up grid) layout for 1:1 mentor sessions. */
+/**
+ * Landscape, side-by-side (2-up grid) layout for 1:1 mentor sessions.
+ * `priority: "PIN"` (not "SPEAKER") keeps both tiles fixed and equally
+ * sized regardless of who's talking — "SPEAKER" would dynamically enlarge
+ * whoever is active, which drifts away from the live side-by-side view's
+ * always-even split.
+ */
 export function buildOneToOneRecordingConfig(activeParticipantCount = 2): RecordingConfig {
   const count = Math.max(1, Math.min(activeParticipantCount, 4));
   return {
@@ -25,6 +31,6 @@ export function buildOneToOneRecordingConfig(activeParticipantCount = 2): Record
     mode: "video-and-audio",
     quality: "high",
     orientation: "landscape",
-    layout: { type: "GRID", priority: "SPEAKER", gridSize: count },
+    layout: { type: "GRID", priority: "PIN", gridSize: count },
   };
 }

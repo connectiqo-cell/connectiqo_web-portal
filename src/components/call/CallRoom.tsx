@@ -391,14 +391,14 @@ export function CallRoom({
                 type="button"
                 onClick={handleSwapPrimary}
                 aria-label="Swap to main view"
-                className="absolute bottom-4 right-4 h-32 w-24 overflow-hidden rounded-xl shadow-lg ring-2 ring-white/20 transition-transform hover:scale-[1.03] sm:h-40 sm:w-28"
+                className="absolute top-4 right-4 h-32 w-24 overflow-hidden rounded-xl shadow-lg ring-2 ring-white/20 transition-transform hover:scale-[1.03] sm:h-40 sm:w-28"
               >
                 <ParticipantTile
                   participantId={pipId}
                   label={pipId === localParticipant?.id ? "You" : otherUserName}
                   fill
+                  showWatermark={false}
                   overlayClassName="inset-x-3 bottom-2"
-                  watermarkClassName="top-2 right-2 text-[10px] sm:text-xs"
                 />
               </button>
             ) : null}

@@ -73,8 +73,12 @@ export function BookingFlow({
       const now = new Date();
       const future = rows.filter((slot) => {
         if (slot.is_booked) return false;
-        const slotEnd = new Date(`${slot.date}T${slot.end_time || slot.start_time}`);
-        return slotEnd > now;
+        // Match the backend's own rule (create-razorpay-order's isSlotStarted):
+        // a slot is unbookable once it has *started*, not once it has ended —
+        // filtering by end time let an already-started slot stay clickable
+        // here, only to be rejected after the learner filled out the form.
+        const slotStart = new Date(`${slot.date}T${slot.start_time}`);
+        return slotStart > now;
       });
       setSlots(future);
       setLoadingSlots(false);
