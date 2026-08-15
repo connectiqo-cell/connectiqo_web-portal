@@ -88,9 +88,15 @@ export async function startTemplateRecording({
     }),
   });
 
+  // Always log status + raw body (mirrors mobile's recordingConfig.js) — the
+  // json()-then-catch-and-discard approach silently loses the real error
+  // whenever VideoSDK's response isn't valid JSON, which is exactly the kind
+  // of gap that makes a REST failure look like a mysterious template mismatch.
+  const responseText = await res.text().catch(() => "");
+  console.warn("[Recording] recordings/start | status:", res.status, "| body:", responseText);
+
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(`HTTP ${res.status}: ${body?.message || res.statusText}`);
+    throw new Error(`VideoSDK ${res.status}: ${responseText}`);
   }
 }
 
@@ -111,9 +117,11 @@ export async function stopTemplateRecording({
     body: JSON.stringify({ roomId: meetingId }),
   });
 
+  const responseText = await res.text().catch(() => "");
+  console.warn("[Recording] recordings/end | status:", res.status, "| body:", responseText);
+
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(`HTTP ${res.status}: ${body?.message || res.statusText}`);
+    throw new Error(`VideoSDK ${res.status}: ${responseText}`);
   }
 }
 
