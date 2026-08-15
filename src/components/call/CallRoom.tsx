@@ -13,12 +13,14 @@ import { RecordingConsentModal } from "@/components/call/RecordingConsentModal";
 import { ScreenShareView } from "@/components/call/ScreenShareView";
 import { bookingApi } from "@/lib/api/bookingApi";
 import { recordingsApi } from "@/lib/api/recordingsApi";
-import { fetchRecordingUrl } from "@/lib/api/videoCallApi";
+import { fetchRecordingUrl, startTemplateRecording, stopTemplateRecording } from "@/lib/api/videoCallApi";
 import { ROUTES } from "@/lib/routes";
 import { buildOneToOneRecordingConfig } from "@/lib/utils/recordingConfig";
 
 
 const MAX_PARTICIPANTS = 2;
+// Must match RECORDER_NAME in RecordingTemplateView.tsx.
+const RECORDER_DISPLAY_NAME = "Recorder";
 
 
 
@@ -126,10 +128,14 @@ export function CallRoom({
 
   // `participants` from useMeeting() already includes the local participant
   // (VideoSDK sets it in the map on join) — filter it out here, otherwise
-  // every count below is inflated by one and double-counts yourself.
-  const remoteIds = Array.from(participants.keys()).filter(
-    (id) => id !== localParticipant?.id,
-  );
+  // every count below is inflated by one and double-counts yourself. The
+  // headless "Recorder" bot (RecordingTemplateView) also joins this same
+  // room while a template recording is active — without excluding it here
+  // too, it would count toward MAX_PARTICIPANTS and trigger the "session
+  // full" kick, and show up as a visible third tile.
+  const remoteIds = Array.from(participants.entries())
+    .filter(([id, p]) => id !== localParticipant?.id && p.displayName !== RECORDER_DISPLAY_NAME)
+    .map(([id]) => id);
   const participantCount = remoteIds.length + (localParticipant ? 1 : 0);
   const limitExceeded = participantCount > MAX_PARTICIPANTS;
 
@@ -172,13 +178,21 @@ export function CallRoom({
   const beginRecording = useCallback(() => {
     if (recordingStartedRef.current) return;
     recordingStartedRef.current = true;
-    startRecording(undefined, undefined, buildOneToOneRecordingConfig(2)).catch((err) =>
-      console.warn("startRecording failed:", err),
-    );
+    // The REST API is the only path that can load a custom templateUrl — the
+    // SDK's native startRecording() has no such param, and would otherwise
+    // silently fall back to whatever recording composition is configured as
+    // default for this VideoSDK account (which may not even be ours). Only
+    // fall back to the native call if the REST request itself fails.
+    startTemplateRecording({ token, meetingId }).catch((err) => {
+      console.warn("startTemplateRecording failed, falling back to native SDK recording:", err);
+      startRecording(undefined, undefined, buildOneToOneRecordingConfig(2)).catch((fallbackErr) =>
+        console.warn("startRecording failed:", fallbackErr),
+      );
+    });
     recordingsApi
       .upsertSessionForBooking({ bookingId, mentorId, learnerId, meetingId })
       .catch((err) => console.warn("Recording session row not created:", err));
-  }, [startRecording, bookingId, mentorId, learnerId, meetingId]);
+  }, [startRecording, token, bookingId, mentorId, learnerId, meetingId]);
 
   useEffect(() => {
     if (participantCount >= 2) bothJoinedRef.current = true;
@@ -282,6 +296,12 @@ export function CallRoom({
 
   const handleToggleRecording = () => {
     if (isRecording) {
+      // Belt-and-braces: end whichever path actually started it (REST
+      // template or native SDK) — an end call for a recording that was
+      // never started that way is just a harmless no-op/404.
+      stopTemplateRecording({ token, meetingId }).catch((err) =>
+        console.warn("stopTemplateRecording failed:", err),
+      );
       stopRecording().catch((err) => console.warn("stopRecording failed:", err));
     } else {
       requestRecording();
@@ -356,10 +376,10 @@ export function CallRoom({
   return (
     <div
       ref={containerRef}
-      className="flex flex-1 flex-col gap-4 bg-[#131314] data-[fullscreen]:justify-center data-[fullscreen]:p-4"
+      className="flex min-h-0 flex-1 flex-col gap-4 bg-[#131314] data-[fullscreen]:justify-center data-[fullscreen]:p-4"
       data-fullscreen={isFullscreen ? "" : undefined}
     >
-      <div className="flex flex-1 flex-col gap-4 sm:flex-row">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 sm:flex-row">
         {presenterId ? (
           <div className="relative min-h-[50vh] flex-1">
             <ScreenShareView
@@ -405,10 +425,10 @@ export function CallRoom({
           </div>
         ) : (
           <div
-            className={`grid flex-1 gap-3 ${
+            className={`grid flex-1 gap-3 overflow-hidden ${
               participantCount > 1
-                ? "min-h-[60vh] grid-cols-1 sm:grid-cols-2"
-                : "min-h-[60vh] grid-cols-1 place-items-center"
+                ? "min-h-[240px] max-h-[75vh] auto-rows-fr grid-cols-1 sm:grid-cols-2"
+                : "min-h-[240px] max-h-[75vh] grid-cols-1 place-items-center"
             }`}
           >
             {localParticipant ? (
