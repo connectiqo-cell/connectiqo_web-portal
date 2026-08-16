@@ -74,10 +74,10 @@ function TemplateTile({ participantId, side }: { participantId: string; side: "l
 
 function ConnectiqoDivider() {
   return (
-    <div className="pointer-events-none absolute inset-y-0 left-1/2 z-10 flex -translate-x-1/2 items-center justify-center">
-      <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-[#7c3aed] to-transparent" />
+    <div className="pointer-events-none absolute inset-y-0 left-1/2 z-10 w-px -translate-x-1/2">
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#7c3aed] to-transparent" />
       <div
-        className="relative whitespace-nowrap rounded-full border px-5 py-2 text-lg font-bold uppercase tracking-[0.25em] text-white"
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border px-5 py-2 text-lg font-bold uppercase tracking-[0.25em] text-white"
         style={{
           background: "linear-gradient(135deg, rgba(109,40,217,0.85), rgba(139,92,246,0.65))",
           borderColor: "rgba(167,139,250,0.7)",
