@@ -448,7 +448,11 @@ export function CallRoom({
                   participantId={id}
                   label={otherUserName}
                   fill={participantCount > 1}
-                  overlayClassName="inset-x-10 bottom-4 sm:inset-x-14"
+                  overlayClassName={
+                    participantCount > 1
+                      ? "inset-x-10 bottom-4 sm:inset-x-14 justify-end"
+                      : "inset-x-10 bottom-4 sm:inset-x-14"
+                  }
                   watermarkClassName="bottom-4 right-10 sm:right-14 sm:text-sm"
                 />
               </div>

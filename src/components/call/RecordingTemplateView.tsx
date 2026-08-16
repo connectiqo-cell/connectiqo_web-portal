@@ -19,7 +19,7 @@ import { Suspense, useEffect, useRef } from "react";
  */
 const RECORDER_NAME = "Recorder";
 
-function TemplateTile({ participantId }: { participantId: string }) {
+function TemplateTile({ participantId, side }: { participantId: string; side: "left" | "right" }) {
   const { webcamStream, micStream, webcamOn, micOn, displayName, isLocal } = useParticipant(participantId);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -61,7 +61,11 @@ function TemplateTile({ participantId }: { participantId: string }) {
         </div>
       )}
       {!isLocal ? <audio ref={audioRef} autoPlay /> : null}
-      <div className="absolute bottom-5 left-5 rounded-md bg-black/45 px-3.5 py-1.5 text-lg font-bold text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.8)]">
+      <div
+        className={`absolute bottom-5 rounded-md bg-black/45 px-3.5 py-1.5 text-lg font-bold text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.8)] ${
+          side === "left" ? "left-5" : "right-5"
+        }`}
+      >
         {displayName || "Guest"}
       </div>
     </div>
@@ -96,8 +100,16 @@ function TemplateMeetingView() {
 
   return (
     <div className="relative flex h-screen w-screen overflow-hidden bg-black">
-      {remoteIds[0] ? <TemplateTile participantId={remoteIds[0]} /> : <div className="h-full w-1/2 bg-[#0a0a0a]" />}
-      {remoteIds[1] ? <TemplateTile participantId={remoteIds[1]} /> : <div className="h-full w-1/2 bg-[#0a0a0a]" />}
+      {remoteIds[0] ? (
+        <TemplateTile participantId={remoteIds[0]} side="left" />
+      ) : (
+        <div className="h-full w-1/2 bg-[#0a0a0a]" />
+      )}
+      {remoteIds[1] ? (
+        <TemplateTile participantId={remoteIds[1]} side="right" />
+      ) : (
+        <div className="h-full w-1/2 bg-[#0a0a0a]" />
+      )}
       {remoteIds.length === 2 ? <ConnectiqoDivider /> : null}
     </div>
   );
