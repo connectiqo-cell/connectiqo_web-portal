@@ -1,0 +1,7 @@
+1)The mentor cannot start when time-slot meeting started
+2) Better Error Handling if Recharge is Over Supabase/videosdk/contabo
+3) Better Booking Flow recheck
+4)Same time slot says after booking & payments show booked by another this is bug resolve this
+5)Both Mentor & Learner should have full control on recirdung all feature
+6) some video call not relate wit identical identical
+eg:consumer with id "8b1518c1-ad14-4c6c-bbb1-0632979dfe5c" not found

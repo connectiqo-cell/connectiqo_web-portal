@@ -43,6 +43,88 @@ export async function createVideoMeeting(token: string): Promise<string> {
   return data.roomId as string;
 }
 
+/**
+ * Web's landscape side-by-side recording template (RecordingTemplateView),
+ * served as a route in this same app rather than mobile's separate deployed
+ * template — VideoSDK just navigates to whatever URL it's given.
+ */
+function buildTemplateUrl({ meetingId, token }: { meetingId: string; token: string }): string {
+  const url = new URL("/recording-template", window.location.origin);
+  url.searchParams.set("meetingId", meetingId);
+  url.searchParams.set("token", token);
+  return url.toString();
+}
+
+/**
+ * Starts a branded recording via VideoSDK's REST API — the SDK's native
+ * startRecording() has no way to load a custom template (only this REST
+ * `templateUrl` param does), so this bypasses whatever recording composition
+ * is otherwise configured (SDK default, or an account-level default
+ * template) and forces web's own landscape layout for this session.
+ */
+export async function startTemplateRecording({
+  token,
+  meetingId,
+}: {
+  token: string;
+  meetingId: string;
+}): Promise<void> {
+  const res = await fetch(`${VIDEOSDK_API_BASE}/recordings/start`, {
+    method: "POST",
+    headers: {
+      Authorization: token,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      roomId: meetingId,
+      templateUrl: buildTemplateUrl({ meetingId, token }),
+      config: {
+        layout: { type: "GRID", priority: "PIN", gridSize: 2 },
+        theme: "DARK",
+        mode: "video-and-audio",
+        quality: "high",
+        orientation: "landscape",
+      },
+    }),
+  });
+
+  // Always log status + raw body (mirrors mobile's recordingConfig.js) — the
+  // json()-then-catch-and-discard approach silently loses the real error
+  // whenever VideoSDK's response isn't valid JSON, which is exactly the kind
+  // of gap that makes a REST failure look like a mysterious template mismatch.
+  const responseText = await res.text().catch(() => "");
+  console.warn("[Recording] recordings/start | status:", res.status, "| body:", responseText);
+
+  if (!res.ok) {
+    throw new Error(`VideoSDK ${res.status}: ${responseText}`);
+  }
+}
+
+/** Stops a REST-started recording. Paired with SDK's stopRecording() as belt-and-braces by the caller. */
+export async function stopTemplateRecording({
+  token,
+  meetingId,
+}: {
+  token: string;
+  meetingId: string;
+}): Promise<void> {
+  const res = await fetch(`${VIDEOSDK_API_BASE}/recordings/end`, {
+    method: "POST",
+    headers: {
+      Authorization: token,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ roomId: meetingId }),
+  });
+
+  const responseText = await res.text().catch(() => "");
+  console.warn("[Recording] recordings/end | status:", res.status, "| body:", responseText);
+
+  if (!res.ok) {
+    throw new Error(`VideoSDK ${res.status}: ${responseText}`);
+  }
+}
+
 type RecordingLike = Record<string, unknown>;
 
 function pickRecordingUrlFromObject(obj: unknown): string | null {

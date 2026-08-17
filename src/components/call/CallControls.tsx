@@ -51,6 +51,24 @@ export function CallControls({
     useMeeting();
   const [moreOpen, setMoreOpen] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
+  const [micPending, setMicPending] = useState(false);
+  const [webcamPending, setWebcamPending] = useState(false);
+
+  // toggleMic/toggleWebcam are async device negotiations — firing a second
+  // one before the first resolves (e.g. a fast double-click) races the SDK
+  // against itself and throws ERROR_OPERATION_IN_PROGRESS /
+  // ERROR_WEBCAM_PRODUCE_FAILED. Disable each button for the duration of its
+  // own in-flight toggle.
+  const handleToggleMic = () => {
+    if (micPending) return;
+    setMicPending(true);
+    toggleMic().catch(() => {}).finally(() => setMicPending(false));
+  };
+  const handleToggleWebcam = () => {
+    if (webcamPending) return;
+    setWebcamPending(true);
+    toggleWebcam().catch(() => {}).finally(() => setWebcamPending(false));
+  };
 
   const isSharingScreen = presenterId === localParticipant?.id;
   // Only one screen share at a time — disable the button for the other
@@ -74,9 +92,10 @@ export function CallControls({
     <div className="flex w-fit shrink-0 items-center justify-center gap-1.5 rounded-full border border-border-light bg-surface-sheet px-2.5 py-1.5 sm:gap-2.5 sm:px-4 sm:py-2">
       <button
         type="button"
-        onClick={() => toggleMic()}
+        onClick={handleToggleMic}
+        disabled={micPending}
         aria-label={localMicOn ? "Mute microphone" : "Unmute microphone"}
-        className={`${iconButtonClass} ${
+        className={`${iconButtonClass} disabled:cursor-not-allowed disabled:opacity-60 ${
           localMicOn ? "bg-surface-chip text-text-primary" : "bg-accent-error/20 text-accent-error"
         }`}
       >
@@ -85,9 +104,10 @@ export function CallControls({
 
       <button
         type="button"
-        onClick={() => toggleWebcam()}
+        onClick={handleToggleWebcam}
+        disabled={webcamPending}
         aria-label={localWebcamOn ? "Turn camera off" : "Turn camera on"}
-        className={`${iconButtonClass} ${
+        className={`${iconButtonClass} disabled:cursor-not-allowed disabled:opacity-60 ${
           localWebcamOn ? "bg-surface-chip text-text-primary" : "bg-accent-error/20 text-accent-error"
         }`}
       >

@@ -15,6 +15,7 @@ const NO_SIDEBAR_PREFIXES = [
   "/onboarding",
   "/call",
   "/admin",
+  "/recording-template",
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
