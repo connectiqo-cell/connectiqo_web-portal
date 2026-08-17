@@ -2,6 +2,7 @@
 
 import { ChevronRight, Star, User } from "lucide-react";
 import Link from "next/link";
+import OptimizedImage from "@/components/OptimizedImage";
 import { useEffect, useRef, useState } from "react";
 
 import type { MentorProfileRow } from "@/lib/api/mentorApi";
@@ -106,12 +107,7 @@ export function CategoryCarousel({
                 {/* Avatar */}
                 <div className="flex h-24 sm:h-32 w-full items-center justify-center overflow-hidden rounded-xl bg-linear-to-br from-surface-chip to-surface-panel">
                   {avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={avatarUrl}
-                      alt={name}
-                      className="h-full w-full object-cover group-hover:scale-105 transition-transform"
-                    />
+                    <OptimizedImage src={avatarUrl} alt={name} width={160} height={160} className="h-full w-full object-cover group-hover:scale-105 transition-transform" />
                   ) : (
                     <User size={20} className="sm:size-8 text-text-muted" />
                   )}

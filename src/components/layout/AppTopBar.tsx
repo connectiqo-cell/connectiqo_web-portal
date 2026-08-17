@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import OptimizedImage from "@/components/OptimizedImage";
 import { HomeSearchBar } from "@/components/HomeSearchBar";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -40,8 +41,7 @@ export function AppTopBar({ onMenuClick }: { onMenuClick?: () => void }) {
           </button>
         ) : null}
         <Link href={ROUTES.home} className="flex shrink-0 items-center gap-2">
-          {/* eslint-disable-next-line @next/next/no-img-element -- local static asset, plain img matches the rest of the codebase's convention */}
-          <img src="/connectiqo_logo.png" alt="" className="h-10 w-10 sm:h-11 sm:w-11" />
+          <OptimizedImage src="/connectiqo_logo.png" alt="" width={40} height={40} className="h-10 w-10 sm:h-11 sm:w-11" />
           <span className="hidden text-lg font-extrabold text-text-primary sm:block">
             Connect<span className="text-accent-link">iqo</span>
           </span>
@@ -62,8 +62,7 @@ export function AppTopBar({ onMenuClick }: { onMenuClick?: () => void }) {
             >
               <span className="flex h-6 sm:h-7 w-6 sm:w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
                 {profile?.avatar_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-                  <img src={profile.avatar_url} alt={profile.name} className="h-full w-full object-cover" />
+                  <OptimizedImage src={profile.avatar_url} alt={profile.name || "Profile"} width={28} height={28} className="h-full w-full object-cover" />
                 ) : (
                   <User size={12} className="sm:size-3.5 text-text-muted" />
                 )}

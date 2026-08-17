@@ -1,4 +1,5 @@
 import { User } from "lucide-react";
+import OptimizedImage from "@/components/OptimizedImage";
 
 import type { ReviewRow } from "@/lib/api/reviewsApi";
 
@@ -13,8 +14,7 @@ export function ReviewCard({ review }: { review: ReviewRow }) {
       <div className="flex items-center gap-3">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
           {avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-            <img src={avatarUrl} alt={name} className="h-full w-full object-cover" />
+            <OptimizedImage src={avatarUrl} alt={name} width={36} height={36} className="h-full w-full object-cover" />
           ) : (
             <User size={16} className="text-text-muted" />
           )}

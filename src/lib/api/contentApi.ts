@@ -1,3 +1,5 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import { createClient } from "@/lib/supabase/client";
 
 export type MentorCategoryRow = {
@@ -8,9 +10,14 @@ export type MentorCategoryRow = {
   sort_order: number;
 };
 
-/** Ported from connectfront/src/api/contentApi.js. */
-export async function fetchActiveCategories(): Promise<MentorCategoryRow[]> {
-  const supabase = createClient();
+/**
+ * Ported from connectfront/src/api/contentApi.js. Accepts an optional client
+ * so Server Components can pass a cookie-free public client (keeps ISR pages
+ * static) instead of the default browser client.
+ */
+export async function fetchActiveCategories(
+  supabase: SupabaseClient = createClient(),
+): Promise<MentorCategoryRow[]> {
   try {
     const { data, error } = await supabase
       .from("mentor_categories")

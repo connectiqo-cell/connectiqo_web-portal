@@ -2,6 +2,7 @@
 
 import { Star, Users, Check } from "lucide-react";
 import Link from "next/link";
+import OptimizedImage from "@/components/OptimizedImage";
 import { type MentorProfileRow } from "@/lib/api/mentorApi";
 import { ROUTES } from "@/lib/routes";
 
@@ -34,12 +35,7 @@ export function CreatorsCarousel({ mentors }: CreatorsCarouselProps) {
             {/* Avatar/Image */}
             <div className="flex h-32 w-full items-center justify-center overflow-hidden rounded-xl bg-surface-chip">
               {mentor.profiles?.avatar_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={mentor.profiles.avatar_url}
-                  alt={mentor.profiles?.name || ""}
-                  className="h-full w-full object-cover"
-                />
+                <OptimizedImage src={mentor.profiles.avatar_url} alt={mentor.profiles?.name || ""} width={160} height={160} className="h-full w-full object-cover" />
               ) : (
                 <Users size={32} className="text-text-muted" />
               )}

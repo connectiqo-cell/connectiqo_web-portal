@@ -3,6 +3,7 @@
 import {
   Calendar as CalendarIcon,
   CalendarCheck,
+  CalendarPlus,
   ChevronLeft,
   ChevronRight,
   Clock3,
@@ -127,29 +128,39 @@ export default function MentorSessionsPage() {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_300px] lg:items-start">
       <div className="flex flex-col gap-6">
-        <div className="flex gap-2 overflow-x-auto border-b border-border-light">
-          <button
-            type="button"
-            onClick={() => setActiveTab("upcoming")}
-            className={`shrink-0 border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors ${
-              activeTab === "upcoming"
-                ? "border-accent-link text-accent-link"
-                : "border-transparent text-text-muted hover:text-text-secondary"
-            }`}
+        <div className="flex items-center justify-between gap-3 border-b border-border-light">
+          <div className="flex gap-2 overflow-x-auto">
+            <button
+              type="button"
+              onClick={() => setActiveTab("upcoming")}
+              className={`shrink-0 border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors ${
+                activeTab === "upcoming"
+                  ? "border-accent-link text-accent-link"
+                  : "border-transparent text-text-muted hover:text-text-secondary"
+              }`}
+            >
+              Upcoming
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("history")}
+              className={`shrink-0 border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors ${
+                activeTab === "history"
+                  ? "border-accent-link text-accent-link"
+                  : "border-transparent text-text-muted hover:text-text-secondary"
+              }`}
+            >
+              History
+            </button>
+          </div>
+          <Link
+            href={ROUTES.mentorSchedule}
+            className="mb-2 flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold text-text-on-accent"
+            style={{ backgroundImage: "var(--gradient-button-primary)" }}
           >
-            Upcoming
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("history")}
-            className={`shrink-0 border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors ${
-              activeTab === "history"
-                ? "border-accent-link text-accent-link"
-                : "border-transparent text-text-muted hover:text-text-secondary"
-            }`}
-          >
-            History
-          </button>
+            <CalendarPlus size={14} />
+            Set Availability
+          </Link>
         </div>
 
         {selectedDate ? (
@@ -202,13 +213,6 @@ export default function MentorSessionsPage() {
                 <p className="max-w-xs text-xs text-text-muted">
                   Open slots for learners to book will appear here once someone schedules a session.
                 </p>
-                <Link
-                  href={ROUTES.mentorSchedule}
-                  className="mt-1 rounded-full px-5 py-2.5 text-sm font-semibold text-text-on-accent"
-                  style={{ backgroundImage: "var(--gradient-button-primary)" }}
-                >
-                  Set Availability
-                </Link>
               </div>
             ) : selectedDate && activeUpcomingFiltered.length === 0 && reschedulePending.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-10 text-center">

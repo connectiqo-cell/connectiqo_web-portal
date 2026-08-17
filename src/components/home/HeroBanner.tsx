@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { fetchActiveHeroSlides, type HeroSlideRow } from "@/lib/api/contentApi";
+import OptimizedImage from "@/components/OptimizedImage";
 
 const AUTO_ADVANCE_MS = 5000;
 
@@ -36,11 +37,12 @@ export function HeroBanner() {
     <section className="w-full">
       <div className="relative aspect-[970/250] w-full overflow-hidden rounded-2xl bg-surface-chip">
         {slides.map((slide, i) => (
-          // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-          <img
+          <OptimizedImage
             key={slide.id}
             src={slide.image_url}
             alt=""
+            width={970}
+            height={250}
             className={`absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-500 ${
               i === active ? "opacity-100" : "opacity-0"
             }`}

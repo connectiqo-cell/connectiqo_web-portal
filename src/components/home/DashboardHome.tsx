@@ -8,6 +8,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
+import OptimizedImage from "@/components/OptimizedImage";
 import { useEffect, useState } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -140,12 +141,7 @@ export function DashboardHome({
                     >
                       <div className="relative flex h-24 sm:h-32 w-full items-center justify-center overflow-hidden rounded-xl bg-black">
                         {video.thumbnail_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={video.thumbnail_url}
-                            alt={video.title}
-                            className="h-full w-full object-cover group-hover:scale-105 transition-transform"
-                          />
+                          <OptimizedImage src={video.thumbnail_url} alt={video.title} width={320} height={180} className="h-full w-full object-cover group-hover:scale-105 transition-transform" />
                         ) : null}
                         <div className="absolute inset-0 flex items-center justify-center">
                           <PlayCircle size={40} className="text-white opacity-80 group-hover:opacity-100 transition-opacity" />
@@ -226,12 +222,7 @@ export function DashboardHome({
                     >
                       <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
                         {booking.profiles?.avatar_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-                          <img
-                            src={booking.profiles.avatar_url}
-                            alt=""
-                            className="h-full w-full object-cover"
-                          />
+                          <OptimizedImage src={booking.profiles.avatar_url} alt="" width={32} height={32} className="h-full w-full object-cover" />
                         ) : (
                           <Users size={14} className="text-text-muted" />
                         )}

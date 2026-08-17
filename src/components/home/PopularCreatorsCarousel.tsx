@@ -2,6 +2,7 @@
 
 import { ChevronLeft, ChevronRight, Star, BadgeCheck, User } from "lucide-react";
 import Link from "next/link";
+import OptimizedImage from "@/components/OptimizedImage";
 import { type MentorProfileRow } from "@/lib/api/mentorApi";
 import { ROUTES } from "@/lib/routes";
 import { useHorizontalScroll } from "@/lib/hooks/useHorizontalScroll";
@@ -59,12 +60,7 @@ export function PopularCreatorsCarousel({
                 {/* Photo Section */}
                 <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-linear-to-br from-accent-link/15 to-accent-link/25">
                   {creator.profiles?.avatar_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={creator.profiles.avatar_url}
-                      alt={creator.profiles?.name || ""}
-                      className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+                    <OptimizedImage src={creator.profiles.avatar_url} alt={creator.profiles?.name || ""} width={96} height={96} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center">
                       <User className="h-8 w-8 text-accent-link/60" />

@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Eye, EyeOff, Lock, Mail, Phone, User, X } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, Lock, Mail, Phone, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent } from "react";

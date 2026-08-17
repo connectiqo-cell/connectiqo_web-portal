@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
+import OptimizedImage from "@/components/OptimizedImage";
 import { videoLibraryApi, type MentorVideo } from "@/lib/api/videoLibraryApi";
 import { useHorizontalScroll } from "@/lib/hooks/useHorizontalScroll";
 import { ROUTES } from "@/lib/routes";
@@ -91,12 +92,7 @@ function VideoRow({
                   ) : (
                     <>
                       {video.thumbnail_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-                        <img
-                          src={video.thumbnail_url}
-                          alt={video.title}
-                          className="h-full w-full object-cover opacity-80"
-                        />
+                        <OptimizedImage src={video.thumbnail_url} alt={video.title} width={320} height={180} className="h-full w-full object-cover opacity-80" />
                       ) : (
                         <VideoIcon size={24} className="text-text-muted" />
                       )}

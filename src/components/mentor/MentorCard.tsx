@@ -1,5 +1,6 @@
 import { User } from "lucide-react";
 import Link from "next/link";
+import OptimizedImage from "@/components/OptimizedImage";
 
 import type { MentorProfileRow } from "@/lib/api/mentorApi";
 import { ROUTES } from "@/lib/routes";
@@ -18,8 +19,7 @@ export function MentorCard({ mentor }: { mentor: MentorProfileRow }) {
       
       <div className="flex h-24 w-full items-center justify-center overflow-hidden rounded-xl bg-surface-chip">
         {avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URLs, no static import list
-          <img src={avatarUrl} alt={name} className="h-full w-full object-cover" />
+          <OptimizedImage src={avatarUrl} alt={name} width={384} height={384} className="h-full w-full object-cover" />
         ) : (
           <User size={32} className="text-text-muted" />
         )}

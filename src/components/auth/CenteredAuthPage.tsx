@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Eye, EyeOff, Lock, Mail, Phone, User, Video } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, Lock, Mail, User, Video } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent } from "react";
@@ -214,7 +214,7 @@ function CenteredAuthForm() {
             </form>
 
             <p style={{ fontSize: "14px", color: "#666", margin: 0 }}>
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <button type="button" onClick={() => setActiveTab("signup")} style={{ background: "none", border: "none", color: "#7c3aed", fontWeight: "700", cursor: "pointer", fontSize: "14px" }}>
                 Create one
               </button>
