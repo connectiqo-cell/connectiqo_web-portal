@@ -29,7 +29,9 @@ export function buildOneToOneRecordingConfig(activeParticipantCount = 2): Record
   return {
     theme: "DARK",
     mode: "video-and-audio",
-    quality: "high",
+    // Matches the "med" test in startTemplateRecording's REST config —
+    // see the comment there for why.
+    quality: "med",
     orientation: "landscape",
     layout: { type: "GRID", priority: "PIN", gridSize: count },
   };

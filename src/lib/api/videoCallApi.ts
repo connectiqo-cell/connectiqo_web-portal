@@ -82,7 +82,13 @@ export async function startTemplateRecording({
         layout: { type: "GRID", priority: "PIN", gridSize: 2 },
         theme: "DARK",
         mode: "video-and-audio",
-        quality: "high",
+        // "high" asks the recorder bot to pull two full-quality browser
+        // streams at once during its connection-establishment window; in
+        // web-to-web calls that bot has consistently been dropping the
+        // room ~5s in (confirmed via VideoSDK's own recording-failed
+        // webhook) before ever producing output. "med" is a lower-bandwidth
+        // test to see if that's what's blowing its timeout budget.
+        quality: "med",
         orientation: "landscape",
       },
     }),

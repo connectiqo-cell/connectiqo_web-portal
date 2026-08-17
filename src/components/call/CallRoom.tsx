@@ -29,6 +29,10 @@ const RECORDING_POLL_ATTEMPTS = 6;
 
 const RECORDING_POLL_DELAY_MS = 5000;
 
+// How long a non-host web client waits, after recording is mutually agreed,
+// before assuming the host's own side never started it and trying itself.
+const RECORDING_FALLBACK_DELAY_MS = 6000;
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -110,6 +114,13 @@ export function CallRoom({
   const pendingOutgoingRequestIdRef = useRef<string | null>(null);
   const isHostRef = useRef(isHost);
   const localParticipantIdRef = useRef<string | undefined>(undefined);
+  const recordingStateRef = useRef<string>("RECORDING_STOPPED");
+  // Tracks "did a recording happen at any point in this call", from the
+  // SDK's shared recordingState — unlike recordingStartedRef (only ever true
+  // on whichever single client actually called beginRecording), this is
+  // correct on EVERY client, host or not, since recordingState is synced to
+  // all participants automatically.
+  const recordingEverActiveRef = useRef(false);
 
   const { leave, participants, localParticipant, startRecording, stopRecording, recordingState, presenterId } =
     useMeeting({
@@ -121,6 +132,11 @@ export function CallRoom({
   useEffect(() => {
     isHostRef.current = isHost;
   }, [isHost]);
+
+  useEffect(() => {
+    recordingStateRef.current = recordingState;
+    if (recordingState === "RECORDING_STARTED") recordingEverActiveRef.current = true;
+  }, [recordingState]);
 
   useEffect(() => {
     localParticipantIdRef.current = localParticipant?.id;
@@ -185,6 +201,10 @@ export function CallRoom({
     // fall back to the native call if the REST request itself fails.
     startTemplateRecording({ token, meetingId }).catch((err) => {
       console.warn("startTemplateRecording failed, falling back to native SDK recording:", err);
+      // Surfaced in the UI (not just the console) — the fallback below can
+      // fail too, and its generic SDK error would otherwise be the only
+      // thing shown, hiding the real reason the REST template call failed.
+      setError((err as Error)?.message || "Recording (template) request failed");
       startRecording(undefined, undefined, buildOneToOneRecordingConfig(2)).catch((fallbackErr) =>
         console.warn("startRecording failed:", fallbackErr),
       );
@@ -193,6 +213,23 @@ export function CallRoom({
       .upsertSessionForBooking({ bookingId, mentorId, learnerId, meetingId })
       .catch((err) => console.warn("Recording session row not created:", err));
   }, [startRecording, token, bookingId, mentorId, learnerId, meetingId]);
+
+  // Only the host's client used to be trusted to start the (web-branded)
+  // template recording — but the host is often on the mobile app, which has
+  // its own separate recording pipeline our web code never touches. When
+  // that happens, a web participant's "record" request would get mutually
+  // agreed on but never actually start a web-template recording. This gives
+  // any non-host web client a delayed second chance: if `recordingState`
+  // (synced by the SDK to every participant, mobile included) hasn't moved
+  // off "RECORDING_STOPPED" shortly after consent was reached, assume the
+  // host's own side didn't pick it up and start it from here instead.
+  const scheduleRecordingFallback = useCallback(() => {
+    if (isHostRef.current) return;
+    setTimeout(() => {
+      if (recordingStateRef.current !== "RECORDING_STOPPED") return;
+      beginRecording();
+    }, RECORDING_FALLBACK_DELAY_MS);
+  }, [beginRecording]);
 
   useEffect(() => {
     if (participantCount >= 2) bothJoinedRef.current = true;
@@ -261,7 +298,12 @@ export function CallRoom({
         if (isHostRef.current) {
           beginRecording();
         } else {
+          // Tells a host-mobile client to kick off its own native recording
+          // (existing protocol, unchanged) — but if the host doesn't pick
+          // this up on its own side, scheduleRecordingFallback() below still
+          // gets a web-template recording started from here.
           publishConsent({ type: "RECORDING_START_APPROVED", requestId, ts: Date.now() });
+          scheduleRecordingFallback();
         }
         return;
       }
@@ -270,7 +312,7 @@ export function CallRoom({
         beginRecording();
       }
     },
-    [beginRecording],
+    [beginRecording, scheduleRecordingFallback],
   );
 
   const { publish } = usePubSub("RECORDING_CONSENT", { onMessageReceived: handleConsentMessage });
@@ -318,6 +360,10 @@ export function CallRoom({
       ts: Date.now(),
     });
     setIncomingRecordingRequestId(null);
+    // Mirrors the fallback on the requester side: if I approved a
+    // host-requested recording but the host (e.g. on mobile) never actually
+    // starts one, get a web-template recording going from here instead.
+    if (agreed) scheduleRecordingFallback();
   };
 
   const handleLeave = async () => {
@@ -340,7 +386,11 @@ export function CallRoom({
       console.warn("Post-call cleanup failed:", err);
     }
 
-    if (isHost && bothJoinedRef.current && recordingStartedRef.current) {
+    // Not gated on isHost — whoever actually clicked Leave should try to
+    // save the recording, since recordingStartedRef only ever reflects the
+    // truth on the single client that called beginRecording(). Any client,
+    // if it ever saw the shared recordingState go live, should try.
+    if (bothJoinedRef.current && (recordingStartedRef.current || recordingEverActiveRef.current)) {
       pollAndSaveRecording({ bookingId, mentorId, learnerId, meetingId, token }).catch((err) =>
         console.warn("Recording poll failed:", err),
       );
