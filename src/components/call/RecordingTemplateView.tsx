@@ -119,6 +119,15 @@ function RecordingTemplateInner() {
   const params = useSearchParams();
   const meetingId = params.get("meetingId");
   const token = params.get("token");
+  // VideoSDK appends this itself when it navigates its recorder bot to the
+  // templateUrl — per their custom-template docs, the bot expects the page
+  // to join AS this specific pre-registered participant, not a fresh
+  // SDK-generated one. Omitting it (as this page previously did) means the
+  // bot's own tracking never sees "its" participant join, which is the
+  // likely cause of the ~5s recording-failed disconnects in web-to-web
+  // calls. Mirrors mobile's reference recording-template app, which reads
+  // and passes this same param.
+  const participantId = params.get("participantId") || undefined;
 
   if (!meetingId || !token) {
     return (
@@ -130,7 +139,14 @@ function RecordingTemplateInner() {
 
   return (
     <MeetingProvider
-      config={{ meetingId, name: RECORDER_NAME, micEnabled: false, webcamEnabled: false, debugMode: false }}
+      config={{
+        meetingId,
+        name: RECORDER_NAME,
+        micEnabled: false,
+        webcamEnabled: false,
+        debugMode: false,
+        participantId,
+      }}
       token={token}
       joinWithoutUserInteraction
     >
