@@ -15,8 +15,15 @@ services:
     container_name: connectweb
     restart: unless-stopped
 
+    # Bound to localhost only — Caddy (on this same VPS) is the sole public
+    # entry point for app.connectiqo.com, terminating TLS and adding
+    # security headers (see /etc/caddy/Caddyfile). Without the 127.0.0.1
+    # prefix, Docker's default "3000:3000" binds all interfaces, making this
+    # container also directly reachable at http://<vps-ip>:3000 — plain
+    # HTTP, no TLS, none of Caddy's headers — bypassing the front door
+    # entirely.
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
 
     environment:
       NODE_ENV: production

@@ -74,22 +74,35 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!user) return;
+
+    // A single call-end can fire two separate UPDATEs on the same booking
+    // row (status -> "completed", then meeting_id cleared — see CallRoom.tsx's
+    // handleLeave), each its own postgres_changes event. Debounce so that
+    // doesn't double every reload — matches useBookingsRealtime's approach,
+    // which subscribes to the same table independently of this context.
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    const triggerDebounced = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => loadNotifications(), 800);
+    };
+
     const supabase = createClient();
     const channel = supabase
       .channel(`notifications-${user.id}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "bookings", filter: `mentor_id=eq.${user.id}` },
-        () => loadNotifications(),
+        triggerDebounced,
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "bookings", filter: `learner_id=eq.${user.id}` },
-        () => loadNotifications(),
+        triggerDebounced,
       )
       .subscribe();
 
     return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
       supabase.removeChannel(channel);
     };
   }, [user, loadNotifications]);
