@@ -91,7 +91,11 @@ export default function MentorSessionsPage() {
   const visibleActiveUpcoming = showAllUpcoming
     ? activeUpcomingFiltered
     : activeUpcomingFiltered.slice(0, PREVIEW_COUNT);
-  const combinedHistory = [...expired, ...history];
+  const combinedHistory = [...expired, ...history].sort((a, b) => {
+    const da = `${a.availability_slots?.date ?? ""} ${a.availability_slots?.start_time ?? ""}`;
+    const db = `${b.availability_slots?.date ?? ""} ${b.availability_slots?.start_time ?? ""}`;
+    return db.localeCompare(da);
+  });
   const combinedHistoryFiltered = selectedDate
     ? combinedHistory.filter((b) => b.availability_slots?.date === selectedDate)
     : combinedHistory;
