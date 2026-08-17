@@ -3,6 +3,7 @@
 import { ArrowLeft, CalendarCheck, CalendarX2, HourglassIcon, TimerOff, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import OptimizedImage from "@/components/OptimizedImage";
 import { use, useEffect, useState } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -174,8 +175,7 @@ export default function RescheduleResponsePage({ params }: PageProps) {
       <div className="flex items-center gap-3 rounded-2xl border border-border-light bg-surface-panel p-4">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
           {mentor?.avatar_url ? (
-            // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-            <img src={mentor.avatar_url} alt={mentorName} className="h-full w-full object-cover" />
+            <OptimizedImage src={mentor.avatar_url} alt={mentorName} width={44} height={44} className="h-full w-full object-cover" />
           ) : (
             <User size={18} className="text-text-muted" />
           )}

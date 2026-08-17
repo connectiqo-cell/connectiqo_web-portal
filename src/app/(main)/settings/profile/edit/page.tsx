@@ -2,6 +2,7 @@
 
 import { ArrowLeft, Camera, Check, Plus, Trash2, User, X } from "lucide-react";
 import Link from "next/link";
+import OptimizedImage from "@/components/OptimizedImage";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -20,6 +21,7 @@ export default function EditProfilePage() {
 
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
+  const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -43,7 +45,6 @@ export default function EditProfilePage() {
   const coverFileInputRef = useRef<HTMLInputElement>(null);
   const [specialization, setSpecialization] = useState("");
   const [category, setCategory] = useState("");
-  const [bio, setBio] = useState("");
   const [experienceYears, setExperienceYears] = useState("0");
   const [pricePerHour, setPricePerHour] = useState("0");
   const [location, setLocation] = useState("");
@@ -81,6 +82,8 @@ export default function EditProfilePage() {
       if (cancelled) return;
       if (rows.length) setCategories(rows.map((r) => r.name));
       setInterests(learnerProfile?.interests || []);
+      // Mentor bio takes precedence for dual-role users; the mentor effect below sets it.
+      if (!isMentor) setBio(learnerProfile?.bio || "");
       setInterestsLoaded(true);
     })();
     return () => {
@@ -247,7 +250,9 @@ export default function EditProfilePage() {
         );
       }
       if (isLearner) {
-        tasks.push(profileApi.updateLearnerProfile({ userId: user.id, interests }));
+        tasks.push(
+          profileApi.updateLearnerProfile({ userId: user.id, bio: bio.trim(), interests }),
+        );
       }
       await Promise.all(tasks);
       refreshProfile();
@@ -283,8 +288,7 @@ export default function EditProfilePage() {
             style={!coverUrl ? { backgroundImage: "var(--gradient-button-primary)" } : undefined}
           >
             {coverUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-              <img src={coverUrl} alt="Cover" className="h-full w-full object-cover" />
+              <OptimizedImage src={coverUrl} alt="Cover" width={1200} height={400} className="h-full w-full object-cover" />
             ) : null}
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -335,8 +339,7 @@ export default function EditProfilePage() {
           aria-label="Change photo"
         >
           {avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-            <img src={avatarUrl} alt={name} className="h-full w-full object-cover" />
+            <OptimizedImage src={avatarUrl} alt={name} width={80} height={80} className="h-full w-full object-cover" />
           ) : (
             <User size={28} className="text-text-muted" />
           )}
@@ -404,6 +407,19 @@ export default function EditProfilePage() {
         </label>
       </div>
 
+      <label className="flex flex-col gap-1.5">
+        <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+          About You
+        </span>
+        <textarea
+          value={bio}
+          onChange={(e) => setBio(e.target.value)}
+          rows={3}
+          placeholder="Tell people a bit about yourself."
+          className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
+        />
+      </label>
+
       {isMentor && !mentorLoading ? (
         <div className="flex flex-col gap-4 border-t border-border-light pt-6">
           <div>
@@ -441,19 +457,6 @@ export default function EditProfilePage() {
                 </option>
               ))}
             </select>
-          </label>
-
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
-              Bio
-            </span>
-            <textarea
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              rows={3}
-              placeholder="Tell learners about your background and how you can help them."
-              className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
-            />
           </label>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

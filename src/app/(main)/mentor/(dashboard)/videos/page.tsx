@@ -2,6 +2,7 @@
 
 import { FileVideo, ImageIcon, Pencil, Play, Trash2, Upload, Video as VideoIcon, X } from "lucide-react";
 import Link from "next/link";
+import OptimizedImage from "@/components/OptimizedImage";
 import { useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -434,8 +435,7 @@ export default function MentorVideosPage() {
                   className="group relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-chip"
                 >
                   {video.thumbnail_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-                    <img src={video.thumbnail_url} alt={video.title} className="h-full w-full object-cover" />
+                    <OptimizedImage src={video.thumbnail_url} alt={video.title} width={160} height={90} className="h-full w-full object-cover" />
                   ) : (
                     <VideoIcon size={18} className="text-text-muted" />
                   )}

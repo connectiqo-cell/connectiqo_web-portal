@@ -2,6 +2,7 @@
 
 import { Calendar, Clock, Download, MoreVertical, Play, Star, User, Video } from "lucide-react";
 import Link from "next/link";
+import OptimizedImage from "@/components/OptimizedImage";
 import { useEffect, useRef, useState } from "react";
 
 import { ReportUserModal } from "@/components/ReportUserModal";
@@ -110,8 +111,7 @@ export function BookingListItem({
       <div className="flex items-center gap-3 min-w-0">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
           {otherParty?.avatar_url ? (
-            // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-            <img src={otherParty.avatar_url} alt={otherName} className="h-full w-full object-cover" />
+            <OptimizedImage src={otherParty.avatar_url} alt={otherName} width={40} height={40} className="h-full w-full object-cover" />
           ) : (
             <User size={18} className="text-text-muted" />
           )}

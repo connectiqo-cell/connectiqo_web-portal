@@ -22,6 +22,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
+import OptimizedImage from "@/components/OptimizedImage";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -158,8 +159,7 @@ export default function ProfileChannelPage() {
         style={{ backgroundImage: "var(--gradient-button-primary)" }}
       >
         {mentor?.cover_image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-          <img src={mentor.cover_image_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
+          <OptimizedImage src={mentor.cover_image_url} alt="" width={1200} height={360} className="absolute inset-0 h-full w-full object-cover" />
         ) : (
           <span className="select-none text-2xl font-extrabold tracking-wide text-white/25 sm:text-3xl">
             Connect<span className="text-white/40">iqo</span>
@@ -180,8 +180,7 @@ export default function ProfileChannelPage() {
         <div className="flex items-end gap-4">
           <div className="relative -mt-16 flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-4 border-void bg-surface-panel sm:h-28 sm:w-28">
             {profile?.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-              <img src={profile.avatar_url} alt={profile.name} className="h-full w-full object-cover" />
+              <OptimizedImage src={profile.avatar_url} alt={profile.name} width={112} height={112} className="h-full w-full object-cover" />
             ) : (
               <User size={36} className="text-text-muted" />
             )}
@@ -530,8 +529,7 @@ function VideoRow({ title, videos }: { title: string; videos: MentorVideo[] }) {
           >
             <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl bg-meeting-canvas">
               {video.thumbnail_url ? (
-                // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-                <img src={video.thumbnail_url} alt={video.title} className="h-full w-full object-cover" />
+                <OptimizedImage src={video.thumbnail_url} alt={video.title} width={320} height={180} className="h-full w-full object-cover" />
               ) : null}
               <span className="absolute inset-0 flex items-center justify-center bg-black/20">
                 <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90">

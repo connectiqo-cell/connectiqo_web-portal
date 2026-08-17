@@ -1,6 +1,7 @@
 import { Award, Clock, Star, User, Users, UsersRound, Video as VideoIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import OptimizedImage from "@/components/OptimizedImage";
 import { notFound } from "next/navigation";
 
 import { ReportUserModal } from "@/components/ReportUserModal";
@@ -56,9 +57,8 @@ export default async function MentorProfilePage({ params }: PageProps) {
         className="relative -mx-6 -mt-6 flex h-40 w-[calc(100%+3rem)] items-center justify-center overflow-hidden sm:-mt-12 sm:rounded-b-3xl"
         style={!mentor.cover_image_url ? { backgroundImage: "var(--gradient-button-primary)" } : undefined}
       >
-        {mentor.cover_image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-          <img src={mentor.cover_image_url} alt="" className="h-full w-full object-cover" />
+          {mentor.cover_image_url ? (
+          <OptimizedImage src={mentor.cover_image_url} alt="" width={1200} height={300} className="h-full w-full object-cover" />
         ) : (
           <span className="select-none text-2xl font-extrabold tracking-wide text-white/25 sm:text-3xl">
             Connect<span className="text-white/40">iqo</span>
@@ -69,8 +69,7 @@ export default async function MentorProfilePage({ params }: PageProps) {
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
         <div className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-surface-panel">
           {avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-            <img src={avatarUrl} alt={name} className="h-full w-full object-cover" />
+            <OptimizedImage src={avatarUrl} alt={name} width={112} height={112} className="h-full w-full object-cover" />
           ) : (
             <User size={40} className="text-text-muted" />
           )}

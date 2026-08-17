@@ -273,8 +273,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() {
+export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
+
+  if (!ctx) {
+    return {
+      session: null,
+      user: null,
+      profile: null,
+      loading: false,
+      signOut: async () => {},
+      refreshProfile: () => {},
+      pendingPasswordReset: false,
+      setPendingPasswordReset: () => {},
+      frozenNotice: false,
+      clearFrozenNotice: () => {},
+    };
+  }
+
   return ctx;
 }

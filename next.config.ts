@@ -24,6 +24,17 @@ const nextConfig: NextConfig = {
     root: path.resolve(__dirname),
   },
 
+  // Image optimization: allow common external hosts (Supabase storage, VideoSDK CDN,
+  // and common Google storage hosts). This enables `next/image` optimizations
+  // (responsive sizes, caching, and automatic lazy-loading).
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "*.supabase.co", pathname: "/**" },
+      { protocol: "https", hostname: "cdn.videosdk.live", pathname: "/**" },
+      { protocol: "https", hostname: "storage.googleapis.com", pathname: "/**" },
+      { protocol: "https", hostname: "lh3.googleusercontent.com", pathname: "/**" },
+    ],
+  },
   // WSL2/Hyper-V's vEthernet adapter (172.16-172.31.x.x) and typical home-router
   // LANs (192.168.x.x) hand out a new IP on every restart, so pin wildcards
   // instead of chasing individual addresses each time dev access breaks.

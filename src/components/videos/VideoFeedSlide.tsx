@@ -2,6 +2,7 @@
 
 import { Check, Link2, Lock, Pause, Play, User, Volume2, VolumeX } from "lucide-react";
 import Link from "next/link";
+import OptimizedImage from "@/components/OptimizedImage";
 import { useEffect, useRef, useState } from "react";
 
 import type { PublicVideo } from "@/lib/api/videoLibraryApi";
@@ -125,12 +126,7 @@ export function VideoFeedSlide({
         ) : (
           <>
             {video.thumbnail_url ? (
-              // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-              <img
-                src={video.thumbnail_url}
-                alt={video.title}
-                className="h-full w-full object-cover"
-              />
+              <OptimizedImage src={video.thumbnail_url} alt={video.title} width={480} height={270} className="h-full w-full object-cover" />
             ) : null}
             <Link
               href={ROUTES.mentorProfile(video.mentor_id)}
@@ -158,12 +154,7 @@ export function VideoFeedSlide({
           >
             <span className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/20">
               {video.profiles?.avatar_url ? (
-                // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-                <img
-                  src={video.profiles.avatar_url}
-                  alt={mentorName}
-                  className="h-full w-full object-cover"
-                />
+                <OptimizedImage src={video.profiles.avatar_url} alt={mentorName} width={20} height={20} className="h-full w-full object-cover" />
               ) : (
                 <User size={11} />
               )}

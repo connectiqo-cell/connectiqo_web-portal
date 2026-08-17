@@ -22,6 +22,7 @@ import { useEffect, useState } from "react";
 
 import { ThemeToggleSwitch } from "@/components/ThemeToggleSwitch";
 import { useAuth } from "@/contexts/AuthContext";
+import OptimizedImage from "@/components/OptimizedImage";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { paymentApi } from "@/lib/api/paymentApi";
@@ -161,8 +162,7 @@ export default function SettingsHubPage() {
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="relative flex h-12 sm:h-16 w-12 sm:w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-accent-link bg-surface-chip">
               {profile?.avatar_url ? (
-                // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-                <img src={profile.avatar_url} alt={profile.name} className="h-full w-full object-cover" />
+                <OptimizedImage src={profile.avatar_url} alt={profile.name} width={80} height={80} className="h-full w-full object-cover" />
               ) : (
                 <User size={16} className="sm:size-7 text-text-muted" />
               )}
@@ -251,12 +251,7 @@ export default function SettingsHubPage() {
                 >
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
                     {sub.profiles?.avatar_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-                      <img
-                        src={sub.profiles.avatar_url}
-                        alt={sub.profiles.name || "Mentor"}
-                        className="h-full w-full object-cover"
-                      />
+                      <OptimizedImage src={sub.profiles.avatar_url} alt={sub.profiles.name || "Mentor"} width={36} height={36} className="h-full w-full object-cover" />
                     ) : (
                       <User size={16} className="text-text-muted" />
                     )}

@@ -1,18 +1,19 @@
 "use client";
 
-import { ChevronRight, Grid3x3, Heart, PlayCircle, ShieldCheck, Star, User, Users, Video, Volume2, VolumeX } from "lucide-react";
+import { ChevronLeft, ChevronRight, Grid3x3, Heart, PlayCircle, ShieldCheck, Star, User, Users, Video, Volume2, VolumeX } from "lucide-react";
 import Link from "next/link";
+import OptimizedImage from "@/components/OptimizedImage";
 import { useEffect, useRef, useState } from "react";
 
 import { AuthHeaderLinks } from "@/components/AuthHeaderLinks";
 import { HomeSearchBar } from "@/components/HomeSearchBar";
 import { LanguageMenu } from "@/components/LanguageMenu";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { MentorCard } from "@/components/mentor/MentorCard";
-import { fetchActiveCategories, type MentorCategoryRow } from "@/lib/api/contentApi";
+import type { MentorCategoryRow } from "@/lib/api/contentApi";
 import type { MentorProfileRow, PlatformStats } from "@/lib/api/mentorApi";
 import { ROUTES } from "@/lib/routes";
 import { getCategoryIcon } from "@/lib/utils/categoryIcons";
+import { useHorizontalScroll } from "@/lib/hooks/useHorizontalScroll";
 
 const NAV_LINKS = [
   { href: ROUTES.discover, label: "Discover Creators" },
@@ -22,10 +23,10 @@ const NAV_LINKS = [
 
 /** Hero-flanking mentor cards. */
 const HERO_PROFILE_CARDS = [
-  { label: "Music Mentor", rating: 4.9, image: "/music_mentor.png" },
-  { label: "Stock Trader", rating: 4.9, image: "/stocktrader.png" },
-  { label: "Wellness Coach", rating: 4.8, image: "/wellness_coach.png" },
-  { label: "AI Expert", rating: 4.8, image: "/ai_expert.png" },
+  { label: "Music Mentor", rating: 4.9, image: "/optimized/music_mentor.webp" },
+  { label: "Stock Trader", rating: 4.9, image: "/optimized/stocktrader.webp" },
+  { label: "Wellness Coach", rating: 4.8, image: "/optimized/wellness_coach.webp" },
+  { label: "AI Expert", rating: 4.8, image: "/optimized/ai_expert.webp" },
 ] as const;
 
 function HeroProfileCard({
@@ -39,8 +40,7 @@ function HeroProfileCard({
 }) {
   return (
     <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-surface-chip shadow-md">
-      {/* eslint-disable-next-line @next/next/no-img-element -- local static asset, plain img matches the rest of the codebase's convention */}
-      <img src={image} alt={label} className="h-full w-full object-cover" />
+    <OptimizedImage src={image} alt={label} width={600} height={800} className="h-full w-full object-cover" priority />
       <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/75 to-transparent p-2">
         <p className="truncate text-[11px] font-bold text-white">{label}</p>
         <p className="flex items-center gap-0.5 text-[10px] font-semibold text-white/90">
@@ -128,7 +128,7 @@ function TrendingCreatorsCarousel({
         {/* Scroll Container */}
         <div
           ref={scrollContainerRef}
-          className="flex gap-3 overflow-x-auto scroll-smooth pb-2 [-webkit-scrollbar:none] scrollbar-none"
+          className="flex gap-3 overflow-x-auto scroll-smooth pb-2 snap-x snap-mandatory [-webkit-scrollbar:none] scrollbar-none md:grid md:grid-cols-2 md:overflow-visible md:snap-none xl:grid-cols-4"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
@@ -141,51 +141,52 @@ function TrendingCreatorsCarousel({
               <Link
                 key={mentor.id}
                 href={ROUTES.mentorProfile(mentor.id)}
-                className="group flex flex-col sm:flex-row gap-3 sm:gap-4 w-64 sm:w-80 shrink-0 rounded-xl border border-border-light bg-surface-panel p-3 sm:p-4 transition-all hover:border-accent-link hover:shadow-lg"
+                className="group flex w-[84vw] max-w-[18rem] shrink-0 snap-start flex-col gap-3 rounded-xl border border-border-light bg-surface-panel p-3 transition-all hover:border-accent-link hover:shadow-lg sm:w-[22rem] md:w-auto md:max-w-none md:flex-row md:gap-4 md:p-4 xl:w-full"
               >
                 {/* Avatar - Left Side */}
                 <div className="shrink-0">
-                  <div className="flex h-20 w-20 sm:h-28 sm:w-28 items-center justify-center overflow-hidden rounded-lg bg-linear-to-br from-surface-chip to-surface-panel">
+                  <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-lg bg-linear-to-br from-surface-chip to-surface-panel sm:h-24 sm:w-24 md:h-28 md:w-28">
                     {avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <OptimizedImage
                         src={avatarUrl}
                         alt={name}
-                        className="h-full w-full object-cover group-hover:scale-105 transition-transform"
+                        width={112}
+                        height={112}
+                        className="h-full w-full object-cover transition-transform group-hover:scale-105"
                       />
                     ) : (
-                      <User size={20} className="sm:size-8 text-text-muted" />
+                      <User size={20} className="text-text-muted sm:size-8" />
                     )}
                   </div>
                 </div>
 
                 {/* Content - Right Side */}
-                <div className="flex flex-1 flex-col justify-between gap-1.5">
+                <div className="flex min-w-0 flex-1 flex-col justify-between gap-1.5">
                   <div>
                     <div className="flex items-center gap-1">
-                      <p className="truncate font-bold text-text-primary text-xs sm:text-sm">{name}</p>
+                      <p className="truncate text-xs font-bold text-text-primary sm:text-sm">{name}</p>
                       {mentor.rating && mentor.rating >= 4.5 && (
                         <span className="text-xs sm:text-sm">✓</span>
                       )}
                     </div>
-                    <p className="truncate text-[11px] sm:text-xs text-text-muted">
+                    <p className="truncate text-[11px] text-text-muted sm:text-xs">
                       {mentor.specialization || "Mentor"}
                     </p>
                   </div>
 
                   <div className="flex items-center gap-1">
-                    <Star size={12} className="sm:size-3.5 fill-accent-secondary text-accent-secondary" />
-                    <span className="text-[11px] sm:text-xs font-semibold text-text-primary">
+                    <Star size={12} className="fill-accent-secondary text-accent-secondary sm:size-3.5" />
+                    <span className="text-[11px] font-semibold text-text-primary sm:text-xs">
                       {mentor.rating?.toFixed(1) || "0"}
                     </span>
-                    <span className="text-[11px] sm:text-xs text-text-muted">
+                    <span className="text-[11px] text-text-muted sm:text-xs">
                       ({(reviewCount / 1000).toFixed(1)}k)
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between gap-2">
                     {mentor.price_per_hour && (
-                      <span className="text-xs sm:text-sm font-bold text-accent-secondary">
+                      <span className="text-xs font-bold text-accent-secondary sm:text-sm">
                         ₹{mentor.price_per_hour}
                       </span>
                     )}
@@ -194,7 +195,7 @@ function TrendingCreatorsCarousel({
                         e.preventDefault();
                         e.stopPropagation();
                       }}
-                      className="shrink-0 rounded-md bg-accent-primary px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs font-semibold text-white hover:bg-accent-primary-hover transition-colors whitespace-nowrap"
+                      className="shrink-0 rounded-md bg-accent-primary px-2.5 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-accent-primary-hover sm:px-3 sm:py-1.5 sm:text-xs"
                     >
                       Book
                     </button>
@@ -245,23 +246,18 @@ const DEFAULT_STATS: PlatformStats = {
 export function MarketingHome({
   trending = [],
   stats = DEFAULT_STATS,
+  categories = [],
 }: {
   trending?: MentorProfileRow[];
   stats?: PlatformStats;
+  categories?: MentorCategoryRow[];
 }) {
   const heroVideoRef = useRef<HTMLVideoElement>(null);
   const [heroMuted, setHeroMuted] = useState(true);
-  const [categories, setCategories] = useState<MentorCategoryRow[]>([]);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetchActiveCategories().then((rows) => {
-      if (!cancelled) setCategories(rows);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { scrollRef: categoryScrollRef, canScrollLeft: canScrollCategoriesLeft, canScrollRight: canScrollCategoriesRight, scroll: scrollCategories } = useHorizontalScroll(
+    categories,
+    "[data-category-card]",
+  );
 
   return (
     <main className="flex flex-1 flex-col">
@@ -402,31 +398,59 @@ export function MarketingHome({
         </div>
       </section>
 
-      <section id="categories" className="mx-auto w-full max-w-6xl px-6 py-10">
+      <section id="categories" className="mx-auto w-full max-w-6xl px-4 sm:px-6 py-10">
         <h2 className="mb-4 text-xl sm:text-2xl font-bold text-text-primary">Categories</h2>
-        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
-          {categories.map(({ id, name, icon }) => {
-            const Icon = getCategoryIcon(icon, name);
-            return (
-              <Link
-                key={id}
-                href={ROUTES.category(name)}
-                className="flex flex-col items-center justify-center gap-3 w-32 shrink-0 rounded-xl border border-border-light bg-surface-panel p-4 text-center transition-all hover:border-accent-link hover:shadow-md"
-              >
-                <Icon size={28} className="text-accent-link" />
-                <span className="text-xs font-semibold text-text-secondary line-clamp-2">
-                  {name}
-                </span>
-              </Link>
-            );
-          })}
-          <Link
-            href={ROUTES.discover}
-            className="flex flex-col items-center justify-center gap-3 w-24 shrink-0 rounded-xl border border-border-light bg-surface-chip p-4 text-center transition-all hover:border-accent-link hover:shadow-md"
+        <div className="flex items-center gap-2">
+          {canScrollCategoriesLeft ? (
+            <button
+              type="button"
+              aria-label="Scroll left"
+              onClick={() => scrollCategories("left")}
+              className="hidden sm:flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border-light bg-surface-panel shadow-sm hover:bg-surface-chip"
+            >
+              <ChevronLeft className="w-4 h-4 text-text-secondary" />
+            </button>
+          ) : null}
+
+          <div
+            ref={categoryScrollRef}
+            className="flex min-w-0 flex-1 gap-4 overflow-x-auto pb-2 scrollbar-none"
           >
-            <Grid3x3 size={28} className="text-accent-link" />
-            <span className="text-xs font-semibold text-text-secondary">View All</span>
-          </Link>
+            {categories.map(({ id, name, icon }) => {
+              const Icon = getCategoryIcon(icon, name);
+              return (
+                <Link
+                  key={id}
+                  data-category-card
+                  href={ROUTES.category(name)}
+                  className="flex flex-col items-center justify-center gap-3 w-28 sm:w-32 shrink-0 rounded-xl border border-border-light bg-surface-panel p-4 text-center transition-all hover:border-accent-link hover:shadow-md"
+                >
+                  <Icon size={28} className="text-accent-link" />
+                  <span className="text-xs font-semibold text-text-secondary line-clamp-2">
+                    {name}
+                  </span>
+                </Link>
+              );
+            })}
+            <Link
+              href={ROUTES.discover}
+              className="flex flex-col items-center justify-center gap-3 w-24 shrink-0 rounded-xl border border-border-light bg-surface-chip p-4 text-center transition-all hover:border-accent-link hover:shadow-md"
+            >
+              <Grid3x3 size={28} className="text-accent-link" />
+              <span className="text-xs font-semibold text-text-secondary">View All</span>
+            </Link>
+          </div>
+
+          {canScrollCategoriesRight ? (
+            <button
+              type="button"
+              aria-label="Scroll right"
+              onClick={() => scrollCategories("right")}
+              className="hidden sm:flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border-light bg-surface-panel shadow-sm hover:bg-surface-chip"
+            >
+              <ChevronRight className="w-4 h-4 text-text-secondary" />
+            </button>
+          ) : null}
         </div>
       </section>
 

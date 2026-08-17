@@ -2,6 +2,7 @@
 
 import { ChevronLeft, ChevronRight, Star, Users } from "lucide-react";
 import Link from "next/link";
+import OptimizedImage from "@/components/OptimizedImage";
 import { useEffect, useRef, useState } from "react";
 
 import { type MentorProfileRow } from "@/lib/api/mentorApi";
@@ -79,12 +80,7 @@ export function PopularCreators({
               <div className="flex gap-3">
                 <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-linear-to-br from-gray-100 to-gray-200">
                   {creator.profiles?.avatar_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={creator.profiles.avatar_url}
-                      alt={creator.profiles?.name || ""}
-                      className="h-full w-full object-cover"
-                    />
+                    <OptimizedImage src={creator.profiles.avatar_url} alt={creator.profiles?.name || ""} width={64} height={64} className="h-full w-full object-cover" />
                   ) : (
                     <Users size={24} className="text-gray-400" />
                   )}

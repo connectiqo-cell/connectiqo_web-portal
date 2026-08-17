@@ -18,6 +18,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
+import OptimizedImage from "@/components/OptimizedImage";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROUTES } from "@/lib/routes";
 
@@ -125,8 +126,7 @@ function SidebarNavContent({
       </nav>
 
       {collapsed ? (
-        // eslint-disable-next-line @next/next/no-img-element -- local static asset, plain img matches the rest of the codebase's convention
-        <img src="/connectiqo_logo.png" alt="Connectiqo App" className="mx-auto h-10 w-10" />
+        <OptimizedImage src="/connectiqo_logo.png" alt="Connectiqo App" width={40} height={40} className="mx-auto h-10 w-10" />
       ) : (
         <div className="relative flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-chip/50 p-4">
           <div>
@@ -139,28 +139,17 @@ function SidebarNavContent({
               onClick={handleStoreClick}
               className="block w-full overflow-hidden rounded-lg border border-border-light hover:border-border-default"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element -- local static asset, plain img matches the rest of the codebase's convention */}
-              <img
-                src="/appstore.png"
-                alt="Download on the App Store"
-                className="block h-auto w-full"
-              />
+              <OptimizedImage src="/appstore.png" alt="Download on the App Store" width={600} height={200} className="block h-auto w-full" />
             </button>
             <button
               type="button"
               onClick={handleStoreClick}
               className="block w-full overflow-hidden rounded-lg border border-border-light hover:border-border-default"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element -- local static asset, plain img matches the rest of the codebase's convention */}
-              <img
-                src="/playstore.png"
-                alt="Get it on Google Play"
-                className="block h-auto w-full"
-              />
+              <OptimizedImage src="/playstore.png" alt="Get it on Google Play" width={600} height={200} className="block h-auto w-full" />
             </button>
           </div>
-          {/* eslint-disable-next-line @next/next/no-img-element -- local static asset, plain img matches the rest of the codebase's convention */}
-          <img src="/connectiqo_logo.png" alt="Connectiqo" className="mx-auto h-14 w-14" />
+          <OptimizedImage src="/connectiqo_logo.png" alt="Connectiqo" width={56} height={56} className="mx-auto h-14 w-14" />
           {storeNotice ? (
             <div className="absolute inset-x-3 bottom-1 rounded-lg bg-surface-panel px-2.5 py-1.5 text-center text-[11px] font-medium text-text-secondary shadow-lg">
               Coming soon
@@ -196,8 +185,7 @@ function SidebarAccountButton({
     >
       <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
         {profile?.avatar_url ? (
-          // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-          <img src={profile.avatar_url} alt={profile.name} className="h-full w-full object-cover" />
+          <OptimizedImage src={profile.avatar_url} alt={profile.name || "Profile"} width={36} height={36} className="h-full w-full object-cover" />
         ) : (
           <User size={16} className="text-text-muted" />
         )}
@@ -269,9 +257,8 @@ export function DashboardSidebar({
           }`}
         >
           <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto">
-            <div className="flex items-center justify-between">
-              {/* eslint-disable-next-line @next/next/no-img-element -- local static asset, plain img matches the rest of the codebase's convention */}
-              <img src="/connectiqo_logo.png" alt="Connectiqo" className="h-9 w-9" />
+              <div className="flex items-center justify-between">
+                <OptimizedImage src="/connectiqo_logo.png" alt="Connectiqo" width={36} height={36} className="h-9 w-9" />
               <button
                 type="button"
                 onClick={onMobileClose}

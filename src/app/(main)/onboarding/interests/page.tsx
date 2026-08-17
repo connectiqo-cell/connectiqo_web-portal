@@ -13,6 +13,7 @@ import { MENTOR_CATEGORIES } from "@/lib/constants/mentorCategories";
 import { ROUTES } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/client";
 import { resolveCategoryIcon } from "@/lib/utils/categoryIcon";
+import OptimizedImage from "@/components/OptimizedImage";
 import { MAX_LEARNER_INTERESTS, MIN_LEARNER_INTERESTS, toggleMentorCategory } from "@/lib/utils/mentorCategories";
 
 export default function InterestsOnboardingPage() {
@@ -149,13 +150,7 @@ export default function InterestsOnboardingPage() {
           {spotlightAvatars.length > 0 ? (
             <div className="grid grid-cols-3 gap-2 pt-4">
               {spotlightAvatars.slice(0, 6).map((url, i) => (
-                // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-                <img
-                  key={`${url}-${i}`}
-                  src={url}
-                  alt=""
-                  className="aspect-square w-full rounded-xl object-cover"
-                />
+                <OptimizedImage key={`${url}-${i}`} src={url} alt="" width={160} height={160} className="aspect-square w-full rounded-xl object-cover" />
               ))}
             </div>
           ) : null}

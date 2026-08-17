@@ -1,0 +1,9 @@
+/optimized/music_mentor.webp
+/optimized/wellness_coach.webp
+/optimized/stocktrader.webp
+/optimized/ai_expert.webp
+https://pkoaxfxejgaawtwnkhvk.supabase.co/storage/v1/object/public/connectiqo_avatar/e7a7740d-ec59-4c33-a8ff-01c6ed947503/avatar.jpg?t=1786038682212
+https://pkoaxfxejgaawtwnkhvk.supabase.co/storage/v1/object/public/connectiqo_avatar/92d8b427-1db8-4ea1-8272-78a045caf525/avatar.jpg?t=1782616111476
+https://pkoaxfxejgaawtwnkhvk.supabase.co/storage/v1/object/public/connectiqo_avatar/da47659f-4535-43e4-b60e-6d618bd743ba/avatar.JPG?t=1783861752756
+https://pkoaxfxejgaawtwnkhvk.supabase.co/storage/v1/object/public/connectiqo_avatar/men5.jpg
+https://pkoaxfxejgaawtwnkhvk.supabase.co/storage/v1/object/public/connectiqo_avatar/6b67a2dc-d272-489f-b3b9-adf2bd341a3c/avatar.jpg?t=1778420868233

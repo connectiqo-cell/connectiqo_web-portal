@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { BookingCalendar } from "@/components/booking/BookingCalendar";
 import { useAuth } from "@/contexts/AuthContext";
+import OptimizedImage from "@/components/OptimizedImage";
 import { availabilityApi, type AvailabilitySlot } from "@/lib/api/availabilityApi";
 import type { MentorProfileRow } from "@/lib/api/mentorApi";
 import { paymentApi, type CreateOrderResponse } from "@/lib/api/paymentApi";
@@ -410,12 +411,7 @@ export function BookingFlow({
       <div className="flex items-center gap-3">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
           {mentor.profiles?.avatar_url ? (
-            // eslint-disable-next-line @next/next/no-img-element -- external Supabase storage URL
-            <img
-              src={mentor.profiles.avatar_url}
-              alt={mentor.profiles.name || "Mentor"}
-              className="h-full w-full object-cover"
-            />
+            <OptimizedImage src={mentor.profiles.avatar_url} alt={mentor.profiles.name || "Mentor"} width={44} height={44} className="h-full w-full object-cover" />
           ) : (
             <User size={18} className="text-text-muted" />
           )}
