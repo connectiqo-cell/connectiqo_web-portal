@@ -15,7 +15,7 @@ export interface MentorProfileFields {
   location: string | null;
   website: string | null;
   linkedin_url: string | null;
-  twitter_url: string | null;
+  x_url: string | null;
   instagram_url: string | null;
   youtube_url: string | null;
   skills: string[] | null;
@@ -129,7 +129,7 @@ export const profileApi = {
       const { data, error } = await supabase
         .from("mentor_profiles")
         .select(
-          "id, specialization, bio, experience_years, price_per_hour, rating, total_sessions, unlock_price, category, cover_image_url, location, website, linkedin_url, twitter_url, instagram_url, youtube_url, skills",
+          "id, specialization, bio, experience_years, price_per_hour, rating, total_sessions, unlock_price, category, cover_image_url, location, website, linkedin_url, x_url, instagram_url, youtube_url, skills",
         )
         .eq("id", mentorId)
         .single();
@@ -271,7 +271,7 @@ export const profileApi = {
     location,
     website,
     linkedinUrl,
-    twitterUrl,
+    xUrl,
     instagramUrl,
     youtubeUrl,
     skills,
@@ -285,7 +285,7 @@ export const profileApi = {
     location?: string;
     website?: string;
     linkedinUrl?: string;
-    twitterUrl?: string;
+    xUrl?: string;
     instagramUrl?: string;
     youtubeUrl?: string;
     skills?: string[];
@@ -305,7 +305,7 @@ export const profileApi = {
             ...(location !== undefined ? { location: location || null } : {}),
             ...(website !== undefined ? { website: website || null } : {}),
             ...(linkedinUrl !== undefined ? { linkedin_url: linkedinUrl || null } : {}),
-            ...(twitterUrl !== undefined ? { twitter_url: twitterUrl || null } : {}),
+            ...(xUrl !== undefined ? { x_url: xUrl || null } : {}),
             ...(instagramUrl !== undefined ? { instagram_url: instagramUrl || null } : {}),
             ...(youtubeUrl !== undefined ? { youtube_url: youtubeUrl || null } : {}),
             ...(skills !== undefined ? { skills } : {}),

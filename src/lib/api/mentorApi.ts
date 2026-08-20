@@ -25,7 +25,7 @@ export interface MentorProfileRow {
   location?: string | null;
   website?: string | null;
   linkedin_url?: string | null;
-  twitter_url?: string | null;
+  x_url?: string | null;
   instagram_url?: string | null;
   youtube_url?: string | null;
   skills?: string[] | null;
@@ -76,7 +76,7 @@ export const mentorApi = {
         .from("mentor_profiles")
         .select(
           `id, specialization, bio, experience_years, price_per_hour, rating, total_sessions,
-           unlock_price, cover_image_url, location, website, linkedin_url, twitter_url, instagram_url, youtube_url, skills,
+           unlock_price, cover_image_url, location, website, linkedin_url, x_url, instagram_url, youtube_url, skills,
            profiles:id ( id, name, avatar_url, username )`,
         )
         .eq("id", mentorId)

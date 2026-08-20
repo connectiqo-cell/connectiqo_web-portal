@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 
 import { ReportUserModal } from "@/components/ReportUserModal";
 import { MentorProfileCta } from "@/components/mentor/MentorProfileCta";
+import { MentorSocialLinks } from "@/components/mentor/MentorSocialLinks";
 import { MentorVideoLibrary } from "@/components/mentor/MentorVideoLibrary";
 import { ReviewCard } from "@/components/mentor/ReviewCard";
 import { mentorApi } from "@/lib/api/mentorApi";
@@ -90,6 +91,7 @@ export default async function MentorProfilePage({ params }: PageProps) {
               </Link>
             ))}
           </div>
+          <MentorSocialLinks mentor={mentor} />
           <ReportUserModal reportedUserId={mentorId} contextType="profile" />
         </div>
       </div>

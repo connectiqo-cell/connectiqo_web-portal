@@ -50,7 +50,7 @@ export default function EditProfilePage() {
   const [location, setLocation] = useState("");
   const [website, setWebsite] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
-  const [twitterUrl, setTwitterUrl] = useState("");
+  const [xUrl, setXUrl] = useState("");
   const [instagramUrl, setInstagramUrl] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
@@ -107,7 +107,7 @@ export default function EditProfilePage() {
         setLocation(data.location || "");
         setWebsite(data.website || "");
         setLinkedinUrl(data.linkedin_url || "");
-        setTwitterUrl(data.twitter_url || "");
+        setXUrl(data.x_url || "");
         setInstagramUrl(data.instagram_url || "");
         setYoutubeUrl(data.youtube_url || "");
         setSkills((data.skills as string[]) || []);
@@ -242,7 +242,7 @@ export default function EditProfilePage() {
             location: location.trim(),
             website: website.trim(),
             linkedinUrl: linkedinUrl.trim(),
-            twitterUrl: twitterUrl.trim(),
+            xUrl: xUrl.trim(),
             instagramUrl: instagramUrl.trim(),
             youtubeUrl: youtubeUrl.trim(),
             skills,
@@ -572,8 +572,8 @@ export default function EditProfilePage() {
                 Twitter / X
               </span>
               <input
-                value={twitterUrl}
-                onChange={(e) => setTwitterUrl(e.target.value)}
+                value={xUrl}
+                onChange={(e) => setXUrl(e.target.value)}
                 placeholder="https://x.com/…"
                 className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
               />

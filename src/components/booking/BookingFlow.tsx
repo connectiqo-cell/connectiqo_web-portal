@@ -3,7 +3,7 @@
 import { CalendarCheck, CheckCircle2, Clock, Loader2, User, Video, VideoOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { BookingCalendar } from "@/components/booking/BookingCalendar";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,6 +13,7 @@ import type { MentorProfileRow } from "@/lib/api/mentorApi";
 import { paymentApi, type CreateOrderResponse } from "@/lib/api/paymentApi";
 import { ROUTES } from "@/lib/routes";
 import { areSlotsContiguous, slotDurationMinutes } from "@/lib/utils/contiguousSlots";
+import { useAvailabilityRealtime } from "@/lib/hooks/useAvailabilityRealtime";
 import { openRazorpayCheckout } from "@/lib/utils/razorpayCheckout";
 
 type Step = "select" | "review" | "success";
@@ -66,28 +67,38 @@ export function BookingFlow({
     }
   }, [authLoading, user, router, mentorId]);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const rows = await availabilityApi.getAvailabilityForMentor(mentorId).catch(() => []);
-      if (cancelled) return;
-      const now = new Date();
-      const future = rows.filter((slot) => {
-        if (slot.is_booked) return false;
-        // Match the backend's own rule (create-razorpay-order's isSlotStarted):
-        // a slot is unbookable once it has *started*, not once it has ended —
-        // filtering by end time let an already-started slot stay clickable
-        // here, only to be rejected after the learner filled out the form.
-        const slotStart = new Date(`${slot.date}T${slot.start_time}`);
-        return slotStart > now;
-      });
-      setSlots(future);
-      setLoadingSlots(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
+  const loadSlots = useCallback(async () => {
+    const rows = await availabilityApi.getAvailabilityForMentor(mentorId).catch(() => []);
+    const now = new Date();
+    const future = rows.filter((slot) => {
+      if (slot.is_booked) return false;
+      // Match the backend's own rule (create-razorpay-order's isSlotStarted):
+      // a slot is unbookable once it has *started*, not once it has ended —
+      // filtering by end time let an already-started slot stay clickable
+      // here, only to be rejected after the learner filled out the form.
+      const slotStart = new Date(`${slot.date}T${slot.start_time}`);
+      return slotStart > now;
+    });
+    setSlots(future);
+    setLoadingSlots(false);
+    // Someone else may have just booked a slot the learner already had
+    // selected — drop it and tell them, instead of letting them pay for a
+    // slot that's no longer theirs to take.
+    setSelectedSlots((prev) => {
+      if (prev.length === 0) return prev;
+      const stillOpen = prev.filter((s) => future.some((f) => f.id === s.id));
+      if (stillOpen.length !== prev.length) {
+        setSelectError("One of your selected slots was just booked by someone else. Please choose again.");
+      }
+      return stillOpen;
+    });
   }, [mentorId]);
+
+  useEffect(() => {
+    void Promise.resolve().then(() => loadSlots());
+  }, [loadSlots]);
+
+  useAvailabilityRealtime(mentorId, loadSlots);
 
   const dates = useMemo(() => {
     const unique = [...new Set(slots.map((s) => s.date))];

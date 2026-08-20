@@ -1,9 +1,7 @@
 "use client";
 
 import {
-  AtSign,
   Award,
-  Briefcase,
   Calendar,
   Camera,
   CheckCircle2,
@@ -26,6 +24,7 @@ import OptimizedImage from "@/components/OptimizedImage";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { MentorSocialLinks } from "@/components/mentor/MentorSocialLinks";
 import { ReviewCard } from "@/components/mentor/ReviewCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { type MentorProfileRow, mentorApi } from "@/lib/api/mentorApi";
@@ -136,7 +135,7 @@ export default function ProfileChannelPage() {
         { label: "Add skills", done: (mentor?.skills?.length ?? 0) > 0 },
         {
           label: "Add social links",
-          done: !!(mentor?.linkedin_url || mentor?.twitter_url || mentor?.instagram_url || mentor?.youtube_url),
+          done: !!(mentor?.linkedin_url || mentor?.x_url || mentor?.instagram_url || mentor?.youtube_url),
         },
       ]
     : [
@@ -377,56 +376,9 @@ export default function ProfileChannelPage() {
               ) : null}
             </div>
 
-            {isMentor && (mentor?.linkedin_url || mentor?.twitter_url || mentor?.instagram_url || mentor?.youtube_url) ? (
-              <div className="flex items-center gap-2 border-t border-border-light pt-3">
-                {mentor.linkedin_url ? (
-                  <a
-                    href={mentor.linkedin_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="LinkedIn"
-                    title="LinkedIn"
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-chip text-text-secondary hover:text-text-primary"
-                  >
-                    <Briefcase size={14} />
-                  </a>
-                ) : null}
-                {mentor.twitter_url ? (
-                  <a
-                    href={mentor.twitter_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Twitter / X"
-                    title="Twitter / X"
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-chip text-text-secondary hover:text-text-primary"
-                  >
-                    <AtSign size={14} />
-                  </a>
-                ) : null}
-                {mentor.instagram_url ? (
-                  <a
-                    href={mentor.instagram_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Instagram"
-                    title="Instagram"
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-chip text-text-secondary hover:text-text-primary"
-                  >
-                    <Camera size={14} />
-                  </a>
-                ) : null}
-                {mentor.youtube_url ? (
-                  <a
-                    href={mentor.youtube_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="YouTube"
-                    title="YouTube"
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-chip text-text-secondary hover:text-text-primary"
-                  >
-                    <VideoIcon size={14} />
-                  </a>
-                ) : null}
+            {isMentor && (mentor?.linkedin_url || mentor?.x_url || mentor?.instagram_url || mentor?.youtube_url) ? (
+              <div className="border-t border-border-light pt-3">
+                <MentorSocialLinks mentor={mentor} />
               </div>
             ) : null}
           </section>

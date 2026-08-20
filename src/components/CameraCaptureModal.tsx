@@ -78,6 +78,16 @@ export function CameraCaptureModal({
     setCapturedBlob(null);
   };
 
+  // The <video> element unmounts (swapped for the captured <img>) while the
+  // stream keeps running in the background, then remounts as a fresh DOM
+  // node on Retake — re-attach the still-live stream to it, since the
+  // mount-only effect above only ever touched the original node.
+  useEffect(() => {
+    if (!capturedUrl && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+    }
+  }, [capturedUrl]);
+
   const handleUse = () => {
     if (!capturedBlob) return;
     onCapture(new File([capturedBlob], `avatar-${Date.now()}.jpg`, { type: "image/jpeg" }));
