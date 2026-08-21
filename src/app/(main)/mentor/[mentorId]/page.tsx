@@ -51,6 +51,9 @@ export default async function MentorProfilePage({ params }: PageProps) {
   const name = mentor.profiles?.name || "Mentor";
   const avatarUrl = mentor.profiles?.avatar_url;
   const username = mentor.profiles?.username;
+  const hasSocialLinks = Boolean(
+    mentor.youtube_url || mentor.instagram_url || mentor.x_url || mentor.linkedin_url,
+  );
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-12">
@@ -91,7 +94,12 @@ export default async function MentorProfilePage({ params }: PageProps) {
               </Link>
             ))}
           </div>
-          <MentorSocialLinks mentor={mentor} />
+
+          {hasSocialLinks ? (
+            <div className="mt-1 border-t border-border-light pt-3">
+              <MentorSocialLinks mentor={mentor} />
+            </div>
+          ) : null}
           <ReportUserModal reportedUserId={mentorId} contextType="profile" />
         </div>
       </div>

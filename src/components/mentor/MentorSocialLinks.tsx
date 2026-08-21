@@ -56,8 +56,14 @@ function normalizeSocialUrl(raw: string | null | undefined): string {
   }
 }
 
-/** Full-width brand icon row — only platforms with a saved URL, matching the mobile app's mentor profile. */
-export function MentorSocialLinks({ mentor }: { mentor: MentorSocialLinksData | null | undefined }) {
+/** Brand icon row — only platforms with a saved URL, matching the mobile app's mentor profile. */
+export function MentorSocialLinks({
+  mentor,
+  className = "",
+}: {
+  mentor: MentorSocialLinksData | null | undefined;
+  className?: string;
+}) {
   if (!mentor) return null;
   const links = SOCIAL_PLATFORMS.map((p) => {
     const url = normalizeSocialUrl(mentor[p.urlKey]);
@@ -67,7 +73,7 @@ export function MentorSocialLinks({ mentor }: { mentor: MentorSocialLinksData | 
   if (!links.length) return null;
 
   return (
-    <div className="flex items-center gap-2" role="list">
+    <div className={`flex flex-wrap items-center gap-2 ${className}`} role="list">
       {links.map((link) => (
         <a
           key={link.key}
@@ -77,8 +83,8 @@ export function MentorSocialLinks({ mentor }: { mentor: MentorSocialLinksData | 
           role="listitem"
           aria-label={`Open ${link.label}`}
           title={link.label}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border bg-surface-chip transition-opacity hover:opacity-80"
-          style={{ borderColor: `${link.color}44` }}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border bg-surface-panel shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md"
+          style={{ borderColor: `${link.color}33` }}
         >
           <link.Icon width={16} height={16} style={{ color: link.color }} />
         </a>
