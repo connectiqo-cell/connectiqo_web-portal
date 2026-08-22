@@ -33,6 +33,9 @@ const RECORDING_POLL_DELAY_MS = 5000;
 // before assuming the host's own side never started it and trying itself.
 const RECORDING_FALLBACK_DELAY_MS = 6000;
 
+// How long an incoming-chat-message toast stays on screen before auto-dismissing.
+const CHAT_TOAST_DURATION_MS = 4000;
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -102,6 +105,8 @@ export function CallRoom({
   const [joined, setJoined] = useState(false);
   const [error, setError] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+  const [chatToast, setChatToast] = useState<{ sender: string; text: string } | null>(null);
   const [layoutMode, setLayoutMode] = useState<"split" | "minmax">("split");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [primaryParticipantId, setPrimaryParticipantId] = useState<string | null>(null);
@@ -114,6 +119,8 @@ export function CallRoom({
   const pendingOutgoingRequestIdRef = useRef<string | null>(null);
   const isHostRef = useRef(isHost);
   const localParticipantIdRef = useRef<string | undefined>(undefined);
+  const chatOpenRef = useRef(false);
+  const chatToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recordingStateRef = useRef<string>("RECORDING_STOPPED");
   // Tracks "did a recording happen at any point in this call", from the
   // SDK's shared recordingState — unlike recordingStartedRef (only ever true
@@ -141,6 +148,18 @@ export function CallRoom({
   useEffect(() => {
     localParticipantIdRef.current = localParticipant?.id;
   }, [localParticipant?.id]);
+
+  useEffect(() => {
+    chatOpenRef.current = chatOpen;
+  }, [chatOpen]);
+
+  // Clear any pending toast-dismiss timer on unmount so it never fires a
+  // setState after the call page has navigated away.
+  useEffect(() => {
+    return () => {
+      if (chatToastTimerRef.current) clearTimeout(chatToastTimerRef.current);
+    };
+  }, []);
 
   // `participants` from useMeeting() already includes the local participant
   // (VideoSDK sets it in the map on join) — filter it out here, otherwise
@@ -320,6 +339,29 @@ export function CallRoom({
   useEffect(() => {
     publishRef.current = publish;
   }, [publish]);
+
+  // Subscribed here (CallRoom), not inside ChatPanel, so a listener exists
+  // for the whole call — otherwise unmounting ChatPanel on close tears down
+  // its usePubSub("CHAT") along with it, and nothing is left listening to
+  // notice a message arrived while the panel is closed. ChatPanel's own
+  // usePubSub("CHAT") call (for rendering `messages`) keeps working exactly
+  // as before — VideoSDK shares message history across every subscriber on
+  // the same topic, so this second subscription doesn't change what
+  // ChatPanel sees once opened.
+  const handleChatMessage = useCallback(
+    (msg: { message: string; senderId: string; senderName: string }) => {
+      if (msg.senderId === localParticipantIdRef.current) return;
+      if (chatOpenRef.current) return;
+
+      setUnreadChatCount((count) => count + 1);
+      setChatToast({ sender: msg.senderName || otherUserName, text: msg.message });
+      if (chatToastTimerRef.current) clearTimeout(chatToastTimerRef.current);
+      chatToastTimerRef.current = setTimeout(() => setChatToast(null), CHAT_TOAST_DURATION_MS);
+    },
+    [otherUserName],
+  );
+
+  usePubSub("CHAT", { onMessageReceived: handleChatMessage });
 
   const requestRecording = () => {
     if (remoteIds.length === 0 || awaitingConsent) return;
@@ -529,6 +571,7 @@ export function CallRoom({
         </p>
       ) : null}
 
+
       {incomingRecordingRequestId ? (
         <RecordingConsentModal
           requesterName={otherUserName}
@@ -541,7 +584,14 @@ export function CallRoom({
         <CallControls
           onLeave={handleLeave}
           chatOpen={chatOpen}
-          onToggleChat={() => setChatOpen((v) => !v)}
+          onToggleChat={() => {
+            setChatOpen((v) => !v);
+            setUnreadChatCount(0);
+            setChatToast(null);
+            if (chatToastTimerRef.current) clearTimeout(chatToastTimerRef.current);
+          }}
+          unreadChatCount={unreadChatCount}
+          chatToast={chatOpen ? null : chatToast}
           canRecord
           recordingDisabled={remoteIds.length === 0 || awaitingConsent}
           isRecording={isRecording}
