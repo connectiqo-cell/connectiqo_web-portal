@@ -11,28 +11,38 @@ const SOCIAL_PLATFORMS = [
   {
     key: "youtube",
     label: "YouTube",
-    color: "#FF0000",
+    background: "#FF0000",
+    // Tints the pill itself — a plain neutral chip barely showed up against
+    // this dark page, so each pill instead gets a translucent wash of its
+    // own brand color (accent) instead of camouflaging into the background.
+    accent: "#FF0000",
     urlKey: "youtube_url" as const,
     Icon: YouTubeIcon,
   },
   {
     key: "instagram",
     label: "Instagram",
-    color: "#E4405F",
+    // Brand gradient (yellow -> pink -> purple), not a flat color.
+    background: "linear-gradient(45deg, #f9ce34, #ee2a7b, #6228d7)",
+    accent: "#ee2a7b",
     urlKey: "instagram_url" as const,
     Icon: InstagramIcon,
   },
   {
     key: "x",
     label: "X",
-    color: "#1D9BF0",
+    background: "#000000",
+    // X's own black-on-black would vanish here too, so it gets a light
+    // wash instead of trying to tint with its own (black) brand color.
+    accent: "#FFFFFF",
     urlKey: "x_url" as const,
     Icon: XIcon,
   },
   {
     key: "linkedin",
     label: "LinkedIn",
-    color: "#0A66C2",
+    background: "#0A66C2",
+    accent: "#0A66C2",
     urlKey: "linkedin_url" as const,
     Icon: LinkedInIcon,
   },
@@ -83,10 +93,31 @@ export function MentorSocialLinks({
           role="listitem"
           aria-label={`Open ${link.label}`}
           title={link.label}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border bg-surface-panel shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md"
-          style={{ borderColor: `${link.color}33` }}
+          // A colored border/fill needs a much higher alpha than a neutral
+          // one to read as equally "bright" — white blended at low opacity
+          // into black still looks like a clear light gray, but a saturated
+          // hue (red/pink/blue) at that same low opacity mostly just gets
+          // absorbed by the black behind it and barely shows up at all.
+          // That tint only reads well on the dark theme though — on light
+          // it comes across as loud, mismatched candy colors. mentor-social-badge
+          // is a CSS variable fallback hook: light theme (see globals.css)
+          // defines --pill-fill/--pill-border to the app's normal neutral
+          // chip tokens, which wins over the colorful fallback below.
+          className="mentor-social-badge flex shrink-0 items-center gap-2 rounded-full border py-1 pl-1 pr-3.5 shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg"
+          style={{
+            backgroundColor: "var(--pill-fill, var(--pill-fill-dark))",
+            borderColor: "var(--pill-border, var(--pill-border-dark))",
+            ["--pill-fill-dark" as string]: `${link.accent}38`,
+            ["--pill-border-dark" as string]: `${link.accent}b3`,
+          }}
         >
-          <link.Icon width={16} height={16} style={{ color: link.color }} />
+          <span
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full shadow-[0_0_10px_-2px_var(--glow)]"
+            style={{ background: link.background, ["--glow" as string]: link.accent }}
+          >
+            <link.Icon width={14} height={14} className="text-white" />
+          </span>
+          <span className="text-xs font-semibold text-text-primary">{link.label}</span>
         </a>
       ))}
     </div>

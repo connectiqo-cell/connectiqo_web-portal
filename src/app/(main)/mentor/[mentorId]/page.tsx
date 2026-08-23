@@ -80,7 +80,10 @@ export default async function MentorProfilePage({ params }: PageProps) {
         </div>
 
         <div className="flex flex-1 flex-col gap-2">
-          <h1 className="text-2xl font-bold text-text-primary">{name}</h1>
+          <div className="flex items-start justify-between gap-3">
+            <h1 className="text-2xl font-bold text-text-primary">{name}</h1>
+            <ReportUserModal reportedUserId={mentorId} contextType="profile" />
+          </div>
           {username ? <p className="text-sm text-accent-link">@{username}</p> : null}
           <p className="text-text-secondary">{mentor.specialization || "Mentor"}</p>
           <div className="flex flex-wrap gap-1.5">
@@ -100,7 +103,6 @@ export default async function MentorProfilePage({ params }: PageProps) {
               <MentorSocialLinks mentor={mentor} />
             </div>
           ) : null}
-          <ReportUserModal reportedUserId={mentorId} contextType="profile" />
         </div>
       </div>
 

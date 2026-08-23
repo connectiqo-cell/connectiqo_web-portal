@@ -90,6 +90,18 @@
   --color-status-unavailable: #ef4444;
 
   --gradient-button-primary: linear-gradient(135deg, #6d4aff, #8b5cf6);
+
+  /*
+   * Mentor social-link pills (MentorSocialLinks.tsx) tint themselves with
+   * each platform's own brand color by default (see --pill-fill-dark /
+   * --pill-border-dark, set inline per pill) — that reads well against the
+   * dark theme's near-black background, but on light it looks like loud,
+   * mismatched candy colors instead of a clean badge. Defining these here
+   * overrides that per-pill fallback with the app's normal neutral chip
+   * look, matching every other pill/chip in the light theme.
+   */
+  --pill-fill: var(--color-surface-chip);
+  --pill-border: var(--color-border-light);
 }
 
 @theme inline {

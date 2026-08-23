@@ -24,6 +24,8 @@ export function CallControls({
   onLeave,
   chatOpen,
   onToggleChat,
+  unreadChatCount,
+  chatToast,
   canRecord,
   recordingDisabled,
   isRecording,
@@ -36,6 +38,10 @@ export function CallControls({
   onLeave: () => void;
   chatOpen: boolean;
   onToggleChat: () => void;
+  /** Unread chat messages received while the panel was closed. */
+  unreadChatCount: number;
+  /** Latest incoming message to surface as a popover above the chat button, or null to show nothing. */
+  chatToast: { sender: string; text: string } | null;
   /** Whether the record control is shown at all. */
   canRecord: boolean;
   /** Greys the button out (e.g. no one else has joined yet, or a request is already pending). */
@@ -53,6 +59,28 @@ export function CallControls({
   const moreRef = useRef<HTMLDivElement>(null);
   const [micPending, setMicPending] = useState(false);
   const [webcamPending, setWebcamPending] = useState(false);
+  // Starts every new toast off-state, then flips it on next frame so the
+  // opacity/scale/translate classes below actually transition in instead of
+  // just appearing — a plain conditional render has nothing to animate from.
+  const [toastVisible, setToastVisible] = useState(false);
+
+  useEffect(() => {
+    if (!chatToast) return;
+    // Double rAF, not one: setting true on the very next frame can land in
+    // the same style/paint pass as the initial (already-true) render, so the
+    // transition has nothing to interpolate from and just snaps in. Forcing
+    // one extra frame between "reset" and "show" guarantees the browser
+    // paints the off-state first.
+    let showFrame = 0;
+    const resetFrame = requestAnimationFrame(() => {
+      setToastVisible(false);
+      showFrame = requestAnimationFrame(() => setToastVisible(true));
+    });
+    return () => {
+      cancelAnimationFrame(resetFrame);
+      cancelAnimationFrame(showFrame);
+    };
+  }, [chatToast]);
 
   // toggleMic/toggleWebcam are async device negotiations — firing a second
   // one before the first resolves (e.g. a fast double-click) races the SDK
@@ -124,6 +152,47 @@ export function CallControls({
         {isFullscreen ? <Minimize size={14} className="sm:size-4" /> : <Maximize size={14} className="sm:size-4" />}
       </button>
 
+      <div className="relative">
+        <button
+          type="button"
+          onClick={onToggleChat}
+          aria-label={chatOpen ? "Close chat" : "Open chat"}
+          title={chatOpen ? "Close chat" : "Open chat"}
+          className={`${iconButtonClass} relative ${
+            chatOpen ? "bg-accent-link/20 text-accent-link" : "bg-surface-chip text-text-primary"
+          }`}
+        >
+          <MessageCircle size={14} className="sm:size-4" />
+          {unreadChatCount > 0 ? (
+            <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-link px-1 text-[9px] font-bold text-text-on-accent">
+              {unreadChatCount > 9 ? "9+" : unreadChatCount}
+            </span>
+          ) : null}
+        </button>
+
+        {chatToast ? (
+          // Anchored directly above the chat button (same bottom-full/mb-2
+          // popover pattern as the "More options" menu below) so it reads as
+          // popping out of the chat icon, not floating over the video. The
+          // little rotated square below is the classic speech-bubble "tail"
+          // trick — same gradient as the bubble so the two fuse visually.
+          <div
+            className={`pointer-events-none absolute bottom-full left-1/2 z-30 mb-3 w-max max-w-64 -translate-x-1/2 rounded-3xl px-4 py-3 text-sm text-text-on-accent shadow-xl ring-1 ring-white/15 transition-all duration-300 ease-out ${
+              toastVisible ? "translate-y-0 scale-100 opacity-100" : "translate-y-1.5 scale-75 opacity-0"
+            }`}
+            style={{ backgroundImage: "var(--gradient-button-primary)" }}
+          >
+            <span className="font-bold">{chatToast.sender}:</span>{" "}
+            <span className="break-words text-text-on-accent/90">{chatToast.text}</span>
+            <span
+              aria-hidden
+              className="absolute left-1/2 top-full h-3.5 w-3.5 -translate-x-1/2 -translate-y-2 rotate-45 rounded-[3px]"
+              style={{ backgroundImage: "var(--gradient-button-primary)" }}
+            />
+          </div>
+        ) : null}
+      </div>
+
       <div ref={moreRef} className="relative">
         <button
           type="button"
@@ -139,20 +208,6 @@ export function CallControls({
 
         {moreOpen ? (
           <div className="absolute bottom-full left-1/2 z-30 mb-2 w-52 -translate-x-1/2 rounded-xl border border-border-light bg-surface-panel p-1.5 shadow-lg">
-            <button
-              type="button"
-              onClick={() => {
-                onToggleChat();
-                setMoreOpen(false);
-              }}
-              className={`${menuItemClass} ${
-                chatOpen ? "text-accent-link" : "text-text-primary hover:bg-surface-chip"
-              }`}
-            >
-              <MessageCircle size={16} />
-              {chatOpen ? "Close chat" : "Open chat"}
-            </button>
-
             <button
               type="button"
               onClick={() => {

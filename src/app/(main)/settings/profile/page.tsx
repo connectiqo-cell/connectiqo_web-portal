@@ -176,8 +176,20 @@ export default function ProfileChannelPage() {
       </div>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex items-end gap-4">
-          <div className="relative -mt-16 flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-4 border-void bg-surface-panel sm:h-28 sm:w-28">
+        {/*
+          items-start (was items-end): with the social icons row now added
+          below the role line, the name column got taller than the avatar,
+          so bottom-aligning the two left the avatar's top sitting well
+          below "Saumya Jain" instead of level with it.
+          The avatar previously carried a -mt-16 to overlap the cover banner
+          above — under items-end that only pulled it up close to level with
+          the (then-shorter) name column, but under items-start it pushed the
+          avatar's top a full 64px above the name instead. Dropping the
+          margin here means the avatar's top and "Saumya Jain" now share the
+          exact same row-start reference, at the cost of the banner overlap.
+        */}
+        <div className="flex items-start gap-4">
+          <div className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-4 border-void bg-surface-panel sm:h-28 sm:w-28">
             {profile?.avatar_url ? (
               <OptimizedImage src={profile.avatar_url} alt={profile.name} width={112} height={112} className="h-full w-full object-cover" />
             ) : (
@@ -195,11 +207,19 @@ export default function ProfileChannelPage() {
             <h1 className="text-xl font-extrabold text-text-primary sm:text-2xl">{profile?.name}</h1>
             {profile?.username ? <p className="text-sm text-accent-link">@{profile.username}</p> : null}
             <p className="text-sm text-text-secondary">{mentor?.specialization || (isMentor ? "Mentor" : "Member")}</p>
+            {isMentor ? <MentorSocialLinks mentor={mentor} className="mt-1" /> : null}
           </div>
         </div>
+        {/*
+          self-start overrides the row's items-end just for this button —
+          without it, Edit Profile bottom-aligns with its sibling (avatar +
+          name column), which got taller once the social icons were added
+          below the role line, pushing the button down with it instead of
+          keeping it level with the name heading.
+        */}
         <Link
           href={ROUTES.editProfileForm}
-          className="flex w-fit items-center gap-1.5 rounded-full border border-border-light px-4 py-2 text-sm font-semibold text-text-secondary hover:text-text-primary"
+          className="flex w-fit items-center gap-1.5 rounded-full border border-border-light px-4 py-2 text-sm font-semibold text-text-secondary hover:text-text-primary sm:self-start"
         >
           <Pencil size={14} />
           Edit Profile
@@ -375,12 +395,6 @@ export default function ProfileChannelPage() {
                 </span>
               ) : null}
             </div>
-
-            {isMentor && (mentor?.linkedin_url || mentor?.x_url || mentor?.instagram_url || mentor?.youtube_url) ? (
-              <div className="border-t border-border-light pt-3">
-                <MentorSocialLinks mentor={mentor} />
-              </div>
-            ) : null}
           </section>
 
           <div className="rounded-2xl border border-border-light bg-surface-panel p-4">

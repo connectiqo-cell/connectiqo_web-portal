@@ -22,7 +22,13 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="flex w-full flex-col rounded-2xl border border-border-light bg-surface-panel sm:w-80">
+    // max-h-[75vh] mirrors the same cap CallRoom's video-tile grid uses — the
+    // row (video + chat, side by side) stretches to fill whatever space is
+    // left in the call layout, but the tiles never grow past 75vh. Without
+    // the same ceiling here, this panel had nothing capping it and kept
+    // stretching to the row's full (taller) height even once the tiles had
+    // already stopped growing, so the two visibly stopped lining up.
+    <div className="flex w-full min-h-0 max-h-[75vh] flex-col rounded-2xl border border-border-light bg-surface-panel sm:w-80">
       <div className="flex items-center justify-between border-b border-border-light px-4 py-3">
         <h2 className="text-sm font-semibold text-text-primary">Chat</h2>
         <button
@@ -35,7 +41,18 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
         </button>
       </div>
 
-      <div ref={listRef} className="flex max-h-72 min-h-40 flex-col gap-2 overflow-y-auto p-3">
+      {/*
+        flex-1 (not a fixed max-h) so this list grows to fill whatever height
+        the panel is stretched to by CallRoom's flex-row layout, matching the
+        video tiles' bottom edge — a fixed cap here is what left dead space
+        below the input any time the panel was taller than the message list.
+        min-h-0 is load-bearing, not decorative: a flex item's default
+        min-height is "at least as tall as its content," which silently wins
+        over flex-1/max-h and made this grow to fit every message instead of
+        scrolling — min-h-0 lets it actually shrink to the space available so
+        overflow-y-auto can do its job.
+      */}
+      <div ref={listRef} className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-3">
         {messages.length === 0 ? (
           <p className="py-6 text-center text-xs text-text-muted">No messages yet.</p>
         ) : (
