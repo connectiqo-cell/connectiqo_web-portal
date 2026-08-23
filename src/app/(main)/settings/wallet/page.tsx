@@ -18,10 +18,24 @@ import { useAuth } from "@/contexts/AuthContext";
 import { earningsApi, type EarningRow } from "@/lib/api/earningsApi";
 import { paymentApi, type WithdrawalRequestRow } from "@/lib/api/paymentApi";
 import { payoutApi, type AccountStatusResponse } from "@/lib/api/payoutApi";
+import { useWithdrawalRequestsRealtime } from "@/lib/hooks/useWithdrawalRequestsRealtime";
 import { ROUTES } from "@/lib/routes";
 
 const SUPPORT_EMAIL = "contact@connectiqo.com";
 const MIN_WITHDRAWAL = 5000;
+
+const WITHDRAWAL_STATUS_STYLE: Record<string, string> = {
+  pending: "bg-accent-warning/15 text-accent-warning",
+  processing: "bg-accent-link/15 text-accent-link",
+  completed: "bg-accent-success/15 text-accent-success",
+  rejected: "bg-accent-error/15 text-accent-error",
+};
+const WITHDRAWAL_STATUS_LABEL: Record<string, string> = {
+  pending: "Pending",
+  processing: "Processing",
+  completed: "Completed",
+  rejected: "Rejected",
+};
 
 type Period = "week" | "month" | "year";
 
@@ -91,6 +105,11 @@ export default function WalletPage() {
     };
   }, [user]);
 
+  useWithdrawalRequestsRealtime(
+    user?.id,
+    useMemo(() => () => { if (user) void loadWallet(user.id); }, [user]),
+  );
+
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
@@ -119,7 +138,9 @@ export default function WalletPage() {
   }, [user, period]);
 
   const hasUpi = Boolean(payoutStatus?.upiId);
-  const canWithdraw = wallet.balance >= MIN_WITHDRAWAL && hasUpi;
+  const hasBankDetails = Boolean(payoutStatus?.bankAccount && payoutStatus?.ifsc);
+  const hasPayoutMethod = hasUpi || hasBankDetails;
+  const canWithdraw = wallet.balance >= MIN_WITHDRAWAL && hasPayoutMethod;
   const pending = withdrawals.filter((w) => w.status === "pending" || w.status === "processing");
   const pendingTotal = pending.reduce((sum, w) => sum + w.amount, 0);
 
@@ -138,7 +159,7 @@ export default function WalletPage() {
       description: `Withdrawal to ${w.upi_id || "bank"}`,
       type: "Withdrawal",
       amount: -w.amount,
-      status: w.status === "completed" ? "Success" : w.status === "rejected" ? "Failed" : "Processing",
+      status: w.status,
     }));
     return [...earningRows, ...withdrawalRows].sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
@@ -176,8 +197,11 @@ export default function WalletPage() {
       setError(`Minimum withdrawal is ${fmtCompact(MIN_WITHDRAWAL)}`);
       return;
     }
+    const destination =
+      payoutStatus?.upiId ||
+      (payoutStatus?.bankAccount ? `${payoutStatus.bankAccount} (${payoutStatus.ifsc})` : "your saved payout details");
     const confirmed = window.confirm(
-      `Send ${fmtCompact(value)} to ${payoutStatus?.upiId}?\n\nProcessed within 1–2 business days.`,
+      `Send ${fmtCompact(value)} to ${destination}?\n\nProcessed within 1–2 business days.`,
     );
     if (!confirmed) return;
 
@@ -316,8 +340,14 @@ export default function WalletPage() {
                           {row.amount >= 0 ? "+" : "−"}₹{Math.abs(row.amount).toFixed(0)}
                         </td>
                         <td className="py-3 text-right">
-                          <span className="rounded-full bg-surface-chip px-2 py-1 text-[11px] font-semibold text-text-secondary">
-                            {row.status}
+                          <span
+                            className={`rounded-full px-2 py-1 text-[11px] font-semibold ${
+                              row.type === "Withdrawal"
+                                ? WITHDRAWAL_STATUS_STYLE[row.status] || "bg-surface-chip text-text-secondary"
+                                : "bg-surface-chip text-text-secondary"
+                            }`}
+                          >
+                            {row.type === "Withdrawal" ? WITHDRAWAL_STATUS_LABEL[row.status] || row.status : row.status}
                           </span>
                         </td>
                       </tr>
@@ -345,7 +375,7 @@ export default function WalletPage() {
             <p className="mb-3 text-2xl font-bold text-text-primary">{fmtCompact(wallet.balance)}</p>
             <p className="mb-4 text-xs text-text-muted">Available for payout</p>
 
-            {!hasUpi ? (
+            {!hasPayoutMethod ? (
               <Link
                 href={ROUTES.payoutSetup}
                 className="flex items-center justify-center gap-1.5 rounded-full border border-border-light px-4 py-2.5 text-xs font-semibold text-text-secondary hover:text-text-primary"
@@ -364,7 +394,7 @@ export default function WalletPage() {
                 Withdraw Earnings
               </button>
             )}
-            {!canWithdraw && hasUpi ? (
+            {!canWithdraw && hasPayoutMethod ? (
               <p className="mt-2 text-[11px] text-text-muted">
                 Minimum {fmtCompact(MIN_WITHDRAWAL)} balance required to withdraw.
               </p>
@@ -424,6 +454,37 @@ export default function WalletPage() {
                 <span className="font-semibold text-text-secondary">{fmtCompact(pendingTotal)}</span>
               </div>
             </div>
+          </div>
+
+          <div className="rounded-2xl border border-border-light bg-surface-panel p-4">
+            <h3 className="mb-3 text-sm font-bold text-text-primary">Withdrawal History</h3>
+            {withdrawals.length === 0 ? (
+              <p className="text-xs text-text-muted">No withdrawal requests yet.</p>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {withdrawals.slice(0, 5).map((w) => (
+                  <div key={w.id} className="flex flex-col gap-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-semibold text-text-primary">{fmtCompact(w.amount)}</span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                          WITHDRAWAL_STATUS_STYLE[w.status] || "bg-surface-chip text-text-secondary"
+                        }`}
+                      >
+                        {WITHDRAWAL_STATUS_LABEL[w.status] || w.status}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-text-muted">
+                      {new Date(w.created_at).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}
+                      {w.status === "completed" && w.payout_reference ? ` · Ref ${w.payout_reference}` : ""}
+                    </p>
+                    {w.status === "rejected" && w.rejected_reason ? (
+                      <p className="text-[11px] text-accent-error">{w.rejected_reason}</p>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="rounded-2xl border border-border-light bg-surface-panel p-4">

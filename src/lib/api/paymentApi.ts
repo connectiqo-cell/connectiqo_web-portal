@@ -53,10 +53,18 @@ export interface TransactionRow {
 
 export interface WithdrawalRequestRow {
   id: string;
+  mentor_id: string;
   amount: number;
   upi_id: string | null;
+  bank_account: string | null;
   status: string;
+  admin_note: string | null;
+  payout_method: string | null;
+  payout_reference: string | null;
+  paid_at: string | null;
+  rejected_reason: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 /** Ported (subset used by booking/checkout) from connectfront/src/api/paymentApi.js. */
@@ -116,7 +124,10 @@ export const paymentApi = {
     }
   },
 
-  /** Triggers a RazorpayX UPI payout via Edge Function. */
+  /**
+   * Creates a manual withdrawal request for admin fulfilment — an operator
+   * settles it via UPI/IMPS/NEFT and records the UTR. Not a RazorpayX payout.
+   */
   requestWithdrawal: async (params: { mentorId: string; amount: number }) => {
     try {
       return await invokeFunction("process-withdrawal", params);
@@ -150,7 +161,9 @@ export const paymentApi = {
     try {
       const { data, error } = await supabase
         .from("withdrawal_requests")
-        .select("id, amount, upi_id, status, created_at")
+        .select(
+          "id, mentor_id, amount, upi_id, bank_account, status, admin_note, payout_method, payout_reference, paid_at, rejected_reason, created_at, updated_at",
+        )
         .eq("mentor_id", mentorId)
         .order("created_at", { ascending: false });
       if (error) throw error;

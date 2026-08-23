@@ -82,9 +82,10 @@ export default function TermsOfServicePage() {
 
       <Section title="7. Mentor payouts">
         <p>
-          Mentors receive session earnings, less the applicable platform fee, via the payout
-          method configured in Settings. Payout timing and KYC requirements are governed by
-          our payment processor&apos;s policies.
+          Mentors receive session earnings, less the applicable platform fee, into an in-app
+          wallet. Withdrawals are requested against the UPI ID configured in Settings and are
+          settled manually by our team via UPI, IMPS, or NEFT, typically within 1–2 business
+          days of the request.
         </p>
       </Section>
 

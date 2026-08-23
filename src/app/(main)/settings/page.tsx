@@ -366,7 +366,7 @@ export default function SettingsHubPage() {
                 <Landmark size={16} className="shrink-0 text-accent-link" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-text-primary">Payouts</p>
-                  <p className="text-xs text-text-muted">Manage bank accounts and payouts</p>
+                  <p className="text-xs text-text-muted">Manage your payout UPI ID</p>
                 </div>
               </Link>
               <Link

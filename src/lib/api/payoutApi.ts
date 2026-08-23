@@ -1,32 +1,32 @@
 import { createClient } from "@/lib/supabase/client";
 
 export interface AccountStatusResponse {
-  status: "not_started" | "active" | "suspended" | "needs_clarification" | "pending";
+  status: "not_started" | "active";
   accountId: string | null;
   upiId: string | null;
+  bankAccount: string | null;
+  ifsc: string | null;
+  accountHolderName: string | null;
 }
 
-/** Ported from connectfront/src/api/payoutApi.js — Razorpay Route linked-account setup. */
+/** Manual payout model — no Razorpay account, just saved UPI and/or bank details. */
 export const payoutApi = {
   createLinkedAccount: async (params: {
     mentorId: string;
-    legalName: string;
-    phone: string;
-    addressLine1: string;
-    city: string;
-    state: string;
-    postalCode: string;
     upiId?: string;
+    bankAccount?: string;
+    ifsc?: string;
+    accountHolderName?: string;
   }) => {
     const supabase = createClient();
     try {
       const { data, error } = await supabase.functions.invoke("create-linked-account", {
         body: params,
       });
-      if (error) throw new Error(error.message || "Failed to create payout account");
+      if (error) throw new Error(error.message || "Failed to save payout details");
       return data;
     } catch (error) {
-      throw new Error((error as Error)?.message || "Failed to create payout account");
+      throw new Error((error as Error)?.message || "Failed to save payout details");
     }
   },
 
