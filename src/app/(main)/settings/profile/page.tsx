@@ -26,6 +26,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { MentorSocialLinks } from "@/components/mentor/MentorSocialLinks";
 import { ReviewCard } from "@/components/mentor/ReviewCard";
+import { ShareProfileModal } from "@/components/mentor/ShareProfileModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { type MentorProfileRow, mentorApi } from "@/lib/api/mentorApi";
 import { profileApi } from "@/lib/api/profileApi";
@@ -211,19 +212,29 @@ export default function ProfileChannelPage() {
           </div>
         </div>
         {/*
-          self-start overrides the row's items-end just for this button —
-          without it, Edit Profile bottom-aligns with its sibling (avatar +
-          name column), which got taller once the social icons were added
-          below the role line, pushing the button down with it instead of
-          keeping it level with the name heading.
+          self-start overrides the row's items-end just for this button
+          group — without it, the buttons bottom-align with their sibling
+          (avatar + name column), which got taller once the social icons
+          were added below the role line, pushing them down with it instead
+          of keeping them level with the name heading.
         */}
-        <Link
-          href={ROUTES.editProfileForm}
-          className="flex w-fit items-center gap-1.5 rounded-full border border-border-light px-4 py-2 text-sm font-semibold text-text-secondary hover:text-text-primary sm:self-start"
-        >
-          <Pencil size={14} />
-          Edit Profile
-        </Link>
+        <div className="flex items-center gap-2 sm:self-start">
+          {isMentor && user ? (
+            <ShareProfileModal
+              mentorId={user.id}
+              name={profile?.name || "Mentor"}
+              username={profile?.username}
+              specialization={mentor?.specialization}
+            />
+          ) : null}
+          <Link
+            href={ROUTES.editProfileForm}
+            className="flex w-fit items-center gap-1.5 rounded-full border border-border-light px-4 py-2 text-sm font-semibold text-text-secondary hover:text-text-primary"
+          >
+            <Pencil size={14} />
+            Edit Profile
+          </Link>
+        </div>
       </div>
 
       {categories.length > 0 ? (

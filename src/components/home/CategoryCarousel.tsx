@@ -5,7 +5,7 @@ import Link from "next/link";
 import OptimizedImage from "@/components/OptimizedImage";
 import { useEffect, useRef, useState } from "react";
 
-import type { MentorProfileRow } from "@/lib/api/mentorApi";
+import { mentorSlug, type MentorProfileRow } from "@/lib/api/mentorApi";
 import { ROUTES } from "@/lib/routes";
 
 interface CategoryCarouselProps {
@@ -101,7 +101,7 @@ export function CategoryCarousel({
             return (
               <Link
                 key={mentor.id}
-                href={ROUTES.mentorProfile(mentor.id)}
+                href={ROUTES.mentorProfile(mentorSlug(mentor))}
                 className="group flex w-44 sm:w-56 shrink-0 flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-3 sm:p-4 transition-all hover:border-border-default hover:shadow-lg"
               >
                 {/* Avatar */}

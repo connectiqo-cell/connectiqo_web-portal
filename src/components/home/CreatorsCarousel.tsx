@@ -3,7 +3,7 @@
 import { Star, Users, Check } from "lucide-react";
 import Link from "next/link";
 import OptimizedImage from "@/components/OptimizedImage";
-import { type MentorProfileRow } from "@/lib/api/mentorApi";
+import { mentorSlug, type MentorProfileRow } from "@/lib/api/mentorApi";
 import { ROUTES } from "@/lib/routes";
 
 interface CreatorsCarouselProps {
@@ -29,7 +29,7 @@ export function CreatorsCarousel({ mentors }: CreatorsCarouselProps) {
         {mentors.map((mentor) => (
           <Link
             key={mentor.id}
-            href={ROUTES.mentorProfile(mentor.id)}
+            href={ROUTES.mentorProfile(mentorSlug(mentor))}
             className="flex shrink-0 w-64 flex-col gap-2 rounded-2xl border border-border-light bg-surface-panel p-3 transition-all hover:shadow-lg"
           >
             {/* Avatar/Image */}

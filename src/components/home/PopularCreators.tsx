@@ -5,7 +5,7 @@ import Link from "next/link";
 import OptimizedImage from "@/components/OptimizedImage";
 import { useEffect, useRef, useState } from "react";
 
-import { type MentorProfileRow } from "@/lib/api/mentorApi";
+import { mentorSlug, type MentorProfileRow } from "@/lib/api/mentorApi";
 import { ROUTES } from "@/lib/routes";
 
 export function PopularCreators({
@@ -73,7 +73,7 @@ export function PopularCreators({
           {creators.map((creator) => (
             <Link
               key={creator.id}
-              href={ROUTES.mentorProfile(creator.id)}
+              href={ROUTES.mentorProfile(mentorSlug(creator))}
               data-creator-card
               className="group flex w-52 shrink-0 flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-3 transition-all hover:border-gray-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer"
             >

@@ -3,7 +3,7 @@
 import { ChevronLeft, ChevronRight, Star, BadgeCheck, User } from "lucide-react";
 import Link from "next/link";
 import OptimizedImage from "@/components/OptimizedImage";
-import { type MentorProfileRow } from "@/lib/api/mentorApi";
+import { mentorSlug, type MentorProfileRow } from "@/lib/api/mentorApi";
 import { ROUTES } from "@/lib/routes";
 import { useHorizontalScroll } from "@/lib/hooks/useHorizontalScroll";
 
@@ -53,7 +53,7 @@ export function PopularCreatorsCarousel({
             {creators.map((creator) => (
               <Link
                 key={creator.id}
-                href={ROUTES.mentorProfile(creator.id)}
+                href={ROUTES.mentorProfile(mentorSlug(creator))}
                 data-card
                 className="group flex h-32 w-80 shrink-0 flex-row items-center gap-4 overflow-hidden rounded-2xl border border-border-light bg-surface-panel p-4 hover:shadow-lg transition-all duration-300"
               >

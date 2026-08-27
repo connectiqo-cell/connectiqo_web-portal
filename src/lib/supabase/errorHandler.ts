@@ -43,6 +43,9 @@ export function getSupabaseErrorMessage(error: unknown): string {
     return "Password is too weak. Use at least 8 characters with letters and numbers.";
   }
 
+  if (code === "23505" && message.toLowerCase().includes("username")) {
+    return "That username is already taken. Try another one.";
+  }
   if (code === "23505") return "This record already exists.";
   if (code === "23502") return "A required field is missing.";
   if (code === "42P01") return "Database error. Please contact support.";

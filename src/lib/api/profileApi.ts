@@ -140,6 +140,25 @@ export const profileApi = {
     }
   },
 
+  /**
+   * Case-insensitive check, excluding the current user's own row (so re-saving your own username doesn't flag itself).
+   * Goes through the is_username_available RPC rather than a direct `profiles` read — RLS
+   * doesn't allow reading another user's profile row directly (see the migration for is_username_available).
+   */
+  isUsernameAvailable: async (username: string, currentUserId: string): Promise<boolean> => {
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase.rpc("is_username_available", {
+        p_username: username,
+        p_user_id: currentUserId,
+      });
+      if (error) throw error;
+      return Boolean(data);
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
   updateProfile: async ({
     userId,
     name,

@@ -10,7 +10,7 @@ import { HomeSearchBar } from "@/components/HomeSearchBar";
 import { LanguageMenu } from "@/components/LanguageMenu";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import type { MentorCategoryRow } from "@/lib/api/contentApi";
-import type { MentorProfileRow, PlatformStats } from "@/lib/api/mentorApi";
+import { mentorSlug, type MentorProfileRow, type PlatformStats } from "@/lib/api/mentorApi";
 import { ROUTES } from "@/lib/routes";
 import { getCategoryIcon } from "@/lib/utils/categoryIcons";
 import { useHorizontalScroll } from "@/lib/hooks/useHorizontalScroll";
@@ -140,7 +140,7 @@ function TrendingCreatorsCarousel({
             return (
               <Link
                 key={mentor.id}
-                href={ROUTES.mentorProfile(mentor.id)}
+                href={ROUTES.mentorProfile(mentorSlug(mentor))}
                 className="group flex w-[84vw] max-w-[18rem] shrink-0 snap-start flex-col gap-3 rounded-xl border border-border-light bg-surface-panel p-3 transition-all hover:border-accent-link hover:shadow-lg sm:w-[22rem] md:w-auto md:max-w-none md:flex-row md:gap-4 md:p-4 xl:w-full"
               >
                 {/* Avatar - Left Side */}
