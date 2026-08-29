@@ -1,0 +1,15 @@
+Q1) Why there is no /backend here
+
+Concretely, here's what's doing backend work in this codebase:
+
+Baas + serverless
+Supabase Postgres + Auth — the actual database, user accounts, sessions.
+Row Level Security (RLS) policies — access control enforced inside the database itself, not just in frontend code. Even if someone bypassed the app entirely and hit the API directly, Postgres refuses unauthorized reads/writes.
+14 Supabase Edge Functions (server-side Deno functions, holding real secrets — Razorpay keys, VideoSDK keys, Firebase service account) doing things a client can never be trusted to do:
+create-razorpay-order / verify-razorpay-payment — server-calculates prices, verifies Razorpay's HMAC signature, creates the booking atomically
+get-videosdk-token — mints video call tokens using a secret API key
+transfer-session-payout, process-withdrawal — real money movement
+notify-booking-status, notify-new-booking, notify-reschedule — push notifications
+razorpay-webhook, verify-video-subscription, verify-play-purchase, verify-apple-purchase, create-linked-account, get-account-status
+Postgres stored procedures (SECURITY DEFINER functions) like complete_session_payment — atomic, server-enforced business logic (crediting a mentor's wallet) that can't be tampered with from the client.
+So the honest framing: there's no separate backend/ folder with an Express server, because none is needed — Supabase is the backend (database + auth + realtime), and the Edge Functions are the equivalent of API route handlers for anything that needs a secret key or server-side trust. It's architecturally different from a traditional split, not backend-less.

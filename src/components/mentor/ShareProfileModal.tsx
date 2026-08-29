@@ -14,9 +14,42 @@ interface ShareProfileModalProps {
   specialization?: string | null;
 }
 
+/**
+ * navigator.clipboard requires a secure context (https://, or localhost) —
+ * on a plain-HTTP LAN address (e.g. testing at http://172.x.x.x:3000) it's
+ * undefined, so writeText() throws immediately and silently. Falls back to
+ * the legacy execCommand("copy") path, which works without that
+ * restriction in most browsers, so copying still works during LAN testing.
+ */
+async function copyText(text: string): Promise<boolean> {
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // fall through to the legacy path below
+    }
+  }
+  try {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(textarea);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
 export function ShareProfileModal({ mentorId, name, username, specialization }: ShareProfileModalProps) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
 
   const path = ROUTES.mentorProfile(username || mentorId);
   const origin = typeof window !== "undefined" ? window.location.origin : "";
@@ -25,29 +58,35 @@ export function ShareProfileModal({ mentorId, name, username, specialization }: 
 
   const close = () => {
     setOpen(false);
-    setTimeout(() => setCopied(false), 200);
+    setTimeout(() => {
+      setCopied(false);
+      setCopyFailed(false);
+    }, 200);
   };
 
   const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(url);
+    const ok = await copyText(url);
+    if (ok) {
+      setCopyFailed(false);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    } catch {
-      // clipboard permission denied — nothing to do
+    } else {
+      setCopied(false);
+      setCopyFailed(true);
+      setTimeout(() => setCopyFailed(false), 2500);
     }
   };
 
   const handleShare = async () => {
-    try {
-      if (navigator.share) {
+    if (navigator.share) {
+      try {
         await navigator.share({ title: `${name} on Connectiqo`, url });
-        return;
+      } catch {
+        // user cancelled the native share sheet — not a failure, nothing to do
       }
-      await handleCopy();
-    } catch {
-      // user cancelled the share sheet — nothing to do
+      return;
     }
+    await handleCopy();
   };
 
   return (
@@ -93,7 +132,7 @@ export function ShareProfileModal({ mentorId, name, username, specialization }: 
               </div>
 
               <div className="flex w-full items-center gap-2 rounded-xl border border-border-light bg-surface-sheet px-3 py-2">
-                <span className="min-w-0 flex-1 truncate font-mono text-xs text-text-secondary">
+                <span className="min-w-0 flex-1 select-all truncate font-mono text-xs text-text-secondary">
                   {displayUrl}
                 </span>
                 <button
@@ -106,6 +145,12 @@ export function ShareProfileModal({ mentorId, name, username, specialization }: 
                   {copied ? "Copied" : "Copy"}
                 </button>
               </div>
+
+              {copyFailed ? (
+                <p className="text-center text-xs text-accent-error">
+                  Couldn&apos;t copy automatically — tap the link above to select it, then copy manually.
+                </p>
+              ) : null}
 
               {!username ? (
                 <p className="text-center text-xs text-text-muted">

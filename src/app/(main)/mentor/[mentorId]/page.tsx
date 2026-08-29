@@ -9,6 +9,7 @@ import { MentorProfileCta } from "@/components/mentor/MentorProfileCta";
 import { MentorSocialLinks } from "@/components/mentor/MentorSocialLinks";
 import { MentorVideoLibrary } from "@/components/mentor/MentorVideoLibrary";
 import { ReviewCard } from "@/components/mentor/ReviewCard";
+import { ShareProfileModal } from "@/components/mentor/ShareProfileModal";
 import { mentorApi } from "@/lib/api/mentorApi";
 import { reviewsApi } from "@/lib/api/reviewsApi";
 import { videoLibraryApi } from "@/lib/api/videoLibraryApi";
@@ -85,7 +86,15 @@ export default async function MentorProfilePage({ params }: PageProps) {
         <div className="flex flex-1 flex-col gap-2">
           <div className="flex items-start justify-between gap-3">
             <h1 className="text-2xl font-bold text-text-primary">{name}</h1>
-            <ReportUserModal reportedUserId={mentorId} contextType="profile" />
+            <div className="flex shrink-0 items-center gap-2">
+              <ShareProfileModal
+                mentorId={mentorId}
+                name={name}
+                username={username}
+                specialization={mentor.specialization}
+              />
+              <ReportUserModal reportedUserId={mentorId} contextType="profile" />
+            </div>
           </div>
           {username ? <p className="text-sm text-accent-link">@{username}</p> : null}
           <p className="text-text-secondary">{mentor.specialization || "Mentor"}</p>
