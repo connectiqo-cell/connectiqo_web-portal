@@ -23,7 +23,9 @@ export default async function Image() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
+          alignItems: "center",
           padding: "88px",
+          textAlign: "center",
           backgroundColor: "#000008",
           backgroundImage:
             "radial-gradient(circle at 88% 12%, rgba(94,234,212,0.20), transparent 55%), radial-gradient(circle at 6% 92%, rgba(240,216,117,0.16), transparent 50%)",
