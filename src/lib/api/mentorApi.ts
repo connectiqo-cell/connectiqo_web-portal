@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { getSupabaseErrorMessage } from "@/lib/supabase/errorHandler";
+import { escapeLikePattern } from "@/lib/utils/username";
 import {
   buildCategoryMatchOrFilter,
   isOtherCategoryLabel,
@@ -37,6 +38,11 @@ export interface MentorProfileRow {
   } | null;
 }
 
+/** Prefer the mentor's username for shareable links; fall back to their id for mentors who haven't set one. */
+export function mentorSlug(mentor: Pick<MentorProfileRow, "id" | "profiles">): string {
+  return mentor.profiles?.username || mentor.id;
+}
+
 export interface PlatformStats {
   mentorCount: number;
   sessionCount: number;
@@ -61,17 +67,48 @@ export const MENTOR_SELECT = `
   )
 `;
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * Ported (subset used by discovery pages) from connectfront/src/api/mentorApi.js.
  * Every function takes the Supabase client as its first argument so it works
  * from both Server Components (server client) and client components (browser client).
  */
 export const mentorApi = {
+  /**
+   * The public `/mentor/:identifier` route accepts either the mentor's raw
+   * UUID (old links, internal callers that only have an id) or their
+   * `profiles.username` (new clean/shareable links) — resolves either to
+   * the UUID that the rest of the API surface expects.
+   *
+   * Queries through mentor_profiles with an inner-joined profiles filter
+   * (the same shape as MENTOR_SELECT below) rather than `.from("profiles")`
+   * directly — RLS allows anonymous visitors to read profiles via that join
+   * but denies a bare top-level select on the profiles table outright.
+   */
+  resolveMentorId: async (supabase: SupabaseClient, identifier: string): Promise<string | null> => {
+    if (UUID_RE.test(identifier)) return identifier;
+    try {
+      const { data, error } = await supabase
+        .from("mentor_profiles")
+        .select("id, profiles!inner(username)")
+        .ilike("profiles.username", escapeLikePattern(identifier))
+        .maybeSingle();
+      if (error) throw error;
+      return data?.id ?? null;
+    } catch {
+      return null;
+    }
+  },
+
   getMentorWithProfile: async (
     supabase: SupabaseClient,
-    mentorId: string,
+    identifier: string,
   ): Promise<MentorProfileRow | null> => {
     try {
+      const mentorId = await mentorApi.resolveMentorId(supabase, identifier);
+      if (!mentorId) return null;
+
       const { data, error } = await supabase
         .from("mentor_profiles")
         .select(

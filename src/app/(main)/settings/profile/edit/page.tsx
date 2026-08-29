@@ -13,6 +13,7 @@ import { profileApi } from "@/lib/api/profileApi";
 import { MENTOR_CATEGORIES } from "@/lib/constants/mentorCategories";
 import { ROUTES } from "@/lib/routes";
 import { toggleMentorCategory } from "@/lib/utils/mentorCategories";
+import { sanitizeUsernameInput, usernameFormatError } from "@/lib/utils/username";
 
 export default function EditProfilePage() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function EditProfilePage() {
 
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
+  const [usernameCheck, setUsernameCheck] = useState<{ value: string; available: boolean } | null>(null);
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -121,6 +123,30 @@ export default function EditProfilePage() {
       cancelled = true;
     };
   }, [user, isMentor]);
+
+  const usernameError = usernameFormatError(username);
+  // Derived, not stored: once `username` moves past what usernameCheck was
+  // computed for, this naturally falls back to null/checking on its own —
+  // no effect needed to explicitly "reset" state when the input changes.
+  const usernameAvailable = usernameCheck?.value === username ? usernameCheck.available : null;
+  const checkingUsername = Boolean(user && username && !usernameError && usernameAvailable === null);
+
+  useEffect(() => {
+    if (!user || !username || usernameError) return;
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      try {
+        const available = await profileApi.isUsernameAvailable(username, user.id);
+        if (!cancelled) setUsernameCheck({ value: username, available });
+      } catch {
+        // leave unresolved — the DB unique constraint still guards the actual save
+      }
+    }, 450);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [user, username, usernameError]);
 
   const handleToggleInterest = (category: string) => {
     setInterests((prev) => toggleMentorCategory(prev, category));
@@ -225,6 +251,14 @@ export default function EditProfilePage() {
 
   const handleSave = async () => {
     if (!user) return;
+    if (usernameError) {
+      setError(usernameError);
+      return;
+    }
+    if (usernameAvailable === false) {
+      setError("That username is already taken. Try another one.");
+      return;
+    }
     setSaving(true);
     setError("");
     setSaved(false);
@@ -401,9 +435,21 @@ export default function EditProfilePage() {
           </span>
           <input
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary focus:outline-none"
+            onChange={(e) => setUsername(sanitizeUsernameInput(e.target.value))}
+            placeholder="e.g. nishadnikam"
+            className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
           />
+          {usernameError ? (
+            <span className="text-xs text-accent-error">{usernameError}</span>
+          ) : checkingUsername ? (
+            <span className="text-xs text-text-muted">Checking availability…</span>
+          ) : usernameAvailable === false ? (
+            <span className="text-xs text-accent-error">Already taken.</span>
+          ) : usernameAvailable === true ? (
+            <span className="text-xs text-accent-success">
+              app.connectiqo.com/mentor/{username}
+            </span>
+          ) : null}
         </label>
       </div>
 
@@ -665,7 +711,7 @@ export default function EditProfilePage() {
         <button
           type="button"
           onClick={handleSave}
-          disabled={saving || sectionsLoading}
+          disabled={saving || sectionsLoading || Boolean(usernameError) || usernameAvailable === false}
           className="flex h-11 w-fit items-center justify-center rounded-full px-6 text-sm font-semibold text-text-on-accent disabled:opacity-60"
           style={{ backgroundImage: "var(--gradient-button-primary)" }}
         >

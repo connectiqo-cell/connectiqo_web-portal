@@ -2,7 +2,7 @@ import { User } from "lucide-react";
 import Link from "next/link";
 import OptimizedImage from "@/components/OptimizedImage";
 
-import type { MentorProfileRow } from "@/lib/api/mentorApi";
+import { mentorSlug, type MentorProfileRow } from "@/lib/api/mentorApi";
 import { ROUTES } from "@/lib/routes";
 
 import { StarRating } from "./StarRating";
@@ -13,7 +13,7 @@ export function MentorCard({ mentor }: { mentor: MentorProfileRow }) {
 
   return (
     <Link
-      href={ROUTES.mentorProfile(mentor.id)}
+      href={ROUTES.mentorProfile(mentorSlug(mentor))}
       className="flex w-full flex-col gap-2.5 rounded-2xl border border-border-light bg-surface-panel p-3 transition-colors hover:border-border-default"
     >
       

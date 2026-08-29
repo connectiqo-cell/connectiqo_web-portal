@@ -24,13 +24,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export const revalidate = 120;
 
 export default async function MentorReviewsPage({ params }: PageProps) {
-  const { mentorId } = await params;
+  const { mentorId: identifier } = await params;
   const supabase = createPublicClient();
 
-  const mentor = await mentorApi.getMentorWithProfile(supabase, mentorId).catch(() => null);
+  const mentor = await mentorApi.getMentorWithProfile(supabase, identifier).catch(() => null);
   if (!mentor) notFound();
 
-  const reviews = await reviewsApi.getReviewsForMentor(supabase, mentorId).catch(() => []);
+  const reviews = await reviewsApi.getReviewsForMentor(supabase, mentor.id).catch(() => []);
   const name = mentor.profiles?.name || "Mentor";
 
   const total = reviews.length;
@@ -43,7 +43,7 @@ export default async function MentorReviewsPage({ params }: PageProps) {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-6 py-12">
       <Link
-        href={ROUTES.mentorProfile(mentorId)}
+        href={ROUTES.mentorProfile(identifier)}
         className="flex w-fit items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary"
       >
         <ArrowLeft size={16} />

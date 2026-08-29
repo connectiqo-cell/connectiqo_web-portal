@@ -36,11 +36,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export const revalidate = 120;
 
 export default async function MentorProfilePage({ params }: PageProps) {
-  const { mentorId } = await params;
+  const { mentorId: identifier } = await params;
   const supabase = createPublicClient();
 
-  const mentor = await mentorApi.getMentorWithProfile(supabase, mentorId).catch(() => null);
+  const mentor = await mentorApi.getMentorWithProfile(supabase, identifier).catch(() => null);
   if (!mentor) notFound();
+
+  // Route param may be a username; every DB call below needs the real UUID.
+  const mentorId = mentor.id;
 
   const [reviews, subscriberCount, videos] = await Promise.all([
     reviewsApi.getReviewsForMentor(supabase, mentorId).catch(() => []),
@@ -141,7 +144,7 @@ export default async function MentorProfilePage({ params }: PageProps) {
           </h2>
           {reviews.length > 0 ? (
             <Link
-              href={ROUTES.mentorReviews(mentorId)}
+              href={ROUTES.mentorReviews(identifier)}
               className="text-xs font-semibold text-accent-link"
             >
               See all
