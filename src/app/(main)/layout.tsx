@@ -20,11 +20,31 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
+const SITE_URL = "https://app.connectiqo.com";
+const SITE_DESCRIPTION =
+  "Book live 1-on-1 video mentorship sessions with expert mentors and creators on Connectiqo. Connect, learn, grow, and earn.";
 
-  title: "Connectiqo — Live 1-on-1 Mentorship",
-  description:
-    "Book live 1-on-1 video mentorship sessions with expert mentors on Connectiqo.",
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Connectiqo — Live 1-on-1 Mentorship",
+    template: "%s | Connectiqo",
+  },
+  description: SITE_DESCRIPTION,
+  keywords: ["mentorship", "1-on-1 video call", "live mentoring", "online coaching", "creator sessions"],
+  openGraph: {
+    type: "website",
+    siteName: "Connectiqo",
+    title: "Connectiqo — Live 1-on-1 Mentorship",
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Connectiqo — Live 1-on-1 Mentorship",
+    description: SITE_DESCRIPTION,
+  },
 };
 
 const NO_FLASH_THEME_SCRIPT = `

@@ -6,7 +6,9 @@ import { normalizeCategoryBucket, parseMentorCategories } from "@/lib/utils/ment
 const BASE_URL = "https://app.connectiqo.com";
 
 const STATIC_ROUTES: MetadataRoute.Sitemap = [
-  { url: BASE_URL, changeFrequency: "daily", priority: 1 },
+  // "/" itself is no longer listed — it now just redirects logged-out
+  // visitors out to the marketing site (connectiqo.com), so it has no
+  // content of its own worth indexing here.
   { url: `${BASE_URL}/discover`, changeFrequency: "daily", priority: 0.9 },
   { url: `${BASE_URL}/privacy`, changeFrequency: "yearly", priority: 0.3 },
   { url: `${BASE_URL}/terms`, changeFrequency: "yearly", priority: 0.3 },
