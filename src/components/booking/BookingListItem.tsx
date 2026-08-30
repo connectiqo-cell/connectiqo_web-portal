@@ -142,18 +142,18 @@ export function BookingListItem({
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
-        <span className={`w-fit rounded-full px-3 py-1.5 sm:px-2.5 sm:py-1 text-xs font-semibold ${STATUS_STYLES[label] || "bg-surface-chip text-text-secondary"}`}>
+      <div className="flex flex-row flex-wrap items-center gap-2">
+        <span className={`w-fit rounded-full px-3 py-1.5 text-xs font-semibold ${STATUS_STYLES[label] || "bg-surface-chip text-text-secondary"}`}>
           {label}
         </span>
         <div className="flex flex-wrap gap-2 sm:gap-1.5">
           {label === "Booked" ? (
             <Link
               href={ROUTES.call(booking.id)}
-              className="flex items-center justify-center gap-1 rounded-full px-3 py-2 sm:px-2.5 sm:py-1 text-xs font-semibold text-text-on-accent shadow-sm min-h-10 sm:min-h-0"
+              className="flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold text-text-on-accent shadow-sm"
               style={{ backgroundImage: "var(--gradient-button-primary)" }}
             >
-              <Video size={14} className="sm:size-3" />
+              <Video size={13} />
               <span className="sm:hidden">Join Call</span>
               <span className="hidden sm:inline">Join</span>
             </Link>
@@ -164,17 +164,17 @@ export function BookingListItem({
                 href={recordingUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-1 rounded-full border border-border-light px-3 py-2 sm:px-2.5 sm:py-1 text-xs font-semibold text-text-secondary hover:text-text-primary min-h-10 sm:min-h-0"
+                className="flex items-center justify-center gap-1 rounded-full border border-border-light px-3 py-1.5 text-xs font-semibold text-text-secondary hover:text-text-primary"
               >
-                <Play size={14} className="sm:size-3" />
+                <Play size={13} />
                 <span className="sm:hidden">Replay</span>
               </a>
               <a
                 href={recordingUrl}
                 download
-                className="flex items-center justify-center gap-1 rounded-full border border-border-light px-3 py-2 sm:px-2.5 sm:py-1 text-xs font-semibold text-text-secondary hover:text-text-primary min-h-10 sm:min-h-0"
+                className="flex items-center justify-center gap-1 rounded-full border border-border-light px-3 py-1.5 text-xs font-semibold text-text-secondary hover:text-text-primary"
               >
-                <Download size={14} className="sm:size-3" />
+                <Download size={13} />
                 <span className="sm:hidden">Download</span>
               </a>
             </>
@@ -182,9 +182,9 @@ export function BookingListItem({
           {canReview ? (
             <Link
               href={ROUTES.review(booking.id)}
-              className="flex items-center justify-center gap-1 rounded-full bg-accent-primary/15 px-3 py-2 sm:px-2.5 sm:py-1 text-xs font-semibold text-accent-primary min-h-10 sm:min-h-0"
+              className="flex items-center justify-center gap-1 rounded-full bg-accent-primary/15 px-3 py-1.5 text-xs font-semibold text-accent-primary"
             >
-              <Star size={14} className="sm:size-3" />
+              <Star size={13} />
               <span className="sm:hidden">Rate Now</span>
               <span className="hidden sm:inline">Rate</span>
             </Link>
@@ -193,7 +193,7 @@ export function BookingListItem({
             <button
               type="button"
               onClick={() => onCancel!(booking.id)}
-              className="flex items-center justify-center px-3 py-2 sm:px-2 sm:py-1 text-xs font-semibold text-accent-error hover:text-accent-error hover:bg-accent-error/10 rounded-full min-h-10 sm:min-h-0"
+              className="flex items-center justify-center px-3 py-1.5 text-xs font-semibold text-accent-error hover:text-accent-error hover:bg-accent-error/10 rounded-full"
             >
               Cancel
             </button>

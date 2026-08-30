@@ -67,7 +67,7 @@ export function TopCategories({
             type="button"
             aria-label="Scroll left"
             onClick={() => scroll("left")}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border-light bg-surface-panel shadow-sm hover:bg-surface-chip"
+            className="hidden lg:flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border-light bg-surface-panel shadow-sm hover:bg-surface-chip"
           >
             <ChevronLeft className="w-4 h-4 text-text-secondary" />
           </button>
@@ -85,18 +85,18 @@ export function TopCategories({
                 key={id}
                 data-category-card
                 onClick={() => onSelectCategory(isSelected ? "" : name)}
-                className={`flex w-28 shrink-0 flex-col items-center justify-center gap-3 rounded-2xl border-2 transition-all px-3 py-4 text-center hover:shadow-md ${
+                className={`flex w-20 sm:w-28 shrink-0 flex-col items-center justify-center gap-2 sm:gap-3 rounded-2xl border-2 transition-all px-2 sm:px-3 py-3 sm:py-4 text-center hover:shadow-md ${
                   isSelected
                     ? "border-accent-link bg-accent-link/10"
                     : "border-border-light bg-surface-panel"
                 }`}
               >
                 <IconComponent
-                  className={`w-8 h-8 shrink-0 ${isSelected ? "text-accent-link" : "text-accent-link/80"}`}
+                  className={`w-6 h-6 sm:w-8 sm:h-8 shrink-0 ${isSelected ? "text-accent-link" : "text-accent-link/80"}`}
                   strokeWidth={1.5}
                 />
                 <span
-                  className={`text-sm font-semibold leading-snug ${isSelected ? "text-accent-link" : "text-text-primary"}`}
+                  className={`text-xs sm:text-sm font-semibold leading-snug ${isSelected ? "text-accent-link" : "text-text-primary"}`}
                 >
                   {name}
                 </span>
@@ -110,7 +110,7 @@ export function TopCategories({
             type="button"
             aria-label="Scroll right"
             onClick={() => scroll("right")}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border-light bg-surface-panel shadow-sm hover:bg-surface-chip"
+            className="hidden lg:flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border-light bg-surface-panel shadow-sm hover:bg-surface-chip"
           >
             <ChevronRight className="w-4 h-4 text-text-secondary" />
           </button>

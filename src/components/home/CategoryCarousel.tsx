@@ -156,11 +156,11 @@ export function CategoryCarousel({
           })}
         </div>
 
-        {/* Scroll Buttons */}
+        {/* Scroll Buttons — hidden on mobile, where touch-swipe drives the carousel and these would overlap card content */}
         {canScrollLeft && (
           <button
             onClick={() => scroll("left")}
-            className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full bg-white shadow-md p-2 hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 z-10"
+            className="hidden lg:block absolute left-0 top-1/2 -translate-y-1/2 rounded-full bg-white shadow-md p-2 hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 z-10"
             aria-label="Scroll left"
           >
             <ChevronRight size={18} className="rotate-180 text-text-primary" />
@@ -170,7 +170,7 @@ export function CategoryCarousel({
         {canScrollRight && (
           <button
             onClick={() => scroll("right")}
-            className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-white shadow-md p-2 hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 z-10"
+            className="hidden lg:block absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-white shadow-md p-2 hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 z-10"
             aria-label="Scroll right"
           >
             <ChevronRight size={18} className="text-text-primary" />

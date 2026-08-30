@@ -33,11 +33,11 @@ export function PopularCreatorsCarousel({
       </div>
 
       <div className="flex items-center gap-4">
-        {/* Previous Button */}
+        {/* Previous Button — hidden on mobile, where touch-swipe drives the carousel and there's no room to spare */}
         {canScrollLeft ? (
           <button
             onClick={() => scroll("left")}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border-light bg-surface-panel shadow-sm hover:bg-surface-chip transition-all"
+            className="hidden lg:flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border-light bg-surface-panel shadow-sm hover:bg-surface-chip transition-all"
             aria-label="Previous creators"
           >
             <ChevronLeft className="w-5 h-5 text-text-secondary" />
@@ -45,20 +45,20 @@ export function PopularCreatorsCarousel({
         ) : null}
 
         {/* Carousel Container */}
-        <div className="relative min-w-0 flex-1 overflow-hidden">
+        <div className="relative min-w-0 flex-1">
           <div
             ref={scrollRef}
-            className="flex gap-4 overflow-x-hidden scroll-smooth"
+            className="flex gap-3 sm:gap-4 overflow-x-auto scroll-smooth scrollbar-none"
           >
             {creators.map((creator) => (
               <Link
                 key={creator.id}
                 href={ROUTES.mentorProfile(mentorSlug(creator))}
                 data-card
-                className="group flex h-32 w-80 shrink-0 flex-row items-center gap-4 overflow-hidden rounded-2xl border border-border-light bg-surface-panel p-4 hover:shadow-lg transition-all duration-300"
+                className="group flex h-32 w-64 sm:w-80 shrink-0 flex-row items-center gap-3 sm:gap-4 overflow-hidden rounded-2xl border border-border-light bg-surface-panel p-3 sm:p-4 hover:shadow-lg transition-all duration-300"
               >
                 {/* Photo Section */}
-                <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-linear-to-br from-accent-link/15 to-accent-link/25">
+                <div className="relative h-24 w-20 sm:w-24 shrink-0 overflow-hidden rounded-xl bg-linear-to-br from-accent-link/15 to-accent-link/25">
                   {creator.profiles?.avatar_url ? (
                     <OptimizedImage src={creator.profiles.avatar_url} alt={creator.profiles?.name || ""} width={96} height={96} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   ) : (
@@ -102,7 +102,7 @@ export function PopularCreatorsCarousel({
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-sm font-bold text-text-primary whitespace-nowrap">
                       ₹{creator.price_per_hour}
-                      <span className="text-xs font-normal text-text-muted ml-1">/session</span>
+                      <span className="hidden text-xs font-normal text-text-muted ml-1 sm:inline">/session</span>
                     </span>
                     <button
                       type="button"
@@ -110,9 +110,10 @@ export function PopularCreatorsCarousel({
                         e.preventDefault();
                         e.stopPropagation();
                       }}
-                      className="rounded-lg bg-accent-primary px-3 py-1.5 text-xs font-bold text-text-on-accent hover:bg-accent-primary-hover transition-colors shrink-0 whitespace-nowrap"
+                      className="rounded-lg bg-accent-primary px-2 sm:px-3 py-1.5 text-xs font-bold text-text-on-accent hover:bg-accent-primary-hover transition-colors shrink-0 whitespace-nowrap"
                     >
-                      Book Now
+                      <span className="sm:hidden">Book</span>
+                      <span className="hidden sm:inline">Book Now</span>
                     </button>
                   </div>
                 </div>
@@ -121,11 +122,11 @@ export function PopularCreatorsCarousel({
           </div>
         </div>
 
-        {/* Next Button */}
+        {/* Next Button — hidden on mobile, where touch-swipe drives the carousel and there's no room to spare */}
         {canScrollRight ? (
           <button
             onClick={() => scroll("right")}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border-light bg-surface-panel shadow-sm hover:bg-surface-chip transition-all"
+            className="hidden lg:flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border-light bg-surface-panel shadow-sm hover:bg-surface-chip transition-all"
             aria-label="Next creators"
           >
             <ChevronRight className="w-5 h-5 text-text-secondary" />

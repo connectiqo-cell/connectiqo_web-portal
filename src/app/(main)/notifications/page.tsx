@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/contexts/NotificationContext";
@@ -58,10 +58,13 @@ function timeAgo(timestamp: string) {
   return new Date(timestamp).toLocaleDateString("en-IN", { month: "short", day: "numeric" });
 }
 
+const PAGE_SIZE = 15;
+
 export default function NotificationsPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { notifications, loading, isRead, markAsRead, markAllRead } = useNotifications();
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace(ROUTES.login);
@@ -89,7 +92,7 @@ export default function NotificationsPage() {
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          {notifications.map((n) => {
+          {notifications.slice(0, visibleCount).map((n) => {
             const Icon = STATUS_ICON[n.status] || Bell;
             const RoleIcon = n.role === "mentor" ? GraduationCap : User;
             return (
@@ -122,6 +125,15 @@ export default function NotificationsPage() {
               </Link>
             );
           })}
+          {visibleCount < notifications.length ? (
+            <button
+              type="button"
+              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+              className="mt-2 rounded-xl border border-border-light py-2.5 text-sm font-semibold text-accent-link hover:bg-surface-chip"
+            >
+              Load more
+            </button>
+          ) : null}
         </div>
       )}
     </main>

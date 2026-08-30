@@ -130,7 +130,7 @@ export function DashboardHome({
               <div className="relative">
                 <div
                   ref={videosScrollRef}
-                  className="flex gap-4 overflow-hidden scroll-smooth pb-2 scrollbar-none"
+                  className="flex gap-4 overflow-x-auto scroll-smooth pb-2 scrollbar-none"
                 >
                   {recommendedVideos.map((video) => (
                     <Link
@@ -159,7 +159,7 @@ export function DashboardHome({
                 {canScrollVideosLeft && (
                   <button
                     onClick={() => scrollVideos("left")}
-                    className="absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 rounded-full bg-surface-panel shadow-md p-2 hover:bg-surface-chip z-10 pointer-events-auto"
+                    className="hidden lg:block absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 rounded-full bg-surface-panel shadow-md p-2 hover:bg-surface-chip z-10 pointer-events-auto"
                     aria-label="Scroll left"
                   >
                     <ChevronRight size={18} className="rotate-180 text-text-primary" />
@@ -169,7 +169,7 @@ export function DashboardHome({
                 {canScrollVideosRight && (
                   <button
                     onClick={() => scrollVideos("right")}
-                    className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 rounded-full bg-surface-panel shadow-md p-2 hover:bg-surface-chip z-10 pointer-events-auto"
+                    className="hidden lg:block absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 rounded-full bg-surface-panel shadow-md p-2 hover:bg-surface-chip z-10 pointer-events-auto"
                     aria-label="Scroll right"
                   >
                     <ChevronRight size={18} className="text-text-primary" />

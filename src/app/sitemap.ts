@@ -9,9 +9,10 @@ const STATIC_ROUTES: MetadataRoute.Sitemap = [
   // "/" itself is no longer listed — it now just redirects logged-out
   // visitors out to the marketing site (connectiqo.com), so it has no
   // content of its own worth indexing here.
+  // Privacy/Terms also live on the marketing site now (connectiqo.com/privacy,
+  // /terms) — nothing in-app links to the local copies anymore, so they're
+  // dropped here too rather than indexing an orphaned duplicate.
   { url: `${BASE_URL}/discover`, changeFrequency: "daily", priority: 0.9 },
-  { url: `${BASE_URL}/privacy`, changeFrequency: "yearly", priority: 0.3 },
-  { url: `${BASE_URL}/terms`, changeFrequency: "yearly", priority: 0.3 },
 ];
 
 /**

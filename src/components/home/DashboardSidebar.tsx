@@ -137,19 +137,18 @@ function SidebarNavContent({
             <button
               type="button"
               onClick={handleStoreClick}
-              className="block w-full overflow-hidden rounded-lg border border-border-light hover:border-border-default"
+              className="block w-36 overflow-hidden rounded-lg border border-border-light hover:border-border-default"
             >
               <OptimizedImage src="/appstore.png" alt="Download on the App Store" width={600} height={200} className="block h-auto w-full" />
             </button>
             <button
               type="button"
               onClick={handleStoreClick}
-              className="block w-full overflow-hidden rounded-lg border border-border-light hover:border-border-default"
+              className="block w-36 overflow-hidden rounded-lg border border-border-light hover:border-border-default"
             >
               <OptimizedImage src="/playstore.png" alt="Get it on Google Play" width={600} height={200} className="block h-auto w-full" />
             </button>
           </div>
-          <OptimizedImage src="/connectiqo_logo.png" alt="Connectiqo" width={56} height={56} className="mx-auto h-14 w-14" />
           {storeNotice ? (
             <div className="absolute inset-x-3 bottom-1 rounded-lg bg-surface-panel px-2.5 py-1.5 text-center text-[11px] font-medium text-text-secondary shadow-lg">
               Coming soon
@@ -196,11 +195,7 @@ function SidebarAccountButton({
             {profile?.name || "My Account"}
           </span>
           <span className="truncate text-xs text-text-muted">
-            {profile?.role === "both"
-              ? "Creator & Member"
-              : profile?.role === "mentor"
-                ? "Creator"
-                : "Member"}
+            {profile?.role === "mentor" ? "Mentor" : profile?.role === "learner" ? "Learner" : "Mentor & Learner"}
           </span>
         </span>
       )}
@@ -252,7 +247,7 @@ export function DashboardSidebar({
           }`}
         />
         <aside
-          className={`absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col justify-between border-r border-border-light bg-surface-panel px-4 py-6 shadow-2xl transition-transform duration-200 ${
+          className={`absolute inset-y-0 left-0 flex w-72 max-w-[50vw] flex-col justify-between border-r border-border-light bg-surface-panel px-4 py-6 shadow-2xl transition-transform duration-200 ${
             mobileOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >

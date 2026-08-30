@@ -13,6 +13,8 @@ interface Profile {
   name: string | null;
 }
 
+const PAGE_SIZE = 15;
+
 export default function TransactionsPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
@@ -20,6 +22,7 @@ export default function TransactionsPage() {
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace(ROUTES.login);
@@ -71,7 +74,7 @@ export default function TransactionsPage() {
         <p className="py-8 text-center text-sm text-text-muted">No transactions yet.</p>
       ) : (
         <div className="flex flex-col gap-2">
-          {transactions.map((txn) => {
+          {transactions.slice(0, visibleCount).map((txn) => {
             const asLearner = txn.learner_id === user.id;
             const otherId = asLearner ? txn.mentor_id : txn.learner_id;
             const otherName = profiles[otherId]?.name || (asLearner ? "Mentor" : "Learner");
@@ -104,6 +107,15 @@ export default function TransactionsPage() {
               </div>
             );
           })}
+          {visibleCount < transactions.length ? (
+            <button
+              type="button"
+              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+              className="mt-2 rounded-xl border border-border-light py-2.5 text-sm font-semibold text-accent-link hover:bg-surface-chip"
+            >
+              Load more
+            </button>
+          ) : null}
         </div>
       )}
     </main>

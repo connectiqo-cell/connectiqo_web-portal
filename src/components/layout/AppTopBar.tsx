@@ -70,7 +70,7 @@ export function AppTopBar({ onMenuClick }: { onMenuClick?: () => void }) {
               <span className="hidden flex-col items-start leading-tight sm:flex">
                 <span className="text-xs font-semibold text-text-primary">{profile?.name || "Account"}</span>
                 <span className="text-[10px] text-text-muted">
-                  {profile?.role === "mentor" || profile?.role === "both" ? "Creator" : "Member"}
+                  {profile?.role === "mentor" ? "Mentor" : profile?.role === "learner" ? "Learner" : "Mentor & Learner"}
                 </span>
               </span>
               <ChevronDown size={12} className="sm:size-3.5 text-text-muted" />

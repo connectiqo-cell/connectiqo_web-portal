@@ -666,11 +666,11 @@ function UnifiedAuthForm() {
                   />
                   <span>
                     I agree to the{" "}
-                    <Link href="/terms" style={{ color: purple, textDecoration: "none", fontWeight: "600" }}>
+                    <Link href="https://connectiqo.com/terms" style={{ color: purple, textDecoration: "none", fontWeight: "600" }}>
                       Terms of Service
                     </Link>
                     {" "}and{" "}
-                    <Link href="/privacy" style={{ color: purple, textDecoration: "none", fontWeight: "600" }}>
+                    <Link href="https://connectiqo.com/privacy" style={{ color: purple, textDecoration: "none", fontWeight: "600" }}>
                       Privacy Policy
                     </Link>
                   </span>

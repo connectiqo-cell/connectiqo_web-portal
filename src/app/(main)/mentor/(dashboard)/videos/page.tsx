@@ -13,6 +13,7 @@ import { ROUTES } from "@/lib/routes";
 import { captureVideoFrame } from "@/lib/utils/videoThumbnail";
 
 const MAX_VIDEO_MB = 80;
+const PAGE_SIZE = 15;
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
@@ -152,6 +153,7 @@ export default function MentorVideosPage() {
   const [playingVideo, setPlayingVideo] = useState<MentorVideo | null>(null);
   const [editingVideo, setEditingVideo] = useState<MentorVideo | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const loadVideos = async () => {
     if (!user) return;
@@ -255,7 +257,7 @@ export default function MentorVideosPage() {
   if (loading) return <p className="text-sm text-text-muted">Loading…</p>;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
       <div className="flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4">
         <h2 className="text-sm font-semibold text-text-primary">Video library unlock price</h2>
         {!hasMentorProfile ? (
@@ -423,7 +425,7 @@ export default function MentorVideosPage() {
           <p className="py-8 text-center text-sm text-text-muted">No videos uploaded yet.</p>
         ) : (
           <div className="flex flex-col gap-2">
-            {videos.map((video) => (
+            {videos.slice(0, visibleCount).map((video) => (
               <div
                 key={video.id}
                 className="flex items-center gap-3 rounded-xl border border-border-light bg-surface-panel px-4 py-3"
@@ -472,6 +474,15 @@ export default function MentorVideosPage() {
                 </button>
               </div>
             ))}
+            {visibleCount < videos.length ? (
+              <button
+                type="button"
+                onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                className="mt-1 rounded-xl border border-border-light py-2.5 text-sm font-semibold text-accent-link hover:bg-surface-chip"
+              >
+                Load more
+              </button>
+            ) : null}
           </div>
         )}
       </div>

@@ -11,6 +11,8 @@ import { fetchRecordingUrl, getVideoSdkToken } from "@/lib/api/videoCallApi";
 import { ROUTES } from "@/lib/routes";
 import { normalizeRecordingUrl } from "@/lib/utils/recordingUrl";
 
+const PAGE_SIZE = 15;
+
 export default function RecordedSessionsPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
@@ -18,6 +20,7 @@ export default function RecordedSessionsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [playingId, setPlayingId] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace(ROUTES.login);
@@ -91,7 +94,7 @@ export default function RecordedSessionsPage() {
         </p>
       ) : (
         <div className="flex flex-col gap-3">
-          {sessions.map((session) => {
+          {sessions.slice(0, visibleCount).map((session) => {
             const asLearner = session.learner_id === user.id;
             const otherName = asLearner
               ? session.profiles?.name || "Mentor"
@@ -133,6 +136,15 @@ export default function RecordedSessionsPage() {
               </div>
             );
           })}
+          {visibleCount < sessions.length ? (
+            <button
+              type="button"
+              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+              className="mt-1 rounded-xl border border-border-light py-2.5 text-sm font-semibold text-accent-link hover:bg-surface-chip"
+            >
+              Load more
+            </button>
+          ) : null}
         </div>
       )}
     </main>

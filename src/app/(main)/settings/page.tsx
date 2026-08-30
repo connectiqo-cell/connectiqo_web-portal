@@ -159,20 +159,22 @@ export default function SettingsHubPage() {
         <div className="flex flex-col gap-5 sm:gap-6">
           {/* Profile Card */}
           <div className="flex flex-col gap-3 sm:gap-4 rounded-2xl border border-border-light bg-surface-panel p-4 sm:p-5">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="relative flex h-12 sm:h-16 w-12 sm:w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-accent-link bg-surface-chip">
+          <div className="flex items-center gap-3">
+            <div className="relative flex h-14 sm:h-16 w-14 sm:w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-accent-link bg-surface-chip">
               {profile?.avatar_url ? (
                 <OptimizedImage src={profile.avatar_url} alt={profile.name} width={80} height={80} className="h-full w-full object-cover" />
               ) : (
-                <User size={16} className="sm:size-7 text-text-muted" />
+                <User size={20} className="sm:size-7 text-text-muted" />
               )}
             </div>
-            <div className="flex flex-1 flex-col">
-              <p className="text-xs sm:text-sm font-bold text-text-primary">{profile?.name || "User"}</p>
-              {profile?.username ? (
-                <p className="text-xs text-accent-link">@{profile.username}</p>
-              ) : null}
-              <p className="text-xs text-text-muted truncate">{profile?.email}</p>
+            <div className="flex flex-1 min-w-0 flex-col">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-sm font-bold text-text-primary truncate">{profile?.name || "User"}</p>
+                {profile?.username ? (
+                  <p className="shrink-0 text-xs text-accent-link">@{profile.username}</p>
+                ) : null}
+              </div>
+              <p className="hidden text-xs text-text-muted truncate sm:block">{profile?.email}</p>
               <span className="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-surface-chip px-2 py-0.5 text-[10px] font-semibold text-accent-link">
                 {roleLabel}
               </span>
@@ -278,67 +280,61 @@ export default function SettingsHubPage() {
         {/* Preferences */}
         <div className="flex flex-col gap-3">
           <SectionHeader title="Preferences" subtitle="Customize your app experience" />
-          <div className="flex flex-col gap-0 rounded-xl border border-border-light bg-surface-panel">
-            {/* Appearance */}
-            <div className="flex items-center justify-between px-4 py-4 text-left transition-colors hover:bg-surface-chip">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-100 dark:bg-cyan-900/30 shrink-0">
-                  <Sun size={20} className="text-cyan-600 dark:text-cyan-400" />
+          <div className="rounded-xl border border-border-light bg-surface-panel p-4">
+            <div className="flex flex-col gap-0">
+              {/* Appearance */}
+              <div className="flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <Sun size={16} className="shrink-0 text-accent-link" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-text-primary">Appearance</p>
+                    <p className="text-xs text-text-muted">
+                      {isDark ? "Dark · tap switch for Light" : "Light · tap switch for Dark"}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-text-primary">Appearance</p>
-                  <p className="text-xs text-text-muted">
-                    {isDark ? "Dark · tap switch for Light" : "Light · tap switch for Dark"}
-                  </p>
+                <div className="shrink-0">
+                  <ThemeToggleSwitch />
                 </div>
               </div>
-              <div className="shrink-0 ml-4">
-                <ThemeToggleSwitch />
-              </div>
+
+              {/* Notifications */}
+              <Link
+                href={ROUTES.notifications}
+                className="flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <Bell size={16} className="shrink-0 text-accent-link" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-text-primary">Notifications</p>
+                    <p className="text-xs text-text-muted">Session updates, bookings, and reminders</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {unreadCount > 0 ? (
+                    <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-primary px-1 text-[10px] font-semibold text-white">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  ) : null}
+                  <ChevronRight size={16} className="text-text-muted" />
+                </div>
+              </Link>
+
+              {/* My Bookings */}
+              <Link
+                href={ROUTES.bookings}
+                className="flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <PlayCircle size={16} className="shrink-0 text-accent-link" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-text-primary">My Bookings</p>
+                    <p className="text-xs text-text-muted">Upcoming and past sessions</p>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-text-muted shrink-0" />
+              </Link>
             </div>
-            <div className="h-px bg-border-light" />
-
-            {/* Notifications */}
-            <Link
-              href={ROUTES.notifications}
-              className="flex items-center justify-between px-4 py-4 text-left transition-colors hover:bg-surface-chip"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/30 shrink-0">
-                  <Bell size={20} className="text-purple-600 dark:text-purple-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-text-primary">Notifications</p>
-                  <p className="text-xs text-text-muted">Session updates, bookings, and reminders</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                {unreadCount > 0 ? (
-                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-accent-primary text-white text-xs font-semibold">
-                    {unreadCount > 99 ? "99+" : unreadCount}
-                  </span>
-                ) : null}
-                <ChevronRight size={18} className="text-text-muted" />
-              </div>
-            </Link>
-            <div className="h-px bg-border-light" />
-
-            {/* My Bookings */}
-            <Link
-              href={ROUTES.bookings}
-              className="flex items-center justify-between px-4 py-4 text-left transition-colors hover:bg-surface-chip"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-yellow-100 dark:bg-yellow-900/30 shrink-0">
-                  <PlayCircle size={20} className="text-yellow-600 dark:text-yellow-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-text-primary">My Bookings</p>
-                  <p className="text-xs text-text-muted">Upcoming and past sessions</p>
-                </div>
-              </div>
-              <ChevronRight size={18} className="text-text-muted shrink-0" />
-            </Link>
           </div>
         </div>
 

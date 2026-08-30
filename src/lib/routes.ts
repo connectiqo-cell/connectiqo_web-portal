@@ -8,8 +8,9 @@
 export const ROUTES = {
   // Public / marketing
   home: "/",
-  privacy: "/privacy",
-  terms: "/terms",
+  // Now hosted on the external marketing site, not this app.
+  privacy: "https://connectiqo.com/privacy",
+  terms: "https://connectiqo.com/terms",
 
   // Auth
   login: "/login",

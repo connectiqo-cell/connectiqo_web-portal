@@ -264,7 +264,7 @@ export default function WalletPage() {
 
           {error ? <p className="text-sm text-accent-error">{error}</p> : null}
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
             <StatTile icon={Receipt} label="Transactions" value={String(earnings.length)} />
             <StatTile icon={Clock} label="Peak Earning" value={fmtCompact(peak)} />
             <StatTile icon={TrendingUp} label="This Month" value={fmtCompact(thisMonthTotal)} />
@@ -317,44 +317,77 @@ export default function WalletPage() {
             {activity.length === 0 ? (
               <p className="py-8 text-center text-sm text-text-muted">No transactions yet.</p>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[500px] border-collapse text-left text-sm">
-                  <thead>
-                    <tr className="text-[11px] uppercase tracking-wide text-text-muted">
-                      <th className="pb-2 font-semibold">Date &amp; Time</th>
-                      <th className="pb-2 font-semibold">Description</th>
-                      <th className="pb-2 font-semibold">Amount</th>
-                      <th className="pb-2 text-right font-semibold">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {activity.slice(0, 5).map((row) => (
-                      <tr key={row.id} className="border-t border-border-light">
-                        <td className="py-3 pr-3 text-xs text-text-secondary">
-                          {new Date(row.date).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}
-                        </td>
-                        <td className="py-3 pr-3 text-xs font-medium text-text-primary">{row.description}</td>
-                        <td
-                          className={`py-3 pr-3 text-xs font-semibold ${row.amount >= 0 ? "text-accent-success" : "text-accent-error"}`}
+              <>
+                {/* Mobile: stacked cards instead of a horizontally-scrolling table */}
+                <div className="flex flex-col gap-3 sm:hidden">
+                  {activity.slice(0, 5).map((row) => (
+                    <div key={row.id} className="flex flex-col gap-1.5 rounded-xl border border-border-light p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="text-xs font-medium text-text-primary">{row.description}</span>
+                        <span
+                          className={`shrink-0 text-xs font-semibold ${row.amount >= 0 ? "text-accent-success" : "text-accent-error"}`}
                         >
                           {row.amount >= 0 ? "+" : "−"}₹{Math.abs(row.amount).toFixed(0)}
-                        </td>
-                        <td className="py-3 text-right">
-                          <span
-                            className={`rounded-full px-2 py-1 text-[11px] font-semibold ${
-                              row.type === "Withdrawal"
-                                ? WITHDRAWAL_STATUS_STYLE[row.status] || "bg-surface-chip text-text-secondary"
-                                : "bg-surface-chip text-text-secondary"
-                            }`}
-                          >
-                            {row.type === "Withdrawal" ? WITHDRAWAL_STATUS_LABEL[row.status] || row.status : row.status}
-                          </span>
-                        </td>
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[11px] text-text-muted">
+                          {new Date(row.date).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}
+                        </span>
+                        <span
+                          className={`rounded-full px-2 py-1 text-[11px] font-semibold ${
+                            row.type === "Withdrawal"
+                              ? WITHDRAWAL_STATUS_STYLE[row.status] || "bg-surface-chip text-text-secondary"
+                              : "bg-surface-chip text-text-secondary"
+                          }`}
+                        >
+                          {row.type === "Withdrawal" ? WITHDRAWAL_STATUS_LABEL[row.status] || row.status : row.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* sm and up: full table */}
+                <div className="hidden overflow-x-auto sm:block">
+                  <table className="w-full min-w-[500px] border-collapse text-left text-sm">
+                    <thead>
+                      <tr className="text-[11px] uppercase tracking-wide text-text-muted">
+                        <th className="pb-2 font-semibold">Date &amp; Time</th>
+                        <th className="pb-2 font-semibold">Description</th>
+                        <th className="pb-2 font-semibold">Amount</th>
+                        <th className="pb-2 text-right font-semibold">Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {activity.slice(0, 5).map((row) => (
+                        <tr key={row.id} className="border-t border-border-light">
+                          <td className="py-3 pr-3 text-xs text-text-secondary">
+                            {new Date(row.date).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}
+                          </td>
+                          <td className="py-3 pr-3 text-xs font-medium text-text-primary">{row.description}</td>
+                          <td
+                            className={`py-3 pr-3 text-xs font-semibold ${row.amount >= 0 ? "text-accent-success" : "text-accent-error"}`}
+                          >
+                            {row.amount >= 0 ? "+" : "−"}₹{Math.abs(row.amount).toFixed(0)}
+                          </td>
+                          <td className="py-3 text-right">
+                            <span
+                              className={`rounded-full px-2 py-1 text-[11px] font-semibold ${
+                                row.type === "Withdrawal"
+                                  ? WITHDRAWAL_STATUS_STYLE[row.status] || "bg-surface-chip text-text-secondary"
+                                  : "bg-surface-chip text-text-secondary"
+                              }`}
+                            >
+                              {row.type === "Withdrawal" ? WITHDRAWAL_STATUS_LABEL[row.status] || row.status : row.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
             <Link
               href={ROUTES.transactions}
@@ -557,10 +590,10 @@ function StatTile({
   value: string;
 }) {
   return (
-    <div className="flex flex-col items-center gap-1 rounded-xl border border-border-light bg-surface-panel py-3">
+    <div className="flex flex-col items-center gap-1 rounded-xl border border-border-light bg-surface-panel px-1 py-2 sm:py-3">
       <Icon size={16} className="text-accent-link" />
-      <span className="text-sm font-bold text-text-primary">{value}</span>
-      <span className="text-[11px] text-text-muted">{label}</span>
+      <span className="text-xs sm:text-sm font-bold text-text-primary whitespace-nowrap">{value}</span>
+      <span className="text-[10px] sm:text-[11px] text-text-muted text-center leading-tight">{label}</span>
     </div>
   );
 }
