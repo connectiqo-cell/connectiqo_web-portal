@@ -247,7 +247,7 @@ export function DashboardSidebar({
           }`}
         />
         <aside
-          className={`absolute inset-y-0 left-0 flex w-72 max-w-[50vw] flex-col justify-between border-r border-border-light bg-surface-panel px-4 py-6 shadow-2xl transition-transform duration-200 ${
+          className={`absolute inset-y-0 left-0 flex w-72 max-w-[70vw] flex-col justify-between border-r border-border-light bg-surface-panel px-4 py-6 shadow-2xl transition-transform duration-200 ${
             mobileOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >

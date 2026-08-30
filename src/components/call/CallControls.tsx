@@ -1,6 +1,6 @@
 "use client";
 
-import { useMeeting } from "@videosdk.live/react-sdk";
+import { createCameraVideoTrack, useMeeting } from "@videosdk.live/react-sdk";
 import {
   Circle,
   LayoutGrid,
@@ -95,7 +95,30 @@ export function CallControls({
   const handleToggleWebcam = () => {
     if (webcamPending) return;
     setWebcamPending(true);
-    toggleWebcam().catch(() => {}).finally(() => setWebcamPending(false));
+    // Turning the camera on: capture with sharper, higher-bitrate settings
+    // instead of the SDK's defaults (optimizationMode "motion" + bitrateMode
+    // "balanced" + VP8), which visibly soften/blur the picture once WebRTC's
+    // congestion control kicks in on a constrained connection — most
+    // noticeable on mobile networks. H264 also runs on hardware encoders on
+    // most phones, unlike software-only VP8. Falls back to the plain toggle
+    // if custom-track capture fails for any reason (e.g. no matching camera).
+    const turnOn = localWebcamOn
+      ? toggleWebcam()
+      : createCameraVideoTrack({
+          encoderConfig: "h720p_w1280p",
+          optimizationMode: "detail",
+          bitrateMode: "high_quality",
+          codec: "H264",
+          // SDK default is "environment" (rear camera) when this is left
+          // unset — irrelevant on desktop (no front/back distinction) but a
+          // real regression on mobile web, which is exactly where this
+          // quality fix matters most: it would silently flip mobile callers
+          // to their back camera instead of the expected selfie camera.
+          facingMode: "user",
+        })
+          .then((track) => toggleWebcam(track))
+          .catch(() => toggleWebcam());
+    turnOn.catch(() => {}).finally(() => setWebcamPending(false));
   };
 
   const isSharingScreen = presenterId === localParticipant?.id;

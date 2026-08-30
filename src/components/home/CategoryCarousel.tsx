@@ -72,7 +72,7 @@ export function CategoryCarousel({
   if (!mentors.length) return null;
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-4 sm:px-6 py-6 sm:py-8">
+    <section className="w-full py-5 sm:py-8">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
         <h2 className="text-lg sm:text-xl font-bold text-text-primary">{title}</h2>
         {viewAllLink && (

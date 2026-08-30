@@ -82,13 +82,13 @@ export async function startTemplateRecording({
         layout: { type: "GRID", priority: "PIN", gridSize: 2 },
         theme: "DARK",
         mode: "video-and-audio",
-        // "high" asks the recorder bot to pull two full-quality browser
-        // streams at once during its connection-establishment window; in
-        // web-to-web calls that bot has consistently been dropping the
-        // room ~5s in (confirmed via VideoSDK's own recording-failed
-        // webhook) before ever producing output. "med" is a lower-bandwidth
-        // test to see if that's what's blowing its timeout budget.
-        quality: "med",
+        // Was capped at "med" as an untested workaround for a separate bug
+        // (the recorder bot dropping web-to-web calls ~5s in) — that
+        // investigation was never confirmed one way or the other. Back to
+        // "high" now that call video quality has been improved elsewhere;
+        // needs a real web-to-web test call to confirm the recorder bot no
+        // longer drops out before assuming this is safe long-term.
+        quality: "high",
         orientation: "landscape",
       },
     }),
