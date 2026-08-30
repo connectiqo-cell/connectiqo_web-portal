@@ -20,9 +20,21 @@ import { Suspense, useEffect, useRef } from "react";
 const RECORDER_NAME = "Recorder";
 
 function TemplateTile({ participantId, side }: { participantId: string; side: "left" | "right" }) {
-  const { webcamStream, micStream, webcamOn, micOn, displayName, isLocal } = useParticipant(participantId);
+  const { webcamStream, micStream, webcamOn, micOn, displayName, isLocal, setQuality } =
+    useParticipant(participantId);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Same fix as ParticipantTile.tsx: without this, the recorder bot receives
+  // whatever simulcast layer VideoSDK auto-selects for it, which can be a
+  // lower one — and that's what gets permanently baked into the saved
+  // recording, regardless of the REST recording config's own "high" setting
+  // (that controls the recorder's own output encode, not what it consumes
+  // from each participant).
+  useEffect(() => {
+    if (isLocal || !webcamOn) return;
+    setQuality("high").catch(() => {});
+  }, [isLocal, webcamOn, setQuality]);
 
   useEffect(() => {
     const el = videoRef.current;

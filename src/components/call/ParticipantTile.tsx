@@ -23,9 +23,20 @@ export function ParticipantTile({
   /** Position of the "Connectiqo" mark — positioned independently of the name pill so small tiles can put it in a corner that isn't already occupied. */
   watermarkClassName?: string;
 }) {
-  const { webcamStream, micStream, webcamOn, micOn, isLocal } = useParticipant(participantId);
+  const { webcamStream, micStream, webcamOn, micOn, isLocal, setQuality } = useParticipant(participantId);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Without this, VideoSDK's simulcast auto-selection decides which
+  // resolution layer to send us for a remote participant — it can settle on
+  // a lower layer than the sender is actually capable of. Explicitly asking
+  // for "high" is the receive-side half of the video-quality fix; the other
+  // half (capture settings) lives in CallControls.tsx. No-op for the local
+  // tile, which isn't receiving anything.
+  useEffect(() => {
+    if (isLocal || !webcamOn) return;
+    setQuality("high").catch(() => {});
+  }, [isLocal, webcamOn, setQuality]);
 
   useEffect(() => {
     const el = videoRef.current;
