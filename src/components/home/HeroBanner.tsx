@@ -35,15 +35,25 @@ export function HeroBanner() {
 
   return (
     <section className="w-full">
-      <div className="relative aspect-[970/250] w-full overflow-hidden rounded-2xl bg-surface-chip">
+      {/*
+        21:9 (2.33:1) — a middle ground between the original 3.88:1 (too
+        cropped for real 16:9 uploads) and full 16:9 (best fit, but ~2.2x
+        taller than the original at every normal window width, not just
+        ultra-wide ones — the max-height cap alone couldn't fix that, since
+        it only engages above ~747px). This ratio matches the two widest
+        real slides closely and keeps everyday window widths meaningfully
+        shorter than 16:9 would. The cap is kept as a safety net for very
+        wide containers, though at this ratio it rarely engages.
+      */}
+      <div className="relative aspect-[21/9] max-h-[420px] w-full overflow-hidden rounded-2xl bg-surface-chip">
         {slides.map((slide, i) => (
           <OptimizedImage
             key={slide.id}
             src={slide.image_url}
             alt=""
-            width={970}
-            height={250}
-            className={`absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-500 ${
+            width={1600}
+            height={686}
+            className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-500 ${
               i === active ? "opacity-100" : "opacity-0"
             }`}
           />
