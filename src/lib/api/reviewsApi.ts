@@ -48,6 +48,11 @@ export const reviewsApi = {
         .select()
         .single();
       if (error) throw error;
+
+      supabase.functions
+        .invoke("recalculate-mentor-rating", { body: { mentorId: params.mentorId } })
+        .catch((err) => console.warn("recalculate-mentor-rating failed:", err));
+
       return data;
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
