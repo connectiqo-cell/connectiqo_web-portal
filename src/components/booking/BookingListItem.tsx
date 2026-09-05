@@ -15,13 +15,21 @@ const STATUS_STYLES: Record<string, string> = {
   Completed: "bg-accent-success/15 text-accent-success",
   Cancelled: "bg-accent-error/15 text-accent-error",
   Expired: "bg-text-disabled/20 text-text-muted",
+  "Reschedule Pending": "bg-accent-warning/15 text-accent-warning",
+  Unresolved: "bg-text-disabled/20 text-text-muted",
 };
 
+// These rows normally render via RescheduleBanner instead of this component —
+// these entries are a defensive fallback only.
 function statusLabelFor(booking: BookingRow): string {
   if (isExpiredBooking(booking)) return "Expired";
   if (booking.status === "pending" || booking.status === "confirmed") return "Booked";
   if (booking.status === "completed") return "Completed";
   if (booking.status === "cancelled" || booking.status === "rejected") return "Cancelled";
+  if (booking.status === "reschedule_needed" || booking.status === "reschedule_proposed") {
+    return "Reschedule Pending";
+  }
+  if (booking.status === "reschedule_unresolved") return "Unresolved";
   return booking.status;
 }
 
@@ -146,6 +154,11 @@ export function BookingListItem({
         <span className={`w-fit rounded-full px-3 py-1.5 text-xs font-semibold ${STATUS_STYLES[label] || "bg-surface-chip text-text-secondary"}`}>
           {label}
         </span>
+        {booking.original_booking_id ? (
+          <span className="w-fit rounded-full bg-accent-link/15 px-3 py-1.5 text-xs font-semibold text-accent-link">
+            Rescheduled
+          </span>
+        ) : null}
         <div className="flex flex-wrap gap-2 sm:gap-1.5">
           {label === "Booked" ? (
             <Link

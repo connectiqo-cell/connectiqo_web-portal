@@ -26,6 +26,7 @@ import { isBookingSessionPast } from "@/lib/utils/bookingSession";
 import { useBookingsRealtime } from "@/lib/hooks/useBookingsRealtime";
 
 const PREVIEW_COUNT = 4;
+const RESCHEDULE_STATUSES = new Set(["reschedule_needed", "reschedule_proposed", "reschedule_unresolved"]);
 
 function toDateStr(d: Date) {
   const year = d.getFullYear();
@@ -99,12 +100,10 @@ export default function BookingsPage() {
 
   useBookingsRealtime(user?.id, loadBookings);
 
-  const reschedulePending = upcoming.filter((b) => b.status === "reschedule_pending");
-  const regularUpcoming = upcoming.filter((b) => b.status !== "reschedule_pending");
-  const activeUpcoming = regularUpcoming.filter((b) => !isBookingSessionPast(b));
-  const expired = regularUpcoming.filter((b) => isBookingSessionPast(b));
+  const activeUpcoming = upcoming.filter((b) => !isBookingSessionPast(b));
+  const expired = upcoming.filter((b) => isBookingSessionPast(b));
   const proposalByBookingId = new Map(proposals.map((p) => [p.booking_id, p]));
-  const upcomingCount = reschedulePending.length + activeUpcoming.length;
+  const upcomingCount = activeUpcoming.length;
   const activeUpcomingFiltered = selectedDate
     ? activeUpcoming.filter((b) => b.availability_slots?.date === selectedDate)
     : activeUpcoming;
@@ -128,11 +127,7 @@ export default function BookingsPage() {
   );
   const summary = useMemo(
     () => {
-      const expiredCount = upcoming.filter((b) => {
-        const reg = b.status !== "reschedule_pending";
-        const active = reg && !isBookingSessionPast(b);
-        return reg && !active;
-      }).length;
+      const expiredCount = upcoming.filter((b) => isBookingSessionPast(b)).length;
       return {
         total: upcoming.length + history.length,
         completed: history.filter((b) => b.status === "completed").length,
@@ -246,7 +241,7 @@ export default function BookingsPage() {
                     Explore Mentors
                   </Link>
                 </div>
-              ) : selectedDate && activeUpcomingFiltered.length === 0 && reschedulePending.length === 0 ? (
+              ) : selectedDate && activeUpcomingFiltered.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 py-10 text-center">
                   <p className="text-sm font-semibold text-text-primary">No upcoming sessions on this date</p>
                   <button
@@ -259,14 +254,6 @@ export default function BookingsPage() {
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
-                  {reschedulePending.map((booking) => (
-                    <RescheduleBanner
-                      key={booking.id}
-                      booking={booking}
-                      variant="learner"
-                      proposal={proposalByBookingId.get(booking.id) || null}
-                    />
-                  ))}
                   {visibleActiveUpcoming.map((booking) => (
                     <BookingListItem key={booking.id} booking={booking} showMoreMenu={false} />
                   ))}
@@ -305,15 +292,24 @@ export default function BookingsPage() {
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
-                  {visibleHistory.map((booking) => (
-                    <BookingListItem
-                      key={booking.id}
-                      booking={booking}
-                      reviewed={booking.status === "completed" ? reviewedIds.has(booking.id) : undefined}
-                      recordingUrl={recordingByBooking.get(booking.id)}
-                      showMoreMenu={false}
-                    />
-                  ))}
+                  {visibleHistory.map((booking) =>
+                    RESCHEDULE_STATUSES.has(booking.status) ? (
+                      <RescheduleBanner
+                        key={booking.id}
+                        booking={booking}
+                        variant="learner"
+                        proposal={proposalByBookingId.get(booking.id) || null}
+                      />
+                    ) : (
+                      <BookingListItem
+                        key={booking.id}
+                        booking={booking}
+                        reviewed={booking.status === "completed" ? reviewedIds.has(booking.id) : undefined}
+                        recordingUrl={recordingByBooking.get(booking.id)}
+                        showMoreMenu={false}
+                      />
+                    ),
+                  )}
                 </div>
               )}
             </section>

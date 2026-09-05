@@ -46,10 +46,20 @@ const STATUS_MESSAGES: Record<
       body: (name) => `Your session with ${name} was cancelled.`,
       accent: "error",
     },
-    reschedule_pending: {
+    reschedule_needed: {
       title: "Reschedule needed",
       body: (name) => `Your session with ${name} needs a new time.`,
       accent: "gold",
+    },
+    reschedule_proposed: {
+      title: "New time proposed",
+      body: (name) => `${name} proposed a new time for your session.`,
+      accent: "gold",
+    },
+    reschedule_unresolved: {
+      title: "Reschedule unresolved",
+      body: (name) => `Your session with ${name} could not be rescheduled.`,
+      accent: "error",
     },
   },
   mentor: {
@@ -78,10 +88,20 @@ const STATUS_MESSAGES: Record<
       body: (name) => `You declined ${name}'s booking request.`,
       accent: "muted",
     },
-    reschedule_pending: {
+    reschedule_needed: {
       title: "Reschedule needed",
       body: (name) => `Propose a new time for your session with ${name}.`,
       accent: "gold",
+    },
+    reschedule_proposed: {
+      title: "Proposal sent",
+      body: (name) => `Waiting for ${name} to respond to your proposed time.`,
+      accent: "gold",
+    },
+    reschedule_unresolved: {
+      title: "Reschedule unresolved",
+      body: (name) => `Your session with ${name} could not be rescheduled.`,
+      accent: "error",
     },
   },
 };
