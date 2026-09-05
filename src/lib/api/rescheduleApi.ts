@@ -154,13 +154,14 @@ export const rescheduleApi = {
   },
 
   /** Learner: accept a proposal. Atomically creates the new booking via DB RPC. */
-  acceptProposal: async (requestId: string) => {
+  acceptProposal: async (requestId: string, bookingId: string) => {
     const supabase = createClient();
     try {
       const { data, error } = await supabase.rpc("accept_reschedule_proposal", {
         p_request_id: requestId,
       });
       if (error) throw error;
+      notifyReschedule({ type: "reschedule_accepted", bookingId, requestId });
       return data;
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
@@ -168,7 +169,7 @@ export const rescheduleApi = {
   },
 
   /** Learner: decline a proposal. Mentor can then submit another one. */
-  declineProposal: async (requestId: string) => {
+  declineProposal: async (requestId: string, bookingId: string) => {
     const supabase = createClient();
     try {
       const { error } = await supabase
@@ -176,6 +177,7 @@ export const rescheduleApi = {
         .update({ status: "declined", updated_at: new Date().toISOString() })
         .eq("id", requestId);
       if (error) throw error;
+      notifyReschedule({ type: "reschedule_declined", bookingId, requestId });
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
     }

@@ -9,8 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { bookingApi, type BookingRow } from "@/lib/api/bookingApi";
 import { rescheduleApi, rescheduleReasonLabel } from "@/lib/api/rescheduleApi";
 import { ROUTES } from "@/lib/routes";
-
-const SESSION_DURATION_MINUTES = 20;
+import { slotDurationMinutes } from "@/lib/utils/contiguousSlots";
 
 function addMinutes(time: string, minutes: number) {
   const [h, m] = time.split(":").map(Number);
@@ -105,7 +104,11 @@ export default function RescheduleRequestPage({ params }: PageProps) {
 
   const learnerName = booking.learner_profile?.name || "the learner";
   const slot = booking.availability_slots;
-  const endTime = startTime ? addMinutes(startTime, SESSION_DURATION_MINUTES) : "";
+  // The proposed slot must run as long as the one the learner originally paid
+  // for (getBooking() already expands this to the full span for continuous
+  // multi-slot bookings) — not a fixed length.
+  const requiredDurationMinutes = slot ? slotDurationMinutes(slot.start_time, slot.end_time) : null;
+  const endTime = startTime && requiredDurationMinutes ? addMinutes(startTime, requiredDurationMinutes) : "";
   const minDate = toDateStr(new Date());
 
   const handleSubmit = async () => {
@@ -174,7 +177,8 @@ export default function RescheduleRequestPage({ params }: PageProps) {
         </p>
         {slot ? (
           <p className="text-xs text-text-muted">
-            Original session: {formatDate(slot.date)} · {formatTime(slot.start_time)}
+            Original session: {formatDate(slot.date)} · {formatTime(slot.start_time)}–{formatTime(slot.end_time)}
+            {requiredDurationMinutes ? ` (${requiredDurationMinutes} min)` : ""}
           </p>
         ) : null}
         {booking.reschedule_deadline ? (
@@ -208,9 +212,9 @@ export default function RescheduleRequestPage({ params }: PageProps) {
           />
         </label>
 
-        {startTime ? (
+        {startTime && requiredDurationMinutes ? (
           <p className="text-xs text-text-muted">
-            Session runs {formatTime(startTime)} – {formatTime(endTime)} ({SESSION_DURATION_MINUTES} min)
+            Session runs {formatTime(startTime)} – {formatTime(endTime)} ({requiredDurationMinutes} min)
           </p>
         ) : null}
 
@@ -219,7 +223,7 @@ export default function RescheduleRequestPage({ params }: PageProps) {
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={submitting || !date || !startTime}
+          disabled={submitting || !date || !startTime || !requiredDurationMinutes}
           className="mt-1 flex h-11 items-center justify-center rounded-full text-sm font-semibold text-text-on-accent disabled:opacity-60"
           style={{ backgroundImage: "var(--gradient-button-primary)" }}
         >

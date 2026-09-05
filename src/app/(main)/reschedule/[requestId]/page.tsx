@@ -94,7 +94,7 @@ export default function RescheduleResponsePage({ params }: PageProps) {
     setActing("accept");
     setError("");
     try {
-      await rescheduleApi.acceptProposal(proposal.id);
+      await rescheduleApi.acceptProposal(proposal.id, proposal.booking_id);
       setDone("accepted");
     } catch (err) {
       setError((err as Error)?.message || "Failed to accept proposal");
@@ -107,7 +107,7 @@ export default function RescheduleResponsePage({ params }: PageProps) {
     setActing("decline");
     setError("");
     try {
-      await rescheduleApi.declineProposal(proposal.id);
+      await rescheduleApi.declineProposal(proposal.id, proposal.booking_id);
       setDone("declined");
     } catch (err) {
       setError((err as Error)?.message || "Failed to decline proposal");
