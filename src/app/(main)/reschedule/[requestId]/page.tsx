@@ -39,7 +39,7 @@ export default function RescheduleResponsePage({ params }: PageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [acting, setActing] = useState<"accept" | "decline" | null>(null);
-  const [done, setDone] = useState<"accepted" | "declined" | null>(null);
+  const [done, setDone] = useState<"accepted" | "declined" | "unresolved" | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -107,8 +107,8 @@ export default function RescheduleResponsePage({ params }: PageProps) {
     setActing("decline");
     setError("");
     try {
-      await rescheduleApi.declineProposal(proposal.id, proposal.booking_id);
-      setDone("declined");
+      const result = await rescheduleApi.declineProposal(proposal.id, proposal.booking_id);
+      setDone(result.unresolved ? "unresolved" : "declined");
     } catch (err) {
       setError((err as Error)?.message || "Failed to decline proposal");
     } finally {
@@ -144,6 +144,26 @@ export default function RescheduleResponsePage({ params }: PageProps) {
         <h1 className="text-xl font-bold text-text-primary">Proposal declined</h1>
         <p className="text-sm text-text-secondary">
           {mentorName} will be notified and can propose another time.
+        </p>
+        <Link
+          href={ROUTES.bookings}
+          className="mt-2 rounded-full px-6 py-2.5 text-sm font-semibold text-text-on-accent"
+          style={{ backgroundImage: "var(--gradient-button-primary)" }}
+        >
+          Go to bookings
+        </Link>
+      </main>
+    );
+  }
+
+  if (done === "unresolved") {
+    return (
+      <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center gap-4 px-6 py-20 text-center">
+        <TimerOff size={40} className="text-text-muted" />
+        <h1 className="text-xl font-bold text-text-primary">Reschedule unresolved</h1>
+        <p className="text-sm text-text-secondary">
+          You and {mentorName} were unable to reach an agreement on a new time after 3 proposals. This booking
+          is now closed.
         </p>
         <Link
           href={ROUTES.bookings}

@@ -46,76 +46,70 @@ function notifyReschedule(payload: { type: string; bookingId: string; requestId?
 export const rescheduleApi = {
   /**
    * Learner: mark a booking as needing reschedule after the mentor didn't join
-   * within the session window. Gives the mentor a 7-day window to propose a new time.
+   * within the session window. Gives the mentor a 7-day window to propose a new
+   * time. Enforced server-side by request_reschedule (rejects if the session
+   * hasn't actually ended yet — a check that can't live in the client alone).
    */
   markForReschedule: async (bookingId: string, reason: "mentor_noshow" | "technical") => {
     const supabase = createClient();
     try {
-      const deadline = new Date();
-      deadline.setDate(deadline.getDate() + 7);
-
-      const { data, error } = await supabase
-        .from("bookings")
-        
-        .update({
-          status: "reschedule_pending",
-          reschedule_reason: reason,
-          reschedule_deadline: deadline.toISOString(),
-        })
-        .eq("id", bookingId)
-        .select()
-        .single();
+      const { error } = await supabase.rpc("request_reschedule", {
+        p_booking_id: bookingId,
+        p_reason: reason,
+      });
       if (error) throw error;
 
       notifyReschedule({ type: "reschedule_requested", bookingId });
-      return data;
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
     }
   },
 
+  /**
+   * Mentor: propose a new time for a booking awaiting reschedule. Duration
+   * match, conflict, and attempt-cap checks all happen server-side in
+   * propose_reschedule_slot — mentorId/learnerId/reason are derived from the
+   * booking row there rather than trusted from the client.
+   */
   proposeSlot: async ({
     bookingId,
-    mentorId,
-    learnerId,
     date,
     startTime,
     endTime,
-    reason,
   }: {
     bookingId: string;
-    mentorId: string;
-    learnerId: string;
     date: string;
     startTime: string;
     endTime: string;
-    reason: string | null;
-  }): Promise<RescheduleRequest> => {
+  }): Promise<{ requestId: string; expiresAt: string }> => {
     const supabase = createClient();
     try {
-      await supabase
-        .from("reschedule_requests")
-        .update({ status: "expired", updated_at: new Date().toISOString() })
-        .eq("booking_id", bookingId)
-        .eq("status", "pending");
-
-      const { data, error } = await supabase
-        .from("reschedule_requests")
-        .insert({
-          booking_id: bookingId,
-          mentor_id: mentorId,
-          learner_id: learnerId,
-          reason,
-          proposed_date: date,
-          proposed_start_time: startTime,
-          proposed_end_time: endTime,
-        })
-        .select()
-        .single();
+      const { data, error } = await supabase.rpc("propose_reschedule_slot", {
+        p_booking_id: bookingId,
+        p_date: date,
+        p_start_time: startTime,
+        p_end_time: endTime,
+      });
       if (error) throw error;
 
-      notifyReschedule({ type: "reschedule_proposed", bookingId, requestId: data.id });
-      return data as RescheduleRequest;
+      notifyReschedule({ type: "reschedule_proposed", bookingId, requestId: data.request_id });
+      return { requestId: data.request_id, expiresAt: data.expires_at };
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  /** Non-sensitive read powering "Attempt X of 3" UI — no RPC needed. */
+  getDeclinedCount: async (bookingId: string): Promise<number> => {
+    const supabase = createClient();
+    try {
+      const { count, error } = await supabase
+        .from("reschedule_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("booking_id", bookingId)
+        .eq("status", "declined");
+      if (error) throw error;
+      return count ?? 0;
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
     }
@@ -168,16 +162,24 @@ export const rescheduleApi = {
     }
   },
 
-  /** Learner: decline a proposal. Mentor can then submit another one. */
-  declineProposal: async (requestId: string, bookingId: string) => {
+  /**
+   * Learner: decline a proposal. Mentor can then submit another one, unless
+   * this was the 3rd decline — decline_reschedule_proposal flips the booking
+   * to reschedule_unresolved instead, and that's reflected in the return value.
+   */
+  declineProposal: async (requestId: string, bookingId: string): Promise<{ unresolved: boolean }> => {
     const supabase = createClient();
     try {
-      const { error } = await supabase
-        .from("reschedule_requests")
-        .update({ status: "declined", updated_at: new Date().toISOString() })
-        .eq("id", requestId);
+      const { data, error } = await supabase.rpc("decline_reschedule_proposal", {
+        p_request_id: requestId,
+      });
       if (error) throw error;
-      notifyReschedule({ type: "reschedule_declined", bookingId, requestId });
+      notifyReschedule({
+        type: data.unresolved ? "reschedule_unresolved" : "reschedule_declined",
+        bookingId,
+        requestId,
+      });
+      return { unresolved: data.unresolved };
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
     }

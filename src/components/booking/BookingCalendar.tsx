@@ -12,15 +12,20 @@ function toDateStr(d: Date): string {
 
 export function BookingCalendar({
   availableDates,
+  minDate,
   selectedDate,
   onSelectDate,
 }: {
-  availableDates: string[];
+  /** Allowlist mode: only these dates are selectable. Omit for free-pick mode. */
+  availableDates?: string[];
+  /** Free-pick mode: any date >= minDate is selectable. Defaults to today. Ignored when availableDates is set. */
+  minDate?: string;
   selectedDate: string | null;
   onSelectDate: (date: string) => void;
 }) {
   const availableSet = new Set(availableDates);
-  const initial = selectedDate || availableDates[0] || toDateStr(new Date());
+  const todayFloor = minDate || toDateStr(new Date());
+  const initial = selectedDate || availableDates?.[0] || toDateStr(new Date());
   const [initialYear, initialMonth] = initial.split("-").map(Number);
   const [monthCursor, setMonthCursor] = useState(new Date(initialYear, initialMonth - 1, 1));
 
@@ -68,7 +73,7 @@ export function BookingCalendar({
         {cells.map((day, i) => {
           if (day === null) return <div key={`empty-${i}`} />;
           const dateStr = toDateStr(new Date(year, month, day));
-          const isAvailable = availableSet.has(dateStr);
+          const isAvailable = availableDates ? availableSet.has(dateStr) : dateStr >= todayFloor;
           const isSelected = dateStr === selectedDate;
           const isToday = dateStr === todayStr;
           return (

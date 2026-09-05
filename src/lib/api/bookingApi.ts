@@ -14,6 +14,8 @@ export interface BookingRow {
   slot_ids?: string[] | null;
   reschedule_reason?: string | null;
   reschedule_deadline?: string | null;
+  original_booking_id?: string | null;
+  reschedule_count?: number | null;
   profiles: { id: string; name: string | null; avatar_url: string | null } | null;
   learner_profile?: { id: string; name: string | null; avatar_url: string | null } | null;
   availability_slots: { date: string; start_time: string; end_time: string } | null;
@@ -222,7 +224,7 @@ export const bookingApi = {
           `*, profiles:mentor_id (id, name, avatar_url), availability_slots (date, start_time, end_time)`,
         )
         .eq("learner_id", learnerId)
-        .in("status", ["pending", "confirmed", "reschedule_pending"]);
+        .in("status", ["pending", "confirmed"]);
       if (error) throw error;
       const rows = await enrichBookingTimeSpans(supabase, (data as unknown as BookingRow[]) || []);
       return rows.sort((a, b) => {
@@ -250,7 +252,15 @@ export const bookingApi = {
           `*, profiles:mentor_id (id, name, avatar_url), availability_slots (date, start_time, end_time)`,
         )
         .eq("learner_id", learnerId)
-        .in("status", ["completed", "cancelled", "rejected", "rescheduled"])
+        .in("status", [
+          "completed",
+          "cancelled",
+          "rejected",
+          "rescheduled",
+          "reschedule_needed",
+          "reschedule_proposed",
+          "reschedule_unresolved",
+        ])
         .order("date", { referencedTable: "availability_slots", ascending: false })
         .order("start_time", { referencedTable: "availability_slots", ascending: false })
         .range(from, to);
@@ -270,7 +280,7 @@ export const bookingApi = {
           `*, learner_profile:profiles!learner_id (id, name, avatar_url), availability_slots (date, start_time, end_time)`,
         )
         .eq("mentor_id", mentorId)
-        .in("status", ["pending", "confirmed", "reschedule_pending"]);
+        .in("status", ["pending", "confirmed"]);
       if (error) throw error;
       const rows = await enrichBookingTimeSpans(supabase, (data as unknown as BookingRow[]) || []);
       return rows.sort((a, b) => {
@@ -298,7 +308,15 @@ export const bookingApi = {
           `*, learner_profile:profiles!learner_id (id, name, avatar_url), availability_slots (date, start_time, end_time)`,
         )
         .eq("mentor_id", mentorId)
-        .in("status", ["completed", "cancelled", "rejected", "rescheduled"])
+        .in("status", [
+          "completed",
+          "cancelled",
+          "rejected",
+          "rescheduled",
+          "reschedule_needed",
+          "reschedule_proposed",
+          "reschedule_unresolved",
+        ])
         .order("date", { referencedTable: "availability_slots", ascending: false })
         .order("start_time", { referencedTable: "availability_slots", ascending: false })
         .range(from, to);

@@ -15,6 +15,11 @@ const DEBOUNCE_MS = 800;
  * mentor or the learner, and calls `onChange` when one happens. Used to keep
  * booking lists live instead of only refreshing on next page load — the
  * mobile app's 19april2026 note flagged this as still missing there too.
+ *
+ * Also watches `reschedule_requests` — a mentor's proposal (or a learner's
+ * accept/decline) writes there, not to `bookings` directly, so without this
+ * the other party's "Review proposal" / "Waiting for response" state would
+ * only ever update on next page load.
  */
 export function useBookingsRealtime(userId: string | undefined, onChange: () => void) {
   const onChangeRef = useRef(onChange);
@@ -43,6 +48,16 @@ export function useBookingsRealtime(userId: string | undefined, onChange: () => 
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "bookings", filter: `learner_id=eq.${userId}` },
+        triggerDebounced,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "reschedule_requests", filter: `mentor_id=eq.${userId}` },
+        triggerDebounced,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "reschedule_requests", filter: `learner_id=eq.${userId}` },
         triggerDebounced,
       )
       .subscribe();
