@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { FrozenAccountNotice } from "@/components/FrozenAccountNotice";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { InterestsStatusProvider } from "@/contexts/InterestsStatusContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 
@@ -82,8 +83,10 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <NotificationProvider>
-              <AppShell>{children}</AppShell>
-              <FrozenAccountNotice />
+              <InterestsStatusProvider>
+                <AppShell>{children}</AppShell>
+                <FrozenAccountNotice />
+              </InterestsStatusProvider>
             </NotificationProvider>
           </AuthProvider>
         </ThemeProvider>

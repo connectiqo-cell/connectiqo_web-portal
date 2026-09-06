@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { CameraCaptureModal } from "@/components/CameraCaptureModal";
 import { useAuth } from "@/contexts/AuthContext";
+import { useInterestsStatus } from "@/contexts/InterestsStatusContext";
 import { fetchActiveCategories } from "@/lib/api/contentApi";
 import { profileApi } from "@/lib/api/profileApi";
 import { ROUTES } from "@/lib/routes";
@@ -17,6 +18,7 @@ import { sanitizeUsernameInput, usernameFormatError } from "@/lib/utils/username
 export default function EditProfilePage() {
   const router = useRouter();
   const { user, profile, loading: authLoading, refreshProfile } = useAuth();
+  const { refresh: refreshInterestsStatus } = useInterestsStatus();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState("");
@@ -305,6 +307,7 @@ export default function EditProfilePage() {
       }
       await Promise.all(tasks);
       refreshProfile();
+      if (isLearner) refreshInterestsStatus();
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (err) {
