@@ -1,0 +1,412 @@
+<title>Hero Ratio Test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --void: #000008;
+    --panel: #161432;
+    --sheet: #0f0e2a;
+    --chip: rgba(255, 255, 255, 0.05);
+
+    --gold: #f0d875;
+    --teal: #5eead4;
+    --violet: #a78bfa;
+
+    --text-primary: #f0f0fc;
+    --text-secondary: #b8b8d4;
+    --text-muted: #8888a8;
+
+    --border-light: rgba(167, 139, 250, 0.22);
+    --border-strong: rgba(240, 216, 117, 0.45);
+
+    --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    background: var(--void);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    padding: 40px 24px 72px;
+  }
+
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  header {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--violet);
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .lede {
+    margin: 0;
+    max-width: 62ch;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border-light);
+    background: var(--sheet);
+    font-size: 12.5px;
+    color: var(--text-secondary);
+  }
+
+  .legend b { color: var(--text-primary); font-weight: 600; }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex: none;
+  }
+  .swatch.frame { background: var(--gold); }
+  .swatch.label { background: var(--teal); }
+
+  /* ---------- controls ---------- */
+
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    border: 1px solid var(--border-light);
+    background: var(--panel);
+  }
+
+  .controls .label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .fit-toggle {
+    display: inline-flex;
+    border-radius: 999px;
+    border: 1px solid var(--border-light);
+    background: var(--sheet);
+    padding: 3px;
+    gap: 3px;
+  }
+
+  .fit-toggle button {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 7px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .fit-toggle button.active {
+    background: var(--violet);
+    color: #0a0714;
+  }
+
+  .fit-toggle button:focus-visible {
+    outline: 2px solid var(--teal);
+    outline-offset: 2px;
+  }
+
+  .source-note {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--text-muted);
+  }
+
+  /* ---------- comparison rows ---------- */
+
+  .rows {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .row {
+    border-radius: 16px;
+    border: 1px solid var(--border-light);
+    background: var(--panel);
+    padding: 18px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .row-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+  }
+
+  .row-title {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .row-title .name {
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .row-title .ratio {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--violet);
+  }
+
+  .row-tag {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+  }
+
+  .previews {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: end;
+  }
+
+  @media (max-width: 640px) {
+    .previews { grid-template-columns: 1fr; }
+  }
+
+  .preview {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .preview-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .preview-label .device {
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .frame-outer {
+    border-radius: 14px;
+    background: var(--void);
+    padding: 10px;
+    border: 1px solid var(--chip);
+  }
+
+  .frame-outer.mobile { max-width: 220px; }
+  .frame-outer.desktop { max-width: 100%; }
+
+  .banner-box {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 12px;
+    background: var(--chip);
+  }
+
+  .banner-box img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  body.fit-cover .banner-box img { object-fit: cover; object-position: top; }
+  body.fit-contain .banner-box img { object-fit: contain; }
+
+  .measured {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--teal);
+  }
+
+  footer {
+    padding-top: 8px;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border-light);
+    padding-top: 20px;
+  }
+
+  footer b { color: var(--text-secondary); }
+</style>
+
+<div class="page">
+  <header>
+    <span class="eyebrow">Homepage Â· Hero banner</span>
+    <h1>Which ratio survives on both screens?</h1>
+    <p class="lede">
+      Same test image, three candidate container shapes, mobile width next to desktop width. The image has a gold
+      frame right at its edge and a corner label in each corner â€” if the frame breaks or a corner label disappears,
+      that edge got cropped.
+    </p>
+  </header>
+
+  <div class="legend">
+    <span class="legend-item"><span class="swatch frame"></span> Gold frame = the full edge of the source image</span>
+    <span class="legend-item"><span class="swatch label"></span> Teal corner tags = TL / TR / BL / BR</span>
+    <span>Text starts 32px from the left edge â€” deliberately as tight as the real "Gamingâ€¦withâ€¦" slide that broke.</span>
+  </div>
+
+  <div class="controls">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <span class="label">Fit mode</span>
+      <div class="fit-toggle" role="group" aria-label="Object-fit mode">
+        <button type="button" data-fit="contain" class="active">contain (current code)</button>
+        <button type="button" data-fit="cover">cover (old code)</button>
+      </div>
+    </div>
+    <span class="source-note">Test source: 1600Ã—900 Â· 16:9 â€” the shape of ~90% of your real uploads</span>
+  </div>
+
+  <div class="rows" id="rows"></div>
+
+  <footer>
+    <b>Reading this:</b> "contain" never crops â€” instead it shrinks the image and leaves empty side/top bars whenever
+    the ratio doesn't match. "cover" always fills the box with no bars, cropping whatever overflows. A ratio that
+    looks clean in <b>both</b> fit modes, at <b>both</b> widths, is the safe pick â€” pick a ratio that only survives
+    one fit mode and it stays fragile against future uploads.
+  </footer>
+</div>
+
+<script>
+  var TEST_IMAGE_SRC = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAwIDkwMCIgd2lkdGg9IjE2MDAiIGhlaWdodD0iOTAwIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iYmciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzBhMDcxNCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjU1JSIgc3RvcC1jb2xvcj0iIzFhMTIzNiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMyYTFhNGEiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9Imdsb3ciIGN4PSI3OCUiIGN5PSI0NSUiIHI9IjU1JSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNhNzhiZmEiIHN0b3Atb3BhY2l0eT0iMC4zNSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNhNzhiZmEiIHN0b3Atb3BhY2l0eT0iMCIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iYXZhdGFyIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNhNzhiZmEiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjNWVlYWQ0Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KCiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjE2MDAiIGhlaWdodD0iOTAwIiBmaWxsPSJ1cmwoI2JnKSIvPgogIDxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxNjAwIiBoZWlnaHQ9IjkwMCIgZmlsbD0idXJsKCNnbG93KSIvPgoKICA8IS0tIGFic3RyYWN0ICJwaG90byIgcGxhY2Vob2xkZXIsIHJpZ2h0IHNpZGUgLS0+CiAgPGNpcmNsZSBjeD0iMTE4MCIgY3k9IjQzMCIgcj0iMTkwIiBmaWxsPSJ1cmwoI2F2YXRhcikiIG9wYWNpdHk9IjAuODUiLz4KICA8cGF0aCBkPSJNIDk0MCA5MDAgUSA5NDAgNjIwIDExODAgNjIwIFEgMTQyMCA2MjAgMTQyMCA5MDAgWiIgZmlsbD0idXJsKCNhdmF0YXIpIiBvcGFjaXR5PSIwLjg1Ii8+CgogIDwhLS0gaGVhZGxpbmUgdGV4dCwgZGVsaWJlcmF0ZWx5IHRpZ2h0IHRvIHRoZSBsZWZ0IGVkZ2UgLS0+CiAgPHRleHQgeD0iMzIiIHk9IjQxMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBIZWx2ZXRpY2EsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iOTIiIGZvbnQtd2VpZ2h0PSI4MDAiIGZpbGw9IiNmMGYwZmMiPkpPSU4gU0VTU0lPTjwvdGV4dD4KICA8dGV4dCB4PSIzMiIgeT0iNDgwIiBmb250LWZhbWlseT0iQXJpYWwsIEhlbHZldGljYSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI0MiIgZm9udC13ZWlnaHQ9IjYwMCIgZm9udC1zdHlsZT0iaXRhbGljIiBmaWxsPSIjZjBkODc1Ij53aXRoIFRlc3QgTWVudG9yPC90ZXh0PgogIDx0ZXh0IHg9IjMyIiB5PSI1MjAiIGZvbnQtZmFtaWx5PSJBcmlhbCwgSGVsdmV0aWNhLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjIyIiBmaWxsPSIjYjhiOGQ0Ij4xLW9uLTEgw4LCtyAzMCBtaW4gc2Vzc2lvbjwvdGV4dD4KCiAgPCEtLSBmdWxsLWJsZWVkIGZyYW1lLCByaWdodCBhdCB0aGUgc291cmNlIGltYWdlJ3MgdHJ1ZSBlZGdlIC0tPgogIDxyZWN0IHg9IjQiIHk9IjQiIHdpZHRoPSIxNTkyIiBoZWlnaHQ9Ijg5MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZjBkODc1IiBzdHJva2Utd2lkdGg9IjgiLz4KCiAgPCEtLSBjb3JuZXIgdGFncyAtLT4KICA8ZyBmb250LWZhbWlseT0iQ29uc29sYXMsICdDb3VyaWVyIE5ldycsIG1vbm9zcGFjZSIgZm9udC1zaXplPSIyNiIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzVlZWFkNCI+CiAgICA8dGV4dCB4PSIyNiIgeT0iNTIiPlRMPC90ZXh0PgogICAgPHRleHQgeD0iMTU3NCIgeT0iNTIiIHRleHQtYW5jaG9yPSJlbmQiPlRSPC90ZXh0PgogICAgPHRleHQgeD0iMjYiIHk9Ijg2NiI+Qkw8L3RleHQ+CiAgICA8dGV4dCB4PSIxNTc0IiB5PSI4NjYiIHRleHQtYW5jaG9yPSJlbmQiPkJSPC90ZXh0PgogIDwvZz4KCiAgPHRleHQgeD0iODAwIiB5PSI4NzgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJDb25zb2xhcywgJ0NvdXJpZXIgTmV3JywgbW9ub3NwYWNlIiBmb250LXNpemU9IjIwIiBmaWxsPSIjODg4OGE4Ij4xNjAwIMOD4oCUIDkwMCDDgsK3IDE2Ojkgw4LCtyBURVNUIFNPVVJDRTwvdGV4dD4KPC9zdmc+Cg==";
+
+  var RATIOS = [
+    { name: "Original", ratio: 970 / 250, tag: "3.88:1 Â· what shipped before this thread" },
+    { name: "Middle ground", ratio: 1600 / 686, tag: "2.33:1 Â· 21:9, close to your two widest real slides" },
+    { name: "Current code", ratio: 16 / 9, tag: "1.78:1 Â· what's live on the branch right now" },
+  ];
+
+  var WIDTHS = [
+    { device: "Mobile", px: 390 },
+    { device: "Desktop", px: 970 },
+  ];
+
+  var rowsEl = document.getElementById("rows");
+
+  RATIOS.forEach(function (r) {
+    var row = document.createElement("div");
+    row.className = "row";
+
+    var head = document.createElement("div");
+    head.className = "row-head";
+    head.innerHTML =
+      '<div class="row-title"><span class="name">' + r.name + '</span><span class="ratio">' +
+      r.ratio.toFixed(2) + ':1</span></div><span class="row-tag">' + r.tag + "</span>";
+    row.appendChild(head);
+
+    var previews = document.createElement("div");
+    previews.className = "previews";
+
+    WIDTHS.forEach(function (w) {
+      var h = Math.round(w.px / r.ratio);
+
+      var preview = document.createElement("div");
+      preview.className = "preview";
+
+      var label = document.createElement("div");
+      label.className = "preview-label";
+      label.innerHTML =
+        '<span class="device">' + w.device + " Â· " + w.px + "px wide</span><span>" + r.ratio.toFixed(2) + ":1</span>";
+      preview.appendChild(label);
+
+      var outer = document.createElement("div");
+      outer.className = "frame-outer " + w.device.toLowerCase();
+
+      var box = document.createElement("div");
+      box.className = "banner-box";
+      box.style.aspectRatio = r.ratio;
+
+      var img = document.createElement("img");
+      img.src = TEST_IMAGE_SRC;
+      img.alt = "";
+      box.appendChild(img);
+      outer.appendChild(box);
+      preview.appendChild(outer);
+
+      var measured = document.createElement("div");
+      measured.className = "measured";
+      measured.textContent = w.px + " Ã— " + h + "px rendered";
+      preview.appendChild(measured);
+
+      previews.appendChild(preview);
+    });
+
+    row.appendChild(previews);
+    rowsEl.appendChild(row);
+  });
+
+  var buttons = document.querySelectorAll(".fit-toggle button");
+  buttons.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      buttons.forEach(function (b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      document.body.classList.remove("fit-cover", "fit-contain");
+      document.body.classList.add("fit-" + btn.dataset.fit);
+    });
+  });
+  document.body.classList.add("fit-contain");
+</script>

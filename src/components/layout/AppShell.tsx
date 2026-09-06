@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { DashboardSidebar } from "@/components/home/DashboardSidebar";
+import { InterestsPromptBar } from "@/components/InterestsPromptBar";
 import { AppTopBar } from "@/components/layout/AppTopBar";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -39,6 +40,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-1 flex-col">
       <AppTopBar onMenuClick={() => setMobileNavOpen(true)} />
+      <InterestsPromptBar />
       <div className="flex flex-1">
         <DashboardSidebar mobileOpen={mobileNavOpen} onMobileClose={() => setMobileNavOpen(false)} />
         <div className="flex min-w-0 flex-1 flex-col">{children}</div>
