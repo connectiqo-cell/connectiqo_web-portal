@@ -224,7 +224,7 @@ export const bookingApi = {
           `*, profiles:mentor_id (id, name, avatar_url), availability_slots (date, start_time, end_time)`,
         )
         .eq("learner_id", learnerId)
-        .in("status", ["pending", "confirmed"]);
+        .in("status", ["pending", "confirmed", "reschedule_needed", "reschedule_proposed"]);
       if (error) throw error;
       const rows = await enrichBookingTimeSpans(supabase, (data as unknown as BookingRow[]) || []);
       return rows.sort((a, b) => {
@@ -252,15 +252,7 @@ export const bookingApi = {
           `*, profiles:mentor_id (id, name, avatar_url), availability_slots (date, start_time, end_time)`,
         )
         .eq("learner_id", learnerId)
-        .in("status", [
-          "completed",
-          "cancelled",
-          "rejected",
-          "rescheduled",
-          "reschedule_needed",
-          "reschedule_proposed",
-          "reschedule_unresolved",
-        ])
+        .in("status", ["completed", "cancelled", "rejected", "rescheduled", "reschedule_unresolved"])
         .order("date", { referencedTable: "availability_slots", ascending: false })
         .order("start_time", { referencedTable: "availability_slots", ascending: false })
         .range(from, to);
@@ -280,7 +272,7 @@ export const bookingApi = {
           `*, learner_profile:profiles!learner_id (id, name, avatar_url), availability_slots (date, start_time, end_time)`,
         )
         .eq("mentor_id", mentorId)
-        .in("status", ["pending", "confirmed"]);
+        .in("status", ["pending", "confirmed", "reschedule_needed", "reschedule_proposed"]);
       if (error) throw error;
       const rows = await enrichBookingTimeSpans(supabase, (data as unknown as BookingRow[]) || []);
       return rows.sort((a, b) => {
@@ -308,15 +300,7 @@ export const bookingApi = {
           `*, learner_profile:profiles!learner_id (id, name, avatar_url), availability_slots (date, start_time, end_time)`,
         )
         .eq("mentor_id", mentorId)
-        .in("status", [
-          "completed",
-          "cancelled",
-          "rejected",
-          "rescheduled",
-          "reschedule_needed",
-          "reschedule_proposed",
-          "reschedule_unresolved",
-        ])
+        .in("status", ["completed", "cancelled", "rejected", "rescheduled", "reschedule_unresolved"])
         .order("date", { referencedTable: "availability_slots", ascending: false })
         .order("start_time", { referencedTable: "availability_slots", ascending: false })
         .range(from, to);
