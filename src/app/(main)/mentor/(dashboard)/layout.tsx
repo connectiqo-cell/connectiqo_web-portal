@@ -15,7 +15,7 @@ const PAGE_HEADERS: Record<string, { title: string; subtitle: string }> = {
 };
 
 /** Soft-lock mentor tools while frozen; learner features stay available. */
-const FROZEN_GATED_PATHS = new Set([
+const FROZEN_GATED_PATHS = new Set<string>([
   ROUTES.mentorProfileDashboard,
   ROUTES.mentorSchedule,
   ROUTES.mentorVideos,
