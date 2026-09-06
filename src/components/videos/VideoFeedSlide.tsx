@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Link2, Lock, Pause, Play, User, Volume2, VolumeX } from "lucide-react";
+import { Check, Link2, Lock, Pause, Play, ThumbsDown, ThumbsUp, User, Volume2, VolumeX } from "lucide-react";
 import Link from "next/link";
 import OptimizedImage from "@/components/OptimizedImage";
 import { useEffect, useRef, useState } from "react";
@@ -14,12 +14,20 @@ export function VideoFeedSlide({
   active,
   muted,
   onToggleMute,
+  likeCount,
+  dislikeCount,
+  myReaction,
+  onReact,
 }: {
   video: PublicVideo;
   canPlay: boolean;
   active: boolean;
   muted: boolean;
   onToggleMute: () => void;
+  likeCount: number;
+  dislikeCount: number;
+  myReaction: "like" | "dislike" | null;
+  onReact: (reaction: "like" | "dislike") => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [copied, setCopied] = useState(false);
@@ -164,6 +172,42 @@ export function VideoFeedSlide({
         </div>
 
         <div className="absolute bottom-24 right-3 flex flex-col items-center gap-4">
+          <button
+            type="button"
+            onClick={() => onReact("like")}
+            aria-label={myReaction === "like" ? "Remove like" : "Like"}
+            className="flex flex-col items-center gap-0.5"
+          >
+            <span
+              className={`flex h-10 w-10 items-center justify-center rounded-full backdrop-blur ${
+                myReaction === "like" ? "bg-accent-link text-white" : "bg-white/15 text-white hover:bg-white/25"
+              }`}
+            >
+              <ThumbsUp size={18} fill={myReaction === "like" ? "currentColor" : "none"} />
+            </span>
+            <span className="text-[11px] font-semibold text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.8)]">
+              {likeCount}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onReact("dislike")}
+            aria-label={myReaction === "dislike" ? "Remove dislike" : "Dislike"}
+            className="flex flex-col items-center gap-0.5"
+          >
+            <span
+              className={`flex h-10 w-10 items-center justify-center rounded-full backdrop-blur ${
+                myReaction === "dislike" ? "bg-accent-error text-white" : "bg-white/15 text-white hover:bg-white/25"
+              }`}
+            >
+              <ThumbsDown size={18} fill={myReaction === "dislike" ? "currentColor" : "none"} />
+            </span>
+            <span className="text-[11px] font-semibold text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.8)]">
+              {dislikeCount}
+            </span>
+          </button>
+
           {canPlay ? (
             <button
               type="button"

@@ -10,10 +10,16 @@ import { VideoFeedSlide } from "./VideoFeedSlide";
 export function VideoFeed({
   videos,
   unlocks,
+  reactionCounts,
+  myReactions,
+  onReact,
   onNearEnd,
 }: {
   videos: PublicVideo[];
   unlocks: Map<string, { expiresAt: string | null }>;
+  reactionCounts: Map<string, { likeCount: number; dislikeCount: number }>;
+  myReactions: Map<string, "like" | "dislike">;
+  onReact: (videoId: string, reaction: "like" | "dislike") => void;
   onNearEnd?: () => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -79,6 +85,10 @@ export function VideoFeed({
               active={i === activeIndex}
               muted={muted}
               onToggleMute={() => setMuted((m) => !m)}
+              likeCount={reactionCounts.get(video.id)?.likeCount ?? 0}
+              dislikeCount={reactionCounts.get(video.id)?.dislikeCount ?? 0}
+              myReaction={myReactions.get(video.id) ?? null}
+              onReact={(reaction) => onReact(video.id, reaction)}
             />
           </div>
         ))}

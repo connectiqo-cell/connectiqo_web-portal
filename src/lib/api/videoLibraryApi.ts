@@ -249,6 +249,80 @@ export const videoLibraryApi = {
     }
   },
 
+  /** Like/dislike counts for a batch of videos, from the video_reaction_counts view. */
+  getVideoReactionCounts: async (
+    videoIds: string[],
+  ): Promise<Map<string, { likeCount: number; dislikeCount: number }>> => {
+    const map = new Map<string, { likeCount: number; dislikeCount: number }>();
+    if (!videoIds.length) return map;
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase
+        .from("video_reaction_counts")
+        .select("video_id, like_count, dislike_count")
+        .in("video_id", videoIds);
+      if (error) throw error;
+      (data || []).forEach((row) =>
+        map.set(row.video_id, { likeCount: row.like_count, dislikeCount: row.dislike_count }),
+      );
+      return map;
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  /** Which of these videos the given user has already liked/disliked. */
+  getMyVideoReactions: async (
+    userId: string,
+    videoIds: string[],
+  ): Promise<Map<string, "like" | "dislike">> => {
+    const map = new Map<string, "like" | "dislike">();
+    if (!userId || !videoIds.length) return map;
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase
+        .from("video_reactions")
+        .select("video_id, reaction")
+        .eq("user_id", userId)
+        .in("video_id", videoIds);
+      if (error) throw error;
+      (data || []).forEach((row) => map.set(row.video_id, row.reaction as "like" | "dislike"));
+      return map;
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  /** Set/switch/clear the caller's reaction on a video. `reaction: null` removes it (toggling off). */
+  setVideoReaction: async ({
+    videoId,
+    userId,
+    reaction,
+  }: {
+    videoId: string;
+    userId: string;
+    reaction: "like" | "dislike" | null;
+  }): Promise<void> => {
+    const supabase = createClient();
+    try {
+      if (reaction === null) {
+        const { error } = await supabase
+          .from("video_reactions")
+          .delete()
+          .eq("video_id", videoId)
+          .eq("user_id", userId);
+        if (error) throw error;
+        return;
+      }
+      const { error } = await supabase
+        .from("video_reactions")
+        .upsert({ video_id: videoId, user_id: userId, reaction }, { onConflict: "video_id,user_id" });
+      if (error) throw error;
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
   /** Learner's active (non-expired) unlocks with mentor profile details, for the Settings page. */
   getLearnerActiveSubscriptions: async (
     learnerId: string,

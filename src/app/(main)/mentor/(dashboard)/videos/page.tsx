@@ -1,6 +1,6 @@
 "use client";
 
-import { FileVideo, ImageIcon, Pencil, Play, Trash2, Upload, Video as VideoIcon, X } from "lucide-react";
+import { FileVideo, ImageIcon, Pencil, Play, ThumbsDown, ThumbsUp, Trash2, Upload, Video as VideoIcon, X } from "lucide-react";
 import Link from "next/link";
 import OptimizedImage from "@/components/OptimizedImage";
 import { useEffect, useRef, useState } from "react";
@@ -154,6 +154,9 @@ export default function MentorVideosPage() {
   const [editingVideo, setEditingVideo] = useState<MentorVideo | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [reactionCounts, setReactionCounts] = useState<
+    Map<string, { likeCount: number; dislikeCount: number }>
+  >(new Map());
 
   const loadVideos = async () => {
     if (!user) return;
@@ -167,6 +170,10 @@ export default function MentorVideosPage() {
       // out the entire page, including videos that loaded fine.
       const rows = await videoLibraryApi.getMentorVideos(user.id);
       setVideos(rows);
+      void videoLibraryApi
+        .getVideoReactionCounts(rows.map((v) => v.id))
+        .then(setReactionCounts)
+        .catch(() => {});
       try {
         const profile = await profileApi.getMentorProfile(user.id);
         setUnlockPriceState(profile.unlock_price ?? null);
@@ -455,6 +462,16 @@ export default function MentorVideosPage() {
                   >
                     {togglingId === video.id ? "Updating…" : video.is_free ? "Free preview — tap to lock" : "Locked — tap to make free"}
                   </button>
+                </div>
+                <div className="hidden shrink-0 items-center gap-3 text-xs font-medium text-text-muted sm:flex">
+                  <span className="flex items-center gap-1">
+                    <ThumbsUp size={13} />
+                    {reactionCounts.get(video.id)?.likeCount ?? 0}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <ThumbsDown size={13} />
+                    {reactionCounts.get(video.id)?.dislikeCount ?? 0}
+                  </span>
                 </div>
                 <button
                   type="button"
