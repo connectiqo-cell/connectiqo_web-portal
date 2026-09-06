@@ -10,7 +10,6 @@ import { AuthTextField } from "@/components/auth/AuthTextField";
 import { AuthVisualPanel } from "@/components/auth/AuthVisualPanel";
 import { authApi } from "@/lib/api/authApi";
 import { ROUTES } from "@/lib/routes";
-import { resolvePostLoginRoute } from "@/lib/utils/postAuthRedirect";
 import { toSafeRelativePath } from "@/lib/utils/safeRedirect";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -46,9 +45,8 @@ function LoginForm() {
     setLoginError("");
     setLoading(true);
     try {
-      const { user } = await authApi.signIn({ email: trimmedEmail, password });
-      const destination = user ? await resolvePostLoginRoute(user.id, next) : next;
-      router.push(destination);
+      await authApi.signIn({ email: trimmedEmail, password });
+      router.push(next);
     } catch (error) {
       setLoginError((error as Error)?.message || "Something went wrong. Please try again.");
       setLoading(false);
