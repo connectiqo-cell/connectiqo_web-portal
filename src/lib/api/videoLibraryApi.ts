@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getSupabaseErrorMessage } from "@/lib/supabase/errorHandler";
 import { VIDEO_UNLOCK_PRICE_TIERS } from "@/lib/constants/videoUnlockTiers";
 import { uploadFileWithProgress } from "@/lib/utils/uploadWithProgress";
+import { isMentorFreezeActive } from "@/lib/utils/mentorFreeze";
 
 const BUCKET = "mentor-videos";
 const THUMB_BUCKET = "mentor-videos-thumbnail";
@@ -15,6 +16,8 @@ export interface MentorVideo {
   thumbnail_url: string | null;
   is_free: boolean;
   position: number | null;
+  is_promoted?: boolean;
+  promoted_at?: string | null;
   created_at: string;
   storage_path?: string;
   profiles?: { id: string; name: string | null; avatar_url: string | null } | null;
@@ -24,6 +27,21 @@ export type PublicVideo = MentorVideo & {
   profiles: { id: string; name: string | null; avatar_url: string | null } | null;
   mentor_profiles: { specialization: string | null; unlock_price: number | null; category: string | null };
 };
+
+async function fetchActiveMentorIds(mentorIds: string[]): Promise<Set<string>> {
+  const unique = [...new Set(mentorIds.filter(Boolean))];
+  if (!unique.length) return new Set();
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("mentor_profiles")
+    .select("id, mentor_frozen, mentor_frozen_until")
+    .in("id", unique);
+  const active = new Set<string>();
+  (data || []).forEach((row) => {
+    if (!isMentorFreezeActive(row)) active.add(row.id);
+  });
+  return active;
+}
 
 export interface CreateVideoOrderResponse {
   orderId: string;
@@ -122,9 +140,26 @@ export const videoLibraryApi = {
   getMentorVideos: async (mentorId: string): Promise<MentorVideo[]> => {
     const supabase = createClient();
     try {
+      const { data: mentorRow } = await supabase
+        .from("mentor_profiles")
+        .select("id, mentor_frozen, mentor_frozen_until")
+        .eq("id", mentorId)
+        .maybeSingle();
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const isOwner = Boolean(user?.id && String(user.id) === String(mentorId));
+
+      if (!isOwner && (!mentorRow || isMentorFreezeActive(mentorRow))) {
+        return [];
+      }
+
       const { data, error } = await supabase
         .from("mentor_videos")
-        .select("id, mentor_id, title, description, video_url, thumbnail_url, is_free, position, storage_path, created_at")
+        .select(
+          "id, mentor_id, title, description, video_url, thumbnail_url, is_free, position, is_promoted, promoted_at, storage_path, created_at",
+        )
         .eq("mentor_id", mentorId)
         .order("position", { ascending: true })
         .order("created_at", { ascending: true });
@@ -179,7 +214,7 @@ export const videoLibraryApi = {
     }
   },
 
-  /** All mentors' public videos, newest first — powers the cross-mentor /videos browse page. */
+  /** All mentors' public videos — promoted first, then newest. */
   getAllPublicVideos: async ({
     page = 0,
     pageSize = 20,
@@ -192,8 +227,10 @@ export const videoLibraryApi = {
       const { data: videos, error } = await supabase
         .from("mentor_videos")
         .select(
-          "id, mentor_id, title, description, video_url, thumbnail_url, is_free, position, created_at, profiles:mentor_id (id, name, avatar_url)",
+          "id, mentor_id, title, description, video_url, thumbnail_url, is_free, position, is_promoted, promoted_at, created_at, profiles:mentor_id (id, name, avatar_url)",
         )
+        .order("is_promoted", { ascending: false })
+        .order("promoted_at", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false })
         .range(from, to);
       if (error) throw error;
@@ -202,16 +239,26 @@ export const videoLibraryApi = {
       const mentorIds = [...new Set(videos.map((v) => v.mentor_id))];
       const { data: mentorProfiles } = await supabase
         .from("mentor_profiles")
-        .select("id, specialization, unlock_price, category")
+        .select("id, specialization, unlock_price, category, mentor_frozen, mentor_frozen_until")
         .in("id", mentorIds);
 
-      const profileMap = new Map((mentorProfiles || []).map((mp) => [mp.id, mp]));
+      const profileMap = new Map(
+        (mentorProfiles || [])
+          .filter((mp) => !isMentorFreezeActive(mp))
+          .map((mp) => [mp.id, mp]),
+      );
 
-      return (videos as unknown as MentorVideo[]).map((v) => ({
-        ...v,
-        profiles: v.profiles ?? null,
-        mentor_profiles: profileMap.get(v.mentor_id) || { specialization: "", unlock_price: null, category: null },
-      })) as PublicVideo[];
+      return (videos as unknown as MentorVideo[])
+        .filter((v) => profileMap.has(v.mentor_id))
+        .map((v) => ({
+          ...v,
+          profiles: v.profiles ?? null,
+          mentor_profiles: profileMap.get(v.mentor_id) || {
+            specialization: "",
+            unlock_price: null,
+            category: null,
+          },
+        })) as PublicVideo[];
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
     }
@@ -224,7 +271,7 @@ export const videoLibraryApi = {
       const { data: video, error } = await supabase
         .from("mentor_videos")
         .select(
-          "id, mentor_id, title, description, video_url, thumbnail_url, is_free, position, created_at, profiles:mentor_id (id, name, avatar_url)",
+          "id, mentor_id, title, description, video_url, thumbnail_url, is_free, position, is_promoted, promoted_at, created_at, profiles:mentor_id (id, name, avatar_url)",
         )
         .eq("id", videoId)
         .maybeSingle();
@@ -235,9 +282,18 @@ export const videoLibraryApi = {
 
       const { data: mentorProfile } = await supabase
         .from("mentor_profiles")
-        .select("id, specialization, unlock_price, category")
+        .select("id, specialization, unlock_price, category, mentor_frozen, mentor_frozen_until")
         .eq("id", typedVideo.mentor_id)
         .maybeSingle();
+
+      if (!mentorProfile || isMentorFreezeActive(mentorProfile)) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user?.id || String(user.id) !== String(typedVideo.mentor_id)) {
+          return null;
+        }
+      }
 
       return {
         ...typedVideo,
@@ -365,8 +421,14 @@ export const videoLibraryApi = {
         .eq("learner_id", learnerId)
         .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
       if (error) throw error;
+      const rows = data || [];
+      const activeMentorIds = await fetchActiveMentorIds(rows.map((u) => u.mentor_id));
       const map = new Map<string, { expiresAt: string | null }>();
-      (data || []).forEach((u) => map.set(u.mentor_id, { expiresAt: u.expires_at }));
+      rows.forEach((u) => {
+        if (activeMentorIds.has(u.mentor_id)) {
+          map.set(u.mentor_id, { expiresAt: u.expires_at });
+        }
+      });
       return map;
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
@@ -382,6 +444,11 @@ export const videoLibraryApi = {
   }): Promise<{ unlocked: boolean; expiresAt: string | null }> => {
     const supabase = createClient();
     try {
+      const activeMentorIds = await fetchActiveMentorIds([mentorId]);
+      if (!activeMentorIds.has(mentorId)) {
+        return { unlocked: false, expiresAt: null };
+      }
+
       const iso = new Date().toISOString();
       const { data, error } = await supabase
         .from("learner_unlocks")

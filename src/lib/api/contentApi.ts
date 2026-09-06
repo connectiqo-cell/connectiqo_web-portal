@@ -29,7 +29,11 @@ export async function fetchActiveCategories(
       console.warn("mentor_categories:", error.message);
       return [];
     }
-    return data || [];
+    // A few live rows have accidental trailing whitespace in `name` (e.g.
+    // "Business & Finance "). Left untrimmed, a name selected here wouldn't
+    // string-match the same (trimmed) value once saved elsewhere — trim once
+    // at the source instead of every comparison site downstream.
+    return (data || []).map((row) => ({ ...row, name: row.name.trim() }));
   } catch (e) {
     console.warn("mentor_categories fetch failed:", (e as Error)?.message);
     return [];

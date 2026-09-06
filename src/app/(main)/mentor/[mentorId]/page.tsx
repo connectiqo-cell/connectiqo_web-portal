@@ -14,6 +14,7 @@ import { mentorApi } from "@/lib/api/mentorApi";
 import { reviewsApi } from "@/lib/api/reviewsApi";
 import { videoLibraryApi } from "@/lib/api/videoLibraryApi";
 import { parseMentorCategories } from "@/lib/utils/mentorCategories";
+import { isMentorFreezeActive } from "@/lib/utils/mentorFreeze";
 import { ROUTES } from "@/lib/routes";
 import { createPublicClient } from "@/lib/supabase/publicClient";
 
@@ -41,7 +42,7 @@ export default async function MentorProfilePage({ params }: PageProps) {
   const supabase = createPublicClient();
 
   const mentor = await mentorApi.getMentorWithProfile(supabase, identifier).catch(() => null);
-  if (!mentor) notFound();
+  if (!mentor || isMentorFreezeActive(mentor)) notFound();
 
   // Route param may be a username; every DB call below needs the real UUID.
   const mentorId = mentor.id;
