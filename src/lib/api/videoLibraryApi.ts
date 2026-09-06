@@ -217,6 +217,38 @@ export const videoLibraryApi = {
     }
   },
 
+  /** One specific video by id, shaped like getAllPublicVideos's rows — lets a deep link (e.g. from a video card elsewhere) open the /videos feed already on that video instead of always the newest one. */
+  getPublicVideoById: async (videoId: string): Promise<PublicVideo | null> => {
+    const supabase = createClient();
+    try {
+      const { data: video, error } = await supabase
+        .from("mentor_videos")
+        .select(
+          "id, mentor_id, title, description, video_url, thumbnail_url, is_free, position, created_at, profiles:mentor_id (id, name, avatar_url)",
+        )
+        .eq("id", videoId)
+        .maybeSingle();
+      if (error) throw error;
+      if (!video) return null;
+
+      const typedVideo = video as unknown as MentorVideo;
+
+      const { data: mentorProfile } = await supabase
+        .from("mentor_profiles")
+        .select("id, specialization, unlock_price, category")
+        .eq("id", typedVideo.mentor_id)
+        .maybeSingle();
+
+      return {
+        ...typedVideo,
+        profiles: typedVideo.profiles ?? null,
+        mentor_profiles: mentorProfile || { specialization: "", unlock_price: null, category: null },
+      } as PublicVideo;
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
   /** Learner's active (non-expired) unlocks with mentor profile details, for the Settings page. */
   getLearnerActiveSubscriptions: async (
     learnerId: string,

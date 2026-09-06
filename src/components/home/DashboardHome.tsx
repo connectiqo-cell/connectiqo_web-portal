@@ -135,7 +135,7 @@ export function DashboardHome({
                   {recommendedVideos.map((video) => (
                     <Link
                       key={video.id}
-                      href={ROUTES.videos}
+                      href={`${ROUTES.videos}?videoId=${video.id}`}
                       data-video
                       className="group flex w-40 sm:w-48 shrink-0 flex-col gap-3 rounded-2xl overflow-hidden transition-all hover:shadow-lg"
                     >
