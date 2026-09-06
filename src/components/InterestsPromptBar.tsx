@@ -2,61 +2,34 @@
 
 import { X } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-import { useAuth } from "@/contexts/AuthContext";
-import { fetchActiveCategoryNames } from "@/lib/api/contentApi";
-import { profileApi } from "@/lib/api/profileApi";
+import { useInterestsStatus } from "@/contexts/InterestsStatusContext";
 import { ROUTES } from "@/lib/routes";
-import { MIN_LEARNER_INTERESTS, needsCategoryInterestOnboarding } from "@/lib/utils/mentorCategories";
-
-function dismissedKey(userId: string) {
-  return `interests-prompt-dismissed-${userId}`;
-}
+import { MIN_LEARNER_INTERESTS } from "@/lib/utils/mentorCategories";
 
 /**
- * Dismissible reminder shown when a learner has fewer than MIN_LEARNER_INTERESTS
- * matched interests — e.g. an admin deleted or renamed a category they'd
- * picked, silently dropping their matched count. Deliberately non-blocking:
- * links to the existing interests picker in Settings > Profile instead of
- * forcing a full-page onboarding redirect (which read as a forced logout).
+ * Reminder shown whenever the signed-in learner has fewer than
+ * MIN_LEARNER_INTERESTS matched interests — e.g. an admin deleted/renamed a
+ * category they'd picked, silently dropping their matched count. Dismissible,
+ * but disappearing it doesn't silence it forever: it reappears on its own if
+ * the condition goes back to true after being fixed (e.g. dismissed once,
+ * then a later admin action drops them below 5 again).
  */
 export function InterestsPromptBar() {
-  const { user, profile } = useAuth();
-  const [needsMore, setNeedsMore] = useState(false);
+  const { needsMoreInterests } = useInterestsStatus();
   const [dismissed, setDismissed] = useState(false);
 
-  const isLearner = profile?.role === "learner" || profile?.role === "both";
+  // Reset a prior dismissal whenever this flips from false to true again —
+  // compared during render rather than in an effect, per React's guidance on
+  // adjusting state when a prop changes without an extra render pass.
+  const [prevNeedsMore, setPrevNeedsMore] = useState(needsMoreInterests);
+  if (needsMoreInterests !== prevNeedsMore) {
+    setPrevNeedsMore(needsMoreInterests);
+    if (needsMoreInterests) setDismissed(false);
+  }
 
-  useEffect(() => {
-    if (!user || !isLearner) return;
-    let cancelled = false;
-    // Deferred to a microtask so the setState calls run as a reaction to the
-    // effect rather than synchronously inside its body.
-    void Promise.resolve().then(async () => {
-      if (cancelled) return;
-      if (sessionStorage.getItem(dismissedKey(user.id))) {
-        setDismissed(true);
-        return;
-      }
-      const [learner, categoryNames] = await Promise.all([
-        profileApi.getLearnerProfile(user.id).catch(() => null),
-        fetchActiveCategoryNames().catch(() => []),
-      ]);
-      if (cancelled) return;
-      setNeedsMore(needsCategoryInterestOnboarding(learner?.interests, categoryNames));
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [user, isLearner]);
-
-  if (!user || !needsMore || dismissed) return null;
-
-  const handleDismiss = () => {
-    sessionStorage.setItem(dismissedKey(user.id), "1");
-    setDismissed(true);
-  };
+  if (!needsMoreInterests || dismissed) return null;
 
   return (
     <div className="flex items-center gap-3 border-b border-accent-warning/40 bg-accent-warning/10 px-4 py-2.5 text-sm sm:px-6">
@@ -71,7 +44,7 @@ export function InterestsPromptBar() {
       </Link>
       <button
         type="button"
-        onClick={handleDismiss}
+        onClick={() => setDismissed(true)}
         aria-label="Dismiss"
         className="shrink-0 text-text-muted hover:text-text-primary"
       >
