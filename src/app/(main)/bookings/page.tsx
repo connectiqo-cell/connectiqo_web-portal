@@ -26,7 +26,10 @@ import { isBookingSessionPast } from "@/lib/utils/bookingSession";
 import { useBookingsRealtime } from "@/lib/hooks/useBookingsRealtime";
 
 const PREVIEW_COUNT = 4;
-const RESCHEDULE_STATUSES = new Set(["reschedule_needed", "reschedule_proposed", "reschedule_unresolved"]);
+// reschedule_needed/reschedule_proposed are still actionable — pinned above the
+// regular Upcoming list. reschedule_unresolved is a closed/dead-end state, so it
+// lives in History instead, alongside completed/cancelled/rejected.
+const RESCHEDULE_ACTIVE_STATUSES = new Set(["reschedule_needed", "reschedule_proposed"]);
 
 function toDateStr(d: Date) {
   const year = d.getFullYear();
@@ -100,10 +103,12 @@ export default function BookingsPage() {
 
   useBookingsRealtime(user?.id, loadBookings);
 
-  const activeUpcoming = upcoming.filter((b) => !isBookingSessionPast(b));
-  const expired = upcoming.filter((b) => isBookingSessionPast(b));
+  const reschedulePending = upcoming.filter((b) => RESCHEDULE_ACTIVE_STATUSES.has(b.status));
+  const regularUpcoming = upcoming.filter((b) => !RESCHEDULE_ACTIVE_STATUSES.has(b.status));
+  const activeUpcoming = regularUpcoming.filter((b) => !isBookingSessionPast(b));
+  const expired = regularUpcoming.filter((b) => isBookingSessionPast(b));
   const proposalByBookingId = new Map(proposals.map((p) => [p.booking_id, p]));
-  const upcomingCount = activeUpcoming.length;
+  const upcomingCount = reschedulePending.length + activeUpcoming.length;
   const activeUpcomingFiltered = selectedDate
     ? activeUpcoming.filter((b) => b.availability_slots?.date === selectedDate)
     : activeUpcoming;
@@ -127,7 +132,7 @@ export default function BookingsPage() {
   );
   const summary = useMemo(
     () => {
-      const expiredCount = upcoming.filter((b) => isBookingSessionPast(b)).length;
+      const expiredCount = regularUpcoming.filter((b) => isBookingSessionPast(b)).length;
       return {
         total: upcoming.length + history.length,
         completed: history.filter((b) => b.status === "completed").length,
@@ -241,7 +246,7 @@ export default function BookingsPage() {
                     Explore Mentors
                   </Link>
                 </div>
-              ) : selectedDate && activeUpcomingFiltered.length === 0 ? (
+              ) : selectedDate && activeUpcomingFiltered.length === 0 && reschedulePending.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 py-10 text-center">
                   <p className="text-sm font-semibold text-text-primary">No upcoming sessions on this date</p>
                   <button
@@ -254,6 +259,14 @@ export default function BookingsPage() {
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
+                  {reschedulePending.map((booking) => (
+                    <RescheduleBanner
+                      key={booking.id}
+                      booking={booking}
+                      variant="learner"
+                      proposal={proposalByBookingId.get(booking.id) || null}
+                    />
+                  ))}
                   {visibleActiveUpcoming.map((booking) => (
                     <BookingListItem key={booking.id} booking={booking} showMoreMenu={false} />
                   ))}
@@ -293,13 +306,8 @@ export default function BookingsPage() {
               ) : (
                 <div className="flex flex-col gap-3">
                   {visibleHistory.map((booking) =>
-                    RESCHEDULE_STATUSES.has(booking.status) ? (
-                      <RescheduleBanner
-                        key={booking.id}
-                        booking={booking}
-                        variant="learner"
-                        proposal={proposalByBookingId.get(booking.id) || null}
-                      />
+                    booking.status === "reschedule_unresolved" ? (
+                      <RescheduleBanner key={booking.id} booking={booking} variant="learner" />
                     ) : (
                       <BookingListItem
                         key={booking.id}
