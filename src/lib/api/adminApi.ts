@@ -273,17 +273,12 @@ export const adminApi = {
   setMentorVideoPromoted: async (videoId: string, promoted: boolean) => {
     const supabase = createClient();
     try {
-      const { data, error } = await supabase
-        .from("mentor_videos")
-        .update({
-          is_promoted: promoted,
-          promoted_at: promoted ? new Date().toISOString() : null,
-        })
-        .eq("id", videoId)
-        .select("id, is_promoted, promoted_at")
-        .single();
+      const { data, error } = await supabase.rpc("admin_set_mentor_video_promoted", {
+        p_id: videoId,
+        p_promoted: promoted,
+      });
       if (error) throw error;
-      return data;
+      return Array.isArray(data) ? data[0] : data;
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
     }
