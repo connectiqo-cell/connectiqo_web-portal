@@ -11,6 +11,7 @@ import {
   parseMentorCategories,
   quotePostgrestFilterValue,
 } from "@/lib/utils/mentorCategories";
+import { isMentorFreezeActive, mentorNotFrozenOrFilter } from "@/lib/utils/mentorFreeze";
 
 export interface MentorProfileRow {
   id: string;
@@ -30,6 +31,9 @@ export interface MentorProfileRow {
   instagram_url?: string | null;
   youtube_url?: string | null;
   skills?: string[] | null;
+  mentor_frozen?: boolean | null;
+  mentor_frozen_until?: string | null;
+  mentor_freeze_reason?: string | null;
   profiles: {
     id: string;
     name: string | null;
@@ -59,6 +63,9 @@ export const MENTOR_SELECT = `
   price_per_hour,
   rating,
   total_sessions,
+  mentor_frozen,
+  mentor_frozen_until,
+  mentor_freeze_reason,
   profiles:id (
     id,
     name,
@@ -68,6 +75,10 @@ export const MENTOR_SELECT = `
 `;
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function withoutFrozenMentors(rows: MentorProfileRow[] | null | undefined): MentorProfileRow[] {
+  return (rows || []).filter((row) => !isMentorFreezeActive(row));
+}
 
 /**
  * Ported (subset used by discovery pages) from connectfront/src/api/mentorApi.js.
@@ -114,6 +125,7 @@ export const mentorApi = {
         .select(
           `id, specialization, bio, experience_years, price_per_hour, rating, total_sessions,
            unlock_price, cover_image_url, location, website, linkedin_url, x_url, instagram_url, youtube_url, skills,
+           mentor_frozen, mentor_frozen_until, mentor_freeze_reason,
            profiles:id ( id, name, avatar_url, username )`,
         )
         .eq("id", mentorId)
@@ -150,6 +162,7 @@ export const mentorApi = {
       const { data, error } = await supabase
         .from("mentor_profiles")
         .select(MENTOR_SELECT)
+        .or(mentorNotFrozenOrFilter())
         .order("category", { ascending: true })
         .order("rating", { ascending: false })
         .limit(300);
@@ -158,7 +171,7 @@ export const mentorApi = {
       const grouped: Record<string, MentorProfileRow[]> = {};
       const keyByLower: Record<string, string> = {};
 
-      ((data as unknown as MentorProfileRow[]) || []).forEach((mentor) => {
+      withoutFrozenMentors(data as unknown as MentorProfileRow[]).forEach((mentor) => {
         const categories = parseMentorCategories(mentor.category);
         const bucketNames = categories.length ? categories : [normalizeCategoryBucket("")];
 
@@ -189,11 +202,12 @@ export const mentorApi = {
       const { data, error } = await supabase
         .from("mentor_profiles")
         .select(MENTOR_SELECT)
+        .or(mentorNotFrozenOrFilter())
         .order("rating", { ascending: false })
         .order("total_sessions", { ascending: false })
         .limit(limit);
       if (error) throw error;
-      return (data as unknown as MentorProfileRow[]) || [];
+      return withoutFrozenMentors(data as unknown as MentorProfileRow[]);
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
     }
@@ -247,7 +261,7 @@ export const mentorApi = {
         .order("rating", { ascending: false })
         .range(from, to);
       if (error) throw error;
-      return ((data as unknown as MentorProfileRow[]) || []).filter((mentor) =>
+      return withoutFrozenMentors(data as unknown as MentorProfileRow[]).filter((mentor) =>
         list.some((interest) => mentorHasCategory(mentor.category, interest)),
       );
     } catch (error) {
@@ -271,7 +285,7 @@ export const mentorApi = {
           .range(0, fetchSize - 1);
         if (error) throw error;
 
-        const matched = ((data as unknown as MentorProfileRow[]) || []).filter((mentor) =>
+        const matched = withoutFrozenMentors(data as unknown as MentorProfileRow[]).filter((mentor) =>
           mentorHasCategory(mentor.category, OTHER_CATEGORY_LABEL),
         );
         const from = page * pageSize;
@@ -287,7 +301,7 @@ export const mentorApi = {
         .order("rating", { ascending: false })
         .range(from, to);
       if (error) throw error;
-      return ((data as unknown as MentorProfileRow[]) || []).filter((mentor) =>
+      return withoutFrozenMentors(data as unknown as MentorProfileRow[]).filter((mentor) =>
         mentorHasCategory(mentor.category, category),
       );
     } catch (error) {
@@ -321,7 +335,7 @@ export const mentorApi = {
 
       if (fieldRes.error) throw fieldRes.error;
 
-      let results = (fieldRes.data as unknown as MentorProfileRow[]) || [];
+      let results = withoutFrozenMentors(fieldRes.data as unknown as MentorProfileRow[]);
 
       if (nameRes.data?.length) {
         const existingIds = new Set(results.map((m) => m.id));
@@ -333,7 +347,9 @@ export const mentorApi = {
             .select(MENTOR_SELECT)
             .in("id", newIds)
             .order("rating", { ascending: false });
-          if (byName?.length) results = [...results, ...(byName as unknown as MentorProfileRow[])];
+          if (byName?.length) {
+            results = [...results, ...withoutFrozenMentors(byName as unknown as MentorProfileRow[])];
+          }
         }
       }
 

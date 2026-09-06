@@ -36,6 +36,7 @@ export const ROUTES = {
   // Admin
   admin: "/admin",
   adminUsers: "/admin/users",
+  adminVideos: "/admin/videos",
 
   // Shared / modal-equivalent routes
   mentorProfile: (mentorId: string) => `/mentor/${mentorId}`,

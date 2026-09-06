@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutGrid, Users } from "lucide-react";
+import { Film, LayoutGrid, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -11,6 +11,7 @@ import { ROUTES } from "@/lib/routes";
 const NAV_ITEMS = [
   { href: ROUTES.admin, label: "Categories", icon: LayoutGrid },
   { href: ROUTES.adminUsers, label: "Users", icon: Users },
+  { href: ROUTES.adminVideos, label: "Videos", icon: Film },
 ];
 
 export default function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
@@ -18,13 +19,11 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
   const pathname = usePathname();
   const { user, profile, loading } = useAuth();
 
-
   useEffect(() => {
     if (loading) return;
     if (!user) {
       router.replace(`${ROUTES.login}?next=${encodeURIComponent(pathname)}`);
       return;
-      
     }
     if (profile && !profile.is_admin) {
       router.replace(ROUTES.home);
@@ -37,7 +36,9 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
       <div>
         <h1 className="text-2xl font-bold text-text-primary">Admin</h1>
-        <p className="mt-1 text-sm text-text-secondary">Manage categories and user accounts.</p>
+        <p className="mt-1 text-sm text-text-secondary">
+          Manage categories, users, mentor freeze, and promoted videos.
+        </p>
       </div>
 
       <nav className="flex gap-1 overflow-x-auto border-b border-border-light">

@@ -13,6 +13,7 @@ import {
 } from "react";
 
 import { createClient } from "@/lib/supabase/client";
+import { isMentorFreezeActive } from "@/lib/utils/mentorFreeze";
 
 const SESSION_BOOTSTRAP_TIMEOUT_MS = 10000;
 
@@ -26,6 +27,12 @@ export interface Profile {
   is_frozen?: boolean;
   is_admin?: boolean;
   created_at?: string;
+}
+
+export interface MentorFreezeState {
+  active: boolean;
+  until: string | null;
+  reason: string | null;
 }
 
 
@@ -50,6 +57,8 @@ interface AuthContextValue {
   setPendingPasswordReset: (value: boolean) => void;
   frozenNotice: boolean;
   clearFrozenNotice: () => void;
+  mentorFreeze: MentorFreezeState | null;
+  isMentorSideFrozen: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -63,8 +72,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [pendingPasswordReset, setPendingPasswordReset] = useState(false);
   const [frozenNotice, setFrozenNotice] = useState(false);
+  const [mentorFreeze, setMentorFreeze] = useState<MentorFreezeState | null>(null);
   const cancelledRef = useRef(false);
   const clearFrozenNotice = useCallback(() => setFrozenNotice(false), []);
+
+  const loadMentorFreeze = useCallback(
+    async (userId: string) => {
+      try {
+        const { data } = await supabase
+          .from("mentor_profiles")
+          .select("mentor_frozen, mentor_frozen_until, mentor_freeze_reason")
+          .eq("id", userId)
+          .maybeSingle();
+        if (data && isMentorFreezeActive(data)) {
+          setMentorFreeze({
+            active: true,
+            until: data.mentor_frozen_until ?? null,
+            reason: data.mentor_freeze_reason ?? null,
+          });
+        } else {
+          setMentorFreeze(null);
+        }
+      } catch {
+        setMentorFreeze(null);
+      }
+    },
+    [supabase],
+  );
 
   const recoverProfile = useCallback(
     async (userId: string) => {
@@ -128,6 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setSession(null);
             setUser(null);
             setProfile(null);
+            setMentorFreeze(null);
             setLoading(false);
             return;
           }
@@ -137,16 +172,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (!data) {
           setProfile(null);
+          setMentorFreeze(null);
         } else if (data.is_frozen === true) {
           await supabase.auth.signOut();
           setSession(null);
           setUser(null);
           setProfile(null);
+          setMentorFreeze(null);
           setFrozenNotice(true);
           setLoading(false);
           return;
         } else {
           setProfile(data as Profile);
+          void loadMentorFreeze(userId);
         }
         setLoading(false);
       } catch (error) {
@@ -160,7 +198,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false);
       }
     },
-    [supabase, recoverProfile],
+    [supabase, recoverProfile, loadMentorFreeze],
   );
 
   useEffect(() => {
@@ -220,6 +258,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(null);
         setUser(null);
         setProfile(null);
+        setMentorFreeze(null);
       }
       clearTimeout(safetyTimer);
       clearLoading();
@@ -238,6 +277,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
     setUser(null);
     setProfile(null);
+    setMentorFreeze(null);
   }, [supabase]);
 
   const refreshProfile = useCallback(() => {
@@ -256,6 +296,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setPendingPasswordReset,
       frozenNotice,
       clearFrozenNotice,
+      mentorFreeze,
+      isMentorSideFrozen: Boolean(mentorFreeze?.active),
     }),
     [
       session,
@@ -267,6 +309,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       pendingPasswordReset,
       frozenNotice,
       clearFrozenNotice,
+      mentorFreeze,
     ],
   );
 
@@ -288,6 +331,8 @@ export function useAuth(): AuthContextValue {
       setPendingPasswordReset: () => {},
       frozenNotice: false,
       clearFrozenNotice: () => {},
+      mentorFreeze: null,
+      isMentorSideFrozen: false,
     };
   }
 

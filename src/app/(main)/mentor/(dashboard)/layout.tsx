@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+import { MentorFrozenGate } from "@/components/mentor/MentorFrozenGate";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROUTES } from "@/lib/routes";
 
@@ -13,10 +14,17 @@ const PAGE_HEADERS: Record<string, { title: string; subtitle: string }> = {
   [ROUTES.mentorVideos]: { title: "Videos", subtitle: "Manage your video library" },
 };
 
+/** Soft-lock mentor tools while frozen; learner features stay available. */
+const FROZEN_GATED_PATHS = new Set([
+  ROUTES.mentorProfileDashboard,
+  ROUTES.mentorSchedule,
+  ROUTES.mentorVideos,
+]);
+
 export default function MentorDashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, loading } = useAuth();
+  const { user, loading, isMentorSideFrozen, mentorFreeze } = useAuth();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -27,6 +35,7 @@ export default function MentorDashboardLayout({ children }: { children: React.Re
   if (!user) return null;
 
   const header = PAGE_HEADERS[pathname] || PAGE_HEADERS[ROUTES.mentorProfileDashboard];
+  const gated = FROZEN_GATED_PATHS.has(pathname) && isMentorSideFrozen;
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
@@ -35,7 +44,11 @@ export default function MentorDashboardLayout({ children }: { children: React.Re
         <p className="mt-1 text-sm text-text-secondary">{header.subtitle}</p>
       </div>
 
-      {children}
+      {gated ? (
+        <MentorFrozenGate until={mentorFreeze?.until} reason={mentorFreeze?.reason} />
+      ) : (
+        children
+      )}
     </main>
   );
 }

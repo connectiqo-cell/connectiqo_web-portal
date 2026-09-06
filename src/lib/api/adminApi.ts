@@ -133,4 +133,121 @@ export const adminApi = {
       throw new Error(getSupabaseErrorMessage(error));
     }
   },
+
+  /** Timed mentor-side freeze (keeps learner access). Requires admin_freeze_mentor RPC. */
+  freezeMentor: async ({
+    mentorId,
+    until = null,
+    reason = null,
+  }: {
+    mentorId: string;
+    until?: string | null;
+    reason?: string | null;
+  }) => {
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase.rpc("admin_freeze_mentor", {
+        p_id: mentorId,
+        p_until: until,
+        p_reason: reason,
+        p_operator: null,
+      });
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  unfreezeMentor: async (mentorId: string) => {
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase.rpc("admin_unfreeze_mentor", {
+        p_id: mentorId,
+        p_operator: null,
+      });
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  listMentorVideos: async ({
+    page = 1,
+    pageSize = 25,
+    search = "",
+  }: {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+  } = {}) => {
+    const supabase = createClient();
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    const q = search
+      .trim()
+      .replace(/[%_,]/g, " ")
+      .replace(/\s+/g, " ")
+      .slice(0, 80);
+
+    try {
+      let query = supabase
+        .from("mentor_videos")
+        .select(
+          "id, mentor_id, title, description, thumbnail_url, is_free, is_promoted, promoted_at, created_at, storage_path, video_url",
+          { count: "exact" },
+        )
+        .order("is_promoted", { ascending: false })
+        .order("promoted_at", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false })
+        .range(from, to);
+
+      if (q) {
+        query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%`);
+      }
+
+      const { data, error, count } = await query;
+      if (error) throw error;
+      return { rows: data || [], total: count ?? 0 };
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  setMentorVideoPromoted: async (videoId: string, promoted: boolean) => {
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase
+        .from("mentor_videos")
+        .update({
+          is_promoted: promoted,
+          promoted_at: promoted ? new Date().toISOString() : null,
+        })
+        .eq("id", videoId)
+        .select("id, is_promoted, promoted_at")
+        .single();
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  deleteMentorVideo: async (video: {
+    id: string;
+    storage_path?: string | null;
+    video_url?: string | null;
+  }) => {
+    const supabase = createClient();
+    try {
+      if (video.storage_path) {
+        await supabase.storage.from("mentor-videos").remove([video.storage_path]).catch(() => {});
+      }
+      const { error } = await supabase.from("mentor_videos").delete().eq("id", video.id);
+      if (error) throw error;
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
 };
