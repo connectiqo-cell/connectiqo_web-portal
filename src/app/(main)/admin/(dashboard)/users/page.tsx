@@ -5,6 +5,10 @@ import { useState } from "react";
 
 import { adminApi, type AdminProfileRow } from "@/lib/api/adminApi";
 
+function isoDateDaysFromNow(days: number): string {
+  return new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+}
+
 export default function AdminUsersPage() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<AdminProfileRow[]>([]);
@@ -58,7 +62,7 @@ export default function AdminUsersPage() {
         setError("Enter a positive number of days, or leave blank for indefinite.");
         return;
       }
-      until = new Date(Date.now() + n * 24 * 60 * 60 * 1000).toISOString();
+      until = isoDateDaysFromNow(n);
     }
     const reason = window.prompt("Reason (optional)") || null;
     setBusyId(profile.id);
