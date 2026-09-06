@@ -132,7 +132,9 @@ export default function BookingsPage() {
   );
   const summary = useMemo(
     () => {
-      const expiredCount = regularUpcoming.filter((b) => isBookingSessionPast(b)).length;
+      const expiredCount = upcoming.filter(
+        (b) => !RESCHEDULE_ACTIVE_STATUSES.has(b.status) && isBookingSessionPast(b),
+      ).length;
       return {
         total: upcoming.length + history.length,
         completed: history.filter((b) => b.status === "completed").length,

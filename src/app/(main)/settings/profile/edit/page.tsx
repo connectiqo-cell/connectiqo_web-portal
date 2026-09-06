@@ -10,7 +10,6 @@ import { CameraCaptureModal } from "@/components/CameraCaptureModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchActiveCategories } from "@/lib/api/contentApi";
 import { profileApi } from "@/lib/api/profileApi";
-import { MENTOR_CATEGORIES } from "@/lib/constants/mentorCategories";
 import { ROUTES } from "@/lib/routes";
 import { toggleMentorCategory } from "@/lib/utils/mentorCategories";
 import { sanitizeUsernameInput, usernameFormatError } from "@/lib/utils/username";
@@ -34,8 +33,9 @@ export default function EditProfilePage() {
   const isLearner = profile?.role !== "mentor";
   const isMentor = profile?.role === "mentor" || profile?.role === "both";
 
-  // Learner interests
-  const [categories, setCategories] = useState<string[]>([...MENTOR_CATEGORIES]);
+  // Category list — live from mentor_categories, shared by the learner interests
+  // picker below and the mentor's own Category field.
+  const [categories, setCategories] = useState<string[]>([]);
   const [interests, setInterests] = useState<string[]>([]);
   const [interestsLoaded, setInterestsLoaded] = useState(false);
 
@@ -98,11 +98,26 @@ export default function EditProfilePage() {
     let cancelled = false;
     (async () => {
       try {
-        const data = await profileApi.getMentorProfile(user.id);
+        const [data, categoryRows] = await Promise.all([
+          profileApi.getMentorProfile(user.id),
+          fetchActiveCategories().catch(() => []),
+        ]);
         if (cancelled) return;
         setCoverUrl(data.cover_image_url || null);
         setSpecialization(data.specialization || "");
-        setCategory(data.category || "");
+
+        const categoryNames = categoryRows.map((r) => r.name);
+        if (categoryNames.length) setCategories(categoryNames);
+        // A saved category can be stale (admin renamed/merged/deleted it since) or
+        // otherwise not a real category — fall back to "Other" for display rather
+        // than silently showing an invalid/blank selection. Only applied when we
+        // actually have a live list to check against, so a failed fetch doesn't
+        // wrongly bucket every mentor into "Other".
+        const savedCategory = data.category || "";
+        const matchesKnownCategory =
+          categoryNames.length === 0 || categoryNames.some((c) => c.toLowerCase() === savedCategory.toLowerCase());
+        setCategory(savedCategory && !matchesKnownCategory ? "Other" : savedCategory);
+
         setBio(data.bio || "");
         setExperienceYears(String(data.experience_years ?? 0));
         setPricePerHour(String(data.price_per_hour ?? 0));
@@ -497,7 +512,7 @@ export default function EditProfilePage() {
               className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary focus:outline-none"
             >
               <option value="">Select a category</option>
-              {MENTOR_CATEGORIES.map((c) => (
+              {categories.map((c) => (
                 <option key={c} value={c}>
                   {c}
                 </option>

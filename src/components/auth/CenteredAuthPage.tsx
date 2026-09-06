@@ -8,7 +8,6 @@ import { Suspense, useState, type FormEvent } from "react";
 import { authApi } from "@/lib/api/authApi";
 import { profileApi } from "@/lib/api/profileApi";
 import { ROUTES } from "@/lib/routes";
-import { resolvePostLoginRoute } from "@/lib/utils/postAuthRedirect";
 import { toSafeRelativePath } from "@/lib/utils/safeRedirect";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -98,9 +97,8 @@ function CenteredAuthForm() {
     setLoginError("");
     setLoginLoading(true);
     try {
-      const { user } = await authApi.signIn({ email: trimmedEmail, password: loginPassword });
-      const destination = user ? await resolvePostLoginRoute(user.id, next) : next;
-      router.push(destination);
+      await authApi.signIn({ email: trimmedEmail, password: loginPassword });
+      router.push(next);
     } catch (error) {
       setLoginError((error as Error)?.message || "Something went wrong. Please try again.");
       setLoginLoading(false);
