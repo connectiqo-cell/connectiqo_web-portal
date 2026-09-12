@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { BookingListItem } from "@/components/booking/BookingListItem";
+import { RequestRescheduleBanner } from "@/components/booking/RequestRescheduleBanner";
 import { RescheduleBanner } from "@/components/booking/RescheduleBanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { bookingApi, type BookingRow } from "@/lib/api/bookingApi";
@@ -108,14 +109,17 @@ export default function BookingsPage() {
   const activeUpcoming = regularUpcoming.filter((b) => !isBookingSessionPast(b));
   const expired = regularUpcoming.filter((b) => isBookingSessionPast(b));
   const proposalByBookingId = new Map(proposals.map((p) => [p.booking_id, p]));
-  const upcomingCount = reschedulePending.length + activeUpcoming.length;
+  // Expired (session window closed, mentor never joined, nothing done about
+  // it yet) is actionable — the learner can request a reschedule right from
+  // here — so it's pinned in Upcoming like reschedulePending, not History.
+  const upcomingCount = reschedulePending.length + expired.length + activeUpcoming.length;
   const activeUpcomingFiltered = selectedDate
     ? activeUpcoming.filter((b) => b.availability_slots?.date === selectedDate)
     : activeUpcoming;
   const visibleActiveUpcoming = showAllUpcoming
     ? activeUpcomingFiltered
     : activeUpcomingFiltered.slice(0, PREVIEW_COUNT);
-  const combinedHistory = [...expired, ...history].sort((a, b) => {
+  const combinedHistory = [...history].sort((a, b) => {
     const da = `${a.availability_slots?.date ?? ""} ${a.availability_slots?.start_time ?? ""}`;
     const db = `${b.availability_slots?.date ?? ""} ${b.availability_slots?.start_time ?? ""}`;
     return db.localeCompare(da);
@@ -248,7 +252,10 @@ export default function BookingsPage() {
                     Explore Mentors
                   </Link>
                 </div>
-              ) : selectedDate && activeUpcomingFiltered.length === 0 && reschedulePending.length === 0 ? (
+              ) : selectedDate &&
+                activeUpcomingFiltered.length === 0 &&
+                reschedulePending.length === 0 &&
+                expired.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 py-10 text-center">
                   <p className="text-sm font-semibold text-text-primary">No upcoming sessions on this date</p>
                   <button
@@ -268,6 +275,9 @@ export default function BookingsPage() {
                       variant="learner"
                       proposal={proposalByBookingId.get(booking.id) || null}
                     />
+                  ))}
+                  {expired.map((booking) => (
+                    <RequestRescheduleBanner key={booking.id} booking={booking} onRequested={loadBookings} />
                   ))}
                   {visibleActiveUpcoming.map((booking) => (
                     <BookingListItem key={booking.id} booking={booking} showMoreMenu={false} />

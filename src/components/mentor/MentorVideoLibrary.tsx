@@ -7,6 +7,8 @@ import {
   Lock,
   Play,
   Sparkles,
+  ThumbsDown,
+  ThumbsUp,
   Video as VideoIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -30,6 +32,7 @@ function VideoRow({
   videos,
   playingId,
   isUnlocked,
+  reactionCounts,
   onPlayToggle,
   onLockedClick,
 }: {
@@ -38,6 +41,7 @@ function VideoRow({
   videos: MentorVideo[];
   playingId: string | null;
   isUnlocked: boolean;
+  reactionCounts: Map<string, { likeCount: number; dislikeCount: number }>;
   onPlayToggle: (id: string) => void;
   onLockedClick: () => void;
 }) {
@@ -112,6 +116,16 @@ function VideoRow({
                   )}
                 </div>
                 <p className="truncate text-xs font-medium text-text-secondary">{video.title}</p>
+                <div className="flex items-center gap-3 text-[11px] text-text-muted">
+                  <span className="flex items-center gap-1">
+                    <ThumbsUp size={11} />
+                    {reactionCounts.get(video.id)?.likeCount ?? 0}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <ThumbsDown size={11} />
+                    {reactionCounts.get(video.id)?.dislikeCount ?? 0}
+                  </span>
+                </div>
               </button>
             );
           })}
@@ -162,6 +176,9 @@ export function MentorVideoLibrary({
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [unlocking, setUnlocking] = useState(false);
   const [error, setError] = useState("");
+  const [reactionCounts, setReactionCounts] = useState<
+    Map<string, { likeCount: number; dislikeCount: number }>
+  >(new Map());
 
   const refreshUnlockStatus = async () => {
     if (!user || user.id === mentorId) return;
@@ -178,6 +195,12 @@ export function MentorVideoLibrary({
       const rows = await videoLibraryApi.getMentorVideos(mentorId).catch(() => []);
       if (cancelled) return;
       setVideos(rows);
+      void videoLibraryApi
+        .getVideoReactionCounts(rows.map((v) => v.id))
+        .then((counts) => {
+          if (!cancelled) setReactionCounts(counts);
+        })
+        .catch(() => {});
 
       if (user && user.id !== mentorId) {
         const status = await videoLibraryApi
@@ -279,6 +302,7 @@ export function MentorVideoLibrary({
         videos={memberVideos}
         playingId={playingId}
         isUnlocked={unlocked || isOwnProfile}
+        reactionCounts={reactionCounts}
         onPlayToggle={handlePlayToggle}
         onLockedClick={handleUnlock}
       />
@@ -289,6 +313,7 @@ export function MentorVideoLibrary({
         videos={previewVideos}
         playingId={playingId}
         isUnlocked={unlocked || isOwnProfile}
+        reactionCounts={reactionCounts}
         onPlayToggle={handlePlayToggle}
         onLockedClick={handleUnlock}
       />
