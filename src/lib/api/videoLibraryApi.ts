@@ -310,16 +310,20 @@ export const videoLibraryApi = {
     videoIds: string[],
   ): Promise<Map<string, { likeCount: number; dislikeCount: number }>> => {
     const map = new Map<string, { likeCount: number; dislikeCount: number }>();
-    if (!videoIds.length) return map;
+    const ids = [...new Set((videoIds || []).map((id) => String(id)).filter(Boolean))];
+    if (!ids.length) return map;
     const supabase = createClient();
     try {
       const { data, error } = await supabase
         .from("video_reaction_counts")
         .select("video_id, like_count, dislike_count")
-        .in("video_id", videoIds);
+        .in("video_id", ids);
       if (error) throw error;
       (data || []).forEach((row) =>
-        map.set(row.video_id, { likeCount: row.like_count, dislikeCount: row.dislike_count }),
+        map.set(String(row.video_id), {
+          likeCount: Number(row.like_count) || 0,
+          dislikeCount: Number(row.dislike_count) || 0,
+        }),
       );
       return map;
     } catch (error) {
@@ -333,16 +337,22 @@ export const videoLibraryApi = {
     videoIds: string[],
   ): Promise<Map<string, "like" | "dislike">> => {
     const map = new Map<string, "like" | "dislike">();
-    if (!userId || !videoIds.length) return map;
+    const uid = userId ? String(userId) : "";
+    const ids = [...new Set((videoIds || []).map((id) => String(id)).filter(Boolean))];
+    if (!uid || !ids.length) return map;
     const supabase = createClient();
     try {
       const { data, error } = await supabase
         .from("video_reactions")
         .select("video_id, reaction")
-        .eq("user_id", userId)
-        .in("video_id", videoIds);
+        .eq("user_id", uid)
+        .in("video_id", ids);
       if (error) throw error;
-      (data || []).forEach((row) => map.set(row.video_id, row.reaction as "like" | "dislike"));
+      (data || []).forEach((row) => {
+        if (row.reaction === "like" || row.reaction === "dislike") {
+          map.set(String(row.video_id), row.reaction);
+        }
+      });
       return map;
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
@@ -360,20 +370,53 @@ export const videoLibraryApi = {
     reaction: "like" | "dislike" | null;
   }): Promise<void> => {
     const supabase = createClient();
+    const vid = String(videoId);
+    const uid = String(userId);
     try {
       if (reaction === null) {
         const { error } = await supabase
           .from("video_reactions")
           .delete()
-          .eq("video_id", videoId)
-          .eq("user_id", userId);
+          .eq("video_id", vid)
+          .eq("user_id", uid);
         if (error) throw error;
         return;
       }
+
+      const { data: existing, error: findError } = await supabase
+        .from("video_reactions")
+        .select("id, reaction")
+        .eq("video_id", vid)
+        .eq("user_id", uid)
+        .maybeSingle();
+      if (findError) throw findError;
+
+      if (existing?.id) {
+        if (existing.reaction === reaction) return;
+        const { error } = await supabase
+          .from("video_reactions")
+          .update({ reaction })
+          .eq("id", existing.id)
+          .eq("user_id", uid);
+        if (error) throw error;
+        return;
+      }
+
       const { error } = await supabase
         .from("video_reactions")
-        .upsert({ video_id: videoId, user_id: userId, reaction }, { onConflict: "video_id,user_id" });
-      if (error) throw error;
+        .insert({ video_id: vid, user_id: uid, reaction });
+      if (error) {
+        if (String((error as { code?: string }).code) === "23505" || /duplicate|unique/i.test(error.message || "")) {
+          const { error: updErr } = await supabase
+            .from("video_reactions")
+            .update({ reaction })
+            .eq("video_id", vid)
+            .eq("user_id", uid);
+          if (updErr) throw updErr;
+          return;
+        }
+        throw error;
+      }
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
     }
