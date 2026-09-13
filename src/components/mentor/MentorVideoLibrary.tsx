@@ -179,6 +179,9 @@ export function MentorVideoLibrary({
   const [reactionCounts, setReactionCounts] = useState<
     Map<string, { likeCount: number; dislikeCount: number }>
   >(new Map());
+  const [feeRule, setFeeRule] = useState<{ platformFeePercent: number; gstPercent: number } | null>(
+    null,
+  );
 
   const refreshUnlockStatus = async () => {
     if (!user || user.id === mentorId) return;
@@ -217,6 +220,34 @@ export function MentorVideoLibrary({
       cancelled = true;
     };
   }, [mentorId, user]);
+
+  useEffect(() => {
+    if (isOwnProfile || !unlockPrice || !user) return;
+    let cancelled = false;
+    videoLibraryApi
+      .getActiveFeeRule()
+      .then((rule) => {
+        if (!cancelled) setFeeRule(rule);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isOwnProfile, unlockPrice, user]);
+
+  const priceBreakdown =
+    feeRule && unlockPrice
+      ? (() => {
+          const platformBaseFee = (unlockPrice * feeRule.platformFeePercent) / 100;
+          const gstOnFee = (platformBaseFee * feeRule.gstPercent) / 100;
+          const convenienceFee = platformBaseFee + gstOnFee;
+          return {
+            mentorAmount: unlockPrice,
+            convenienceFee,
+            totalAmount: Math.round(unlockPrice + convenienceFee),
+          };
+        })()
+      : null;
 
   const handleUnlock = async () => {
     // A mentor viewing their own profile already has full access — never
@@ -282,15 +313,36 @@ export function MentorVideoLibrary({
             Unlocked · {formatExpiry(expiresAt)}
           </span>
         ) : !unlocked && hasLockedVideos && unlockPrice ? (
-          <button
-            type="button"
-            onClick={handleUnlock}
-            disabled={unlocking}
-            className="rounded-full px-4 py-1.5 text-xs font-semibold text-text-on-accent disabled:opacity-60"
-            style={{ backgroundImage: "var(--gradient-button-primary)" }}
-          >
-            {unlocking ? "Processing…" : `Unlock all — ₹${unlockPrice} / 30 days`}
-          </button>
+          <div className="group relative">
+            <button
+              type="button"
+              onClick={handleUnlock}
+              disabled={unlocking}
+              className="rounded-full px-4 py-1.5 text-xs font-semibold text-text-on-accent disabled:opacity-60"
+              style={{ backgroundImage: "var(--gradient-button-primary)" }}
+            >
+              {unlocking
+                ? "Processing…"
+                : `Unlock all — ₹${priceBreakdown?.totalAmount ?? unlockPrice} / 30 days`}
+            </button>
+
+            {priceBreakdown ? (
+              <div className="pointer-events-none absolute right-0 top-full z-10 mt-2 w-56 rounded-xl border border-border-light bg-surface-panel p-3 text-xs text-text-secondary opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+                <div className="flex justify-between gap-3">
+                  <span>Mentor&apos;s price</span>
+                  <span className="text-text-primary">₹{priceBreakdown.mentorAmount}</span>
+                </div>
+                <div className="mt-1 flex justify-between gap-3">
+                  <span>Platform fee + GST</span>
+                  <span className="text-text-primary">₹{priceBreakdown.convenienceFee.toFixed(2)}</span>
+                </div>
+                <div className="mt-2 flex justify-between gap-3 border-t border-border-light pt-2 font-semibold">
+                  <span className="text-text-primary">Total</span>
+                  <span className="text-text-primary">₹{priceBreakdown.totalAmount}</span>
+                </div>
+              </div>
+            ) : null}
+          </div>
         ) : null}
       </div>
 
