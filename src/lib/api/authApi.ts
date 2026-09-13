@@ -1,3 +1,5 @@
+import { FunctionsHttpError } from "@supabase/supabase-js";
+
 import { createClient } from "@/lib/supabase/client";
 import { getSupabaseErrorMessage } from "@/lib/supabase/errorHandler";
 
@@ -60,15 +62,42 @@ export const authApi = {
     }
   },
 
+  /** Routed through the login-with-lockout edge function so repeated failed
+   * attempts for the same email get locked out for a cooldown window, instead
+   * of calling Supabase Auth directly from the browser. */
   signIn: async ({ email, password }: { email: string; password: string }) => {
     const supabase = createClient();
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const { data, error } = await supabase.functions.invoke("login-with-lockout", {
+        body: { email, password },
       });
-      if (error) throw error;
-      return { user: data.user, session: data.session };
+
+      if (error) {
+        let message = error.message;
+        if (error instanceof FunctionsHttpError) {
+          try {
+            const body = await error.context.json();
+            if (body?.error) message = body.error;
+          } catch {
+            // response body wasn't JSON; fall back to the generic error message
+          }
+        }
+        throw new Error(message);
+      }
+
+      const { access_token: accessToken, refresh_token: refreshToken } = data as {
+        access_token?: string;
+        refresh_token?: string;
+      };
+      if (!accessToken || !refreshToken) throw new Error("Sign in did not return a session.");
+
+      const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+      if (sessionError) throw sessionError;
+
+      return { user: sessionData.user, session: sessionData.session };
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
     }
