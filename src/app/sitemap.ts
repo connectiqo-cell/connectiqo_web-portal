@@ -13,6 +13,11 @@ const STATIC_ROUTES: MetadataRoute.Sitemap = [
   // /terms) — nothing in-app links to the local copies anymore, so they're
   // dropped here too rather than indexing an orphaned duplicate.
   { url: `${BASE_URL}/discover`, changeFrequency: "daily", priority: 0.9 },
+  {
+    url: `${BASE_URL}/child-safety`,
+    changeFrequency: "yearly",
+    priority: 0.4,
+  },
 ];
 
 /**

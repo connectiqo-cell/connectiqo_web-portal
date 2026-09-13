@@ -46,6 +46,9 @@ export function getSupabaseErrorMessage(error: unknown): string {
   if (code === "23505" && message.toLowerCase().includes("username")) {
     return "That username is already taken. Try another one.";
   }
+  if (code === "23505" && (message.includes("user_reports") || message.toLowerCase().includes("report"))) {
+    return "You already have an open report for this item.";
+  }
   if (code === "23505") return "This record already exists.";
   if (code === "23502") return "A required field is missing.";
   if (code === "42P01") return "Database error. Please contact support.";

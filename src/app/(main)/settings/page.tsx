@@ -442,6 +442,16 @@ export default function SettingsHubPage() {
                   <p className="text-xs text-text-muted">Usage guidelines and policies</p>
                 </div>
               </Link>
+              <Link
+                href={ROUTES.childSafety}
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
+              >
+                <Shield size={16} className="shrink-0 text-accent-link" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-text-primary">Child Safety Standards</p>
+                  <p className="text-xs text-text-muted">CSAE / CSAM policy and reporting</p>
+                </div>
+              </Link>
               <button
                 type="button"
                 onClick={handleShare}

@@ -600,6 +600,9 @@ export function CallRoom({
           onToggleLayout={() => setLayoutMode((m) => (m === "split" ? "minmax" : "split"))}
           isFullscreen={isFullscreen}
           onToggleFullscreen={toggleFullscreen}
+          reportUserId={isHost ? String(learnerId) : String(mentorId)}
+          reportUserName={otherUserName || (isHost ? "Learner" : "Mentor")}
+          bookingId={String(bookingId)}
         />
         <CallSessionTimer slot={slot} />
       </div>

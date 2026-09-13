@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { ReportUserModal } from "@/components/ReportUserModal";
+
 export function CallControls({
   onLeave,
   chatOpen,
@@ -34,6 +36,9 @@ export function CallControls({
   onToggleLayout,
   isFullscreen,
   onToggleFullscreen,
+  reportUserId,
+  reportUserName,
+  bookingId,
 }: {
   onLeave: () => void;
   chatOpen: boolean;
@@ -52,6 +57,9 @@ export function CallControls({
   onToggleLayout: () => void;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
+  reportUserId?: string | null;
+  reportUserName?: string | null;
+  bookingId?: string | null;
 }) {
   const { toggleMic, toggleWebcam, localMicOn, localWebcamOn, toggleScreenShare, presenterId, localParticipant } =
     useMeeting();
@@ -278,6 +286,19 @@ export function CallControls({
               {layoutMode === "split" ? <PictureInPicture2 size={16} /> : <LayoutGrid size={16} />}
               {layoutMode === "split" ? "Switch to min/max view" : "Switch to side-by-side view"}
             </button>
+
+            {reportUserId && bookingId ? (
+              <div className={`${menuItemClass} hover:bg-surface-chip`}>
+                <ReportUserModal
+                  reportedUserId={String(reportUserId)}
+                  reportedUserName={reportUserName || "this user"}
+                  contextType="call"
+                  contextId={String(bookingId)}
+                  variant="menu"
+                  onBeforeOpen={() => setMoreOpen(false)}
+                />
+              </div>
+            ) : null}
           </div>
         ) : null}
       </div>

@@ -94,7 +94,7 @@ export default async function MentorProfilePage({ params }: PageProps) {
                 username={username}
                 specialization={mentor.specialization}
               />
-              <ReportUserModal reportedUserId={mentorId} contextType="profile" />
+              <ReportUserModal reportedUserId={mentorId} reportedUserName={name} contextType="profile" />
             </div>
           </div>
           {username ? <p className="text-sm text-accent-link">@{username}</p> : null}

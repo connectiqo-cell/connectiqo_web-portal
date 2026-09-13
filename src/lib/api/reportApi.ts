@@ -17,6 +17,29 @@ export type ReportContextType = "profile" | "video" | "booking" | "call";
 const VALID_REASONS = new Set(USER_REPORT_REASONS.map((item) => item.value));
 const VALID_CONTEXT_TYPES = new Set<ReportContextType>(["profile", "video", "booking", "call"]);
 
+function duplicateReportMessage(contextType: ReportContextType) {
+  if (contextType === "video") return "You already have an open report for this video.";
+  if (contextType === "call") return "You already have an open report for this call.";
+  if (contextType === "booking") return "You already have an open report for this booking.";
+  return "You already have an open report for this user.";
+}
+
+function isClientFacingError(error: unknown): error is Error {
+  if (!(error instanceof Error) || !error.message) return false;
+  const msg = error.message;
+  return (
+    msg.includes("already have an open report") ||
+    msg.includes("must be signed in") ||
+    msg.includes("cannot report") ||
+    msg.includes("missing") ||
+    msg.includes("required") ||
+    msg.includes("valid report") ||
+    msg.includes("Invalid report") ||
+    msg.includes("1,000") ||
+    msg.includes("Choose a reason")
+  );
+}
+
 /** Ported from connectfront/src/api/reportApi.js — same `user_reports` table, same RLS. */
 export const reportApi = {
   submitUserReport: async ({
@@ -46,8 +69,6 @@ export const reportApi = {
       throw new Error("Report context ID is required for this type of report.");
     }
 
-    
-
     const supabase = createClient();
     try {
       const {
@@ -56,7 +77,7 @@ export const reportApi = {
       } = await supabase.auth.getUser();
       if (userError) throw userError;
       if (!user?.id) throw new Error("You must be signed in to report a user.");
-      if (user.id === targetId) throw new Error("You cannot report your own profile.");
+      if (String(user.id) === targetId) throw new Error("You cannot report your own profile.");
 
       const { error } = await supabase.from("user_reports").insert({
         reporter_id: user.id,
@@ -68,11 +89,12 @@ export const reportApi = {
       });
       if (error) {
         if (error.code === "23505") {
-          throw new Error("You already have an open report for this user.");
+          throw new Error(duplicateReportMessage(contextType));
         }
         throw error;
       }
     } catch (error) {
+      if (isClientFacingError(error)) throw error;
       throw new Error(getSupabaseErrorMessage(error));
     }
   },

@@ -5,6 +5,8 @@ import Link from "next/link";
 import OptimizedImage from "@/components/OptimizedImage";
 import { useEffect, useRef, useState } from "react";
 
+import { ReportUserModal } from "@/components/ReportUserModal";
+import { useAuth } from "@/contexts/AuthContext";
 import type { PublicVideo } from "@/lib/api/videoLibraryApi";
 import { ROUTES } from "@/lib/routes";
 
@@ -33,7 +35,12 @@ export function VideoFeedSlide({
   const [copied, setCopied] = useState(false);
   const [showPlayPauseIcon, setShowPlayPauseIcon] = useState(false);
   const [isPaused, setIsPaused] = useState(true);
+  const { user } = useAuth();
   const mentorName = video.profiles?.name || "Mentor";
+  const isOwnVideo =
+    Boolean(user?.id) &&
+    Boolean(video.mentor_id) &&
+    String(user?.id) === String(video.mentor_id);
 
   useEffect(() => {
     const el = videoRef.current;
@@ -226,6 +233,22 @@ export function VideoFeedSlide({
           >
             {copied ? <Check size={18} /> : <Link2 size={18} />}
           </button>
+
+          {video.mentor_id && video.id && !isOwnVideo ? (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="relative z-20"
+            >
+              <ReportUserModal
+                reportedUserId={String(video.mentor_id)}
+                reportedUserName={mentorName}
+                contextType="video"
+                contextId={String(video.id)}
+                variant="icon"
+              />
+            </div>
+          ) : null}
         </div>
       </div>
 

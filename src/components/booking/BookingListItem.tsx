@@ -52,7 +52,15 @@ function formatDateTime(date?: string, time?: string) {
   return `${label} · ${formatTime(time)}`;
 }
 
-function MoreMenu({ otherPartyId, bookingId }: { otherPartyId?: string; bookingId: string }) {
+function MoreMenu({
+  otherPartyId,
+  otherPartyName,
+  bookingId,
+}: {
+  otherPartyId?: string;
+  otherPartyName?: string;
+  bookingId: string;
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -78,9 +86,15 @@ function MoreMenu({ otherPartyId, bookingId }: { otherPartyId?: string; bookingI
         <MoreVertical size={18} className="sm:size-4" />
       </button>
       {open ? (
-        <div className="absolute right-0 top-9 z-10 w-40 rounded-xl border border-border-light bg-surface-panel p-1.5 shadow-lg">
+        <div className="absolute right-0 top-9 z-10 w-44 rounded-xl border border-border-light bg-surface-panel p-1.5 shadow-lg">
           <div className="px-2 py-1.5">
-            <ReportUserModal reportedUserId={otherPartyId} contextType="booking" contextId={bookingId} />
+            <ReportUserModal
+              reportedUserId={String(otherPartyId)}
+              reportedUserName={otherPartyName || "this user"}
+              contextType="booking"
+              contextId={String(bookingId)}
+              onBeforeOpen={() => setOpen(false)}
+            />
           </div>
         </div>
       ) : null}
@@ -113,6 +127,7 @@ export function BookingListItem({
   const canReview = !isMentorView && label === "Completed" && reviewed === false;
   const otherParty = isMentorView ? booking.learner_profile : booking.profiles;
   const otherName = otherParty?.name || (isMentorView ? "Learner" : "Mentor");
+  const otherPartyId = isMentorView ? booking.learner_id : booking.mentor_id;
 
   return (
     <div className="flex flex-col gap-4 rounded-2xl border border-border-light bg-surface-panel p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -214,7 +229,11 @@ export function BookingListItem({
         </div>
         {showMoreMenu ? (
           <div className="ml-auto sm:ml-0">
-            <MoreMenu otherPartyId={otherParty?.id} bookingId={booking.id} />
+            <MoreMenu
+              otherPartyId={otherPartyId}
+              otherPartyName={otherName}
+              bookingId={booking.id}
+            />
           </div>
         ) : null}
       </div>

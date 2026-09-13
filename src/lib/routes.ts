@@ -11,6 +11,8 @@ export const ROUTES = {
   // Now hosted on the external marketing site, not this app.
   privacy: "https://connectiqo.com/privacy",
   terms: "https://connectiqo.com/terms",
+  /** Play Console CSAE / child safety standards (hosted on the app web portal). */
+  childSafety: "https://app.connectiqo.com/child-safety",
 
   // Auth
   login: "/login",
