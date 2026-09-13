@@ -509,6 +509,26 @@ export const videoLibraryApi = {
     }
   },
 
+  /** Active platform fee/GST rates, for previewing the total a learner would pay before checkout. */
+  getActiveFeeRule: async (): Promise<{ platformFeePercent: number; gstPercent: number } | null> => {
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase
+        .from("platform_fee_rules")
+        .select("platform_fee_percent, gst_percent")
+        .eq("is_active", true)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) return null;
+      return {
+        platformFeePercent: Number(data.platform_fee_percent),
+        gstPercent: Number(data.gst_percent),
+      };
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
   setUnlockPrice: async ({ mentorId, price }: { mentorId: string; price: number }) => {
     if (!(VIDEO_UNLOCK_PRICE_TIERS as readonly number[]).includes(price)) {
       throw new Error(`Price must be one of: ₹${VIDEO_UNLOCK_PRICE_TIERS.join(", ₹")}`);

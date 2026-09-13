@@ -4,7 +4,6 @@ import { ChevronDown, LogOut, Menu, Settings as SettingsIcon, Shield, User } fro
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { RiVideoUploadLine } from "react-icons/ri";
 
 import OptimizedImage from "@/components/OptimizedImage";
 import { HomeSearchBar } from "@/components/HomeSearchBar";
@@ -51,15 +50,6 @@ export function AppTopBar({ onMenuClick }: { onMenuClick?: () => void }) {
           <HomeSearchBar placeholder="Search by name, @username or skill" compact />
         </div>
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
-          <a
-            href="https://app.connectiqo.com/mentor/videos"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex h-8 w-8 items-center justify-center rounded-full text-text-secondary hover:text-text-primary"
-            aria-label="Upload video"
-          >
-            <RiVideoUploadLine size={18} />
-          </a>
           <NotificationBell />
           <div className="hidden sm:block">
             <ThemeToggle />
