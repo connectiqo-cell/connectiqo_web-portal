@@ -17,7 +17,7 @@ export function MentorCard({ mentor }: { mentor: MentorProfileRow }) {
       className="flex w-full flex-col gap-2.5 rounded-2xl border border-border-light bg-surface-panel p-3 transition-colors hover:border-border-default"
     >
       
-      <div className="flex h-24 w-full items-center justify-center overflow-hidden rounded-xl bg-surface-chip">
+      <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-full bg-surface-chip">
         {avatarUrl ? (
           <OptimizedImage src={avatarUrl} alt={name} width={384} height={384} className="h-full w-full object-cover" />
         ) : (

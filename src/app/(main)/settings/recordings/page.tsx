@@ -131,7 +131,12 @@ export default function RecordedSessionsPage() {
                 </button>
 
                 {isPlaying && src ? (
-                  <video src={src} controls autoPlay className="w-full rounded-xl bg-meeting-canvas" />
+                  <video
+                    src={src}
+                    controls
+                    autoPlay
+                    className="mx-auto max-h-[60vh] w-auto max-w-full rounded-xl bg-meeting-canvas"
+                  />
                 ) : null}
               </div>
             );
