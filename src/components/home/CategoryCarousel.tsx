@@ -105,7 +105,7 @@ export function CategoryCarousel({
                 className="group flex w-44 sm:w-56 shrink-0 flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-3 sm:p-4 transition-all hover:border-border-default hover:shadow-lg"
               >
                 {/* Avatar */}
-                <div className="flex h-24 sm:h-32 w-full items-center justify-center overflow-hidden rounded-xl bg-linear-to-br from-surface-chip to-surface-panel">
+                <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-surface-chip to-surface-panel">
                   {avatarUrl ? (
                     <OptimizedImage src={avatarUrl} alt={name} width={160} height={160} className="h-full w-full object-cover group-hover:scale-105 transition-transform" />
                   ) : (
