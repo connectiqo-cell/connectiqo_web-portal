@@ -139,9 +139,9 @@ export function DashboardHome({
                       data-video
                       className="group flex w-40 sm:w-48 shrink-0 flex-col gap-3 rounded-2xl overflow-hidden transition-all hover:shadow-lg"
                     >
-                      <div className="relative flex h-24 sm:h-32 w-full items-center justify-center overflow-hidden rounded-xl bg-black">
+                      <div className="relative flex aspect-[3/4] w-full items-center justify-center overflow-hidden rounded-xl bg-black">
                         {video.thumbnail_url ? (
-                          <OptimizedImage src={video.thumbnail_url} alt={video.title} width={320} height={180} className="h-full w-full object-cover group-hover:scale-105 transition-transform" />
+                          <OptimizedImage src={video.thumbnail_url} alt={video.title} width={360} height={480} className="h-full w-full object-contain group-hover:scale-105 transition-transform" />
                         ) : null}
                         <div className="absolute inset-0 flex items-center justify-center">
                           <PlayCircle size={40} className="text-white opacity-80 group-hover:opacity-100 transition-opacity" />
