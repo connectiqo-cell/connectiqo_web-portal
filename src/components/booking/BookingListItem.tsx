@@ -9,6 +9,7 @@ import { ReportUserModal } from "@/components/ReportUserModal";
 import type { BookingRow } from "@/lib/api/bookingApi";
 import { ROUTES } from "@/lib/routes";
 import { isExpiredBooking } from "@/lib/utils/bookingSession";
+import { normalizeRecordingUrl } from "@/lib/utils/recordingUrl";
 
 const STATUS_STYLES: Record<string, string> = {
   Booked: "bg-accent-info/15 text-accent-info",
@@ -128,115 +129,126 @@ export function BookingListItem({
   const otherParty = isMentorView ? booking.learner_profile : booking.profiles;
   const otherName = otherParty?.name || (isMentorView ? "Learner" : "Mentor");
   const otherPartyId = isMentorView ? booking.learner_id : booking.mentor_id;
+  const [showPlayer, setShowPlayer] = useState(false);
+  const playbackSrc = normalizeRecordingUrl(recordingUrl);
 
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-border-light bg-surface-panel p-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
-          {otherParty?.avatar_url ? (
-            <OptimizedImage src={otherParty.avatar_url} alt={otherName} width={40} height={40} className="h-full w-full object-cover" />
-          ) : (
-            <User size={18} className="text-text-muted" />
-          )}
-        </div>
-        <div className="flex flex-col gap-0.5">
-          {isMentorView ? (
-            <span className="text-sm font-semibold text-text-primary">{otherName}</span>
-          ) : (
-            <Link
-              href={ROUTES.mentorProfile(booking.mentor_id)}
-              className="text-sm font-semibold text-text-primary hover:text-accent-link"
-            >
-              {otherName}
-            </Link>
-          )}
-          <div className="flex items-center gap-3 text-xs text-text-muted">
-            <span className="flex items-center gap-1">
-              <Calendar size={12} />
-              {formatDateTime(booking.availability_slots?.date)}
-            </span>
-            {booking.availability_slots?.start_time ? (
+    <div className="flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
+            {otherParty?.avatar_url ? (
+              <OptimizedImage src={otherParty.avatar_url} alt={otherName} width={40} height={40} className="h-full w-full object-cover" />
+            ) : (
+              <User size={18} className="text-text-muted" />
+            )}
+          </div>
+          <div className="flex flex-col gap-0.5">
+            {isMentorView ? (
+              <span className="text-sm font-semibold text-text-primary">{otherName}</span>
+            ) : (
+              <Link
+                href={ROUTES.mentorProfile(booking.mentor_id)}
+                className="text-sm font-semibold text-text-primary hover:text-accent-link"
+              >
+                {otherName}
+              </Link>
+            )}
+            <div className="flex items-center gap-3 text-xs text-text-muted">
               <span className="flex items-center gap-1">
-                <Clock size={12} />
-                {formatTime(booking.availability_slots.start_time)}
+                <Calendar size={12} />
+                {formatDateTime(booking.availability_slots?.date)}
               </span>
+              {booking.availability_slots?.start_time ? (
+                <span className="flex items-center gap-1">
+                  <Clock size={12} />
+                  {formatTime(booking.availability_slots.start_time)}
+                </span>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-row flex-wrap items-center gap-2">
+          <span className={`w-fit rounded-full px-3 py-1.5 text-xs font-semibold ${STATUS_STYLES[label] || "bg-surface-chip text-text-secondary"}`}>
+            {label}
+          </span>
+          {booking.original_booking_id ? (
+            <span className="w-fit rounded-full bg-accent-link/15 px-3 py-1.5 text-xs font-semibold text-accent-link">
+              Rescheduled
+            </span>
+          ) : null}
+          <div className="flex flex-wrap gap-2 sm:gap-1.5">
+            {label === "Booked" ? (
+              <Link
+                href={ROUTES.call(booking.id)}
+                className="flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold text-text-on-accent shadow-sm"
+                style={{ backgroundImage: "var(--gradient-button-primary)" }}
+              >
+                <Video size={13} />
+                <span className="sm:hidden">Join Call</span>
+                <span className="hidden sm:inline">Join</span>
+              </Link>
+            ) : null}
+            {recordingUrl ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setShowPlayer((v) => !v)}
+                  className="flex items-center justify-center gap-1 rounded-full border border-border-light px-3 py-1.5 text-xs font-semibold text-text-secondary hover:text-text-primary"
+                >
+                  <Play size={13} />
+                  <span className="sm:hidden">Replay</span>
+                </button>
+                <a
+                  href={recordingUrl}
+                  download
+                  className="flex items-center justify-center gap-1 rounded-full border border-border-light px-3 py-1.5 text-xs font-semibold text-text-secondary hover:text-text-primary"
+                >
+                  <Download size={13} />
+                  <span className="sm:hidden">Download</span>
+                </a>
+              </>
+            ) : null}
+            {canReview ? (
+              <Link
+                href={ROUTES.review(booking.id)}
+                className="flex items-center justify-center gap-1 rounded-full bg-accent-primary/15 px-3 py-1.5 text-xs font-semibold text-accent-primary"
+              >
+                <Star size={13} />
+                <span className="sm:hidden">Rate Now</span>
+                <span className="hidden sm:inline">Rate</span>
+              </Link>
+            ) : null}
+            {canCancel ? (
+              <button
+                type="button"
+                onClick={() => onCancel!(booking.id)}
+                className="flex items-center justify-center px-3 py-1.5 text-xs font-semibold text-accent-error hover:text-accent-error hover:bg-accent-error/10 rounded-full"
+              >
+                Cancel
+              </button>
             ) : null}
           </div>
-        </div>
-      </div>
-
-      <div className="flex flex-row flex-wrap items-center gap-2">
-        <span className={`w-fit rounded-full px-3 py-1.5 text-xs font-semibold ${STATUS_STYLES[label] || "bg-surface-chip text-text-secondary"}`}>
-          {label}
-        </span>
-        {booking.original_booking_id ? (
-          <span className="w-fit rounded-full bg-accent-link/15 px-3 py-1.5 text-xs font-semibold text-accent-link">
-            Rescheduled
-          </span>
-        ) : null}
-        <div className="flex flex-wrap gap-2 sm:gap-1.5">
-          {label === "Booked" ? (
-            <Link
-              href={ROUTES.call(booking.id)}
-              className="flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold text-text-on-accent shadow-sm"
-              style={{ backgroundImage: "var(--gradient-button-primary)" }}
-            >
-              <Video size={13} />
-              <span className="sm:hidden">Join Call</span>
-              <span className="hidden sm:inline">Join</span>
-            </Link>
-          ) : null}
-          {recordingUrl ? (
-            <>
-              <a
-                href={recordingUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-1 rounded-full border border-border-light px-3 py-1.5 text-xs font-semibold text-text-secondary hover:text-text-primary"
-              >
-                <Play size={13} />
-                <span className="sm:hidden">Replay</span>
-              </a>
-              <a
-                href={recordingUrl}
-                download
-                className="flex items-center justify-center gap-1 rounded-full border border-border-light px-3 py-1.5 text-xs font-semibold text-text-secondary hover:text-text-primary"
-              >
-                <Download size={13} />
-                <span className="sm:hidden">Download</span>
-              </a>
-            </>
-          ) : null}
-          {canReview ? (
-            <Link
-              href={ROUTES.review(booking.id)}
-              className="flex items-center justify-center gap-1 rounded-full bg-accent-primary/15 px-3 py-1.5 text-xs font-semibold text-accent-primary"
-            >
-              <Star size={13} />
-              <span className="sm:hidden">Rate Now</span>
-              <span className="hidden sm:inline">Rate</span>
-            </Link>
-          ) : null}
-          {canCancel ? (
-            <button
-              type="button"
-              onClick={() => onCancel!(booking.id)}
-              className="flex items-center justify-center px-3 py-1.5 text-xs font-semibold text-accent-error hover:text-accent-error hover:bg-accent-error/10 rounded-full"
-            >
-              Cancel
-            </button>
+          {showMoreMenu ? (
+            <div className="ml-auto sm:ml-0">
+              <MoreMenu
+                otherPartyId={otherPartyId}
+                otherPartyName={otherName}
+                bookingId={booking.id}
+              />
+            </div>
           ) : null}
         </div>
-        {showMoreMenu ? (
-          <div className="ml-auto sm:ml-0">
-            <MoreMenu
-              otherPartyId={otherPartyId}
-              otherPartyName={otherName}
-              bookingId={booking.id}
-            />
-          </div>
-        ) : null}
       </div>
+      {showPlayer && playbackSrc ? (
+        <video
+          src={playbackSrc}
+          controls
+          autoPlay
+          className="mx-auto max-h-[60vh] w-full rounded-xl bg-meeting-canvas sm:w-auto"
+        />
+      ) : null}
     </div>
   );
 }
