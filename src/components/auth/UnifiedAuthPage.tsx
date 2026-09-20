@@ -132,19 +132,30 @@ function UnifiedAuthForm() {
     setSignupError("");
     setSignupLoading(true);
     try {
-      const { user } = await authApi.signUp({
+      const { user, needsVerification } = await authApi.signUp({
         email: signupEmail.trim(),
         password: signupPassword,
+      });
+      if (!user?.id) throw new Error("Sign up did not return a user.");
+
+      if (needsVerification) {
+        // This page has no OTP-entry step (it's unlinked from the app's
+        // real signup flow at /signup, which does) — send them there to
+        // finish verifying instead of duplicating that UI here.
+        router.push(ROUTES.signup);
+        return;
+      }
+
+      await authApi.createProfile({
+        userId: user.id,
+        email: signupEmail.trim(),
         name: signupName.trim(),
         role: "both",
       });
-
-      if (user?.id) {
-        await Promise.all([
-          profileApi.createMentorProfile(user.id),
-          profileApi.createLearnerProfile(user.id),
-        ]);
-      }
+      await Promise.all([
+        profileApi.createMentorProfile(user.id),
+        profileApi.createLearnerProfile(user.id),
+      ]);
 
       router.push(ROUTES.interestsOnboarding);
     } catch (error) {

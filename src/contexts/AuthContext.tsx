@@ -122,7 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           created_at: new Date().toISOString(),
         });
         // 23505 (unique_violation) means the row already exists — most often
-        // authApi.signUp's own profile insert landing concurrently with this
+        // authApi.createProfile's own insert landing concurrently with this
         // recovery attempt. That's success, not failure: retrying the SELECT
         // will find it. Anything else is a genuine insert failure.
         if (error && error.code !== "23505") return false;

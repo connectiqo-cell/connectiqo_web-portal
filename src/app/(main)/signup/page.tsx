@@ -66,8 +66,31 @@ export default function SignupPage() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState("");
 
+  // Set once signUp() comes back with no session — i.e. email confirmation
+  // is required. If confirmation isn't enabled (or gets disabled again),
+  // signUp() returns a session immediately and this step is skipped
+  // entirely, so this file keeps working either way.
+  const [step, setStep] = useState<"form" | "otp">("form");
+  const [otp, setOtp] = useState("");
+  const [otpError, setOtpError] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resent, setResent] = useState(false);
+
   const clearError = (field: keyof FieldErrors) => {
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
+  };
+
+  const finishSignup = async (userId: string) => {
+    // profiles row requires auth.uid() = id under RLS, so this can only
+    // happen once a session actually exists — either right after signUp()
+    // (confirmation disabled) or after verifySignupOtp() succeeds.
+    await authApi.createProfile({ userId, email: email.trim(), name: name.trim(), role: "both" });
+    await Promise.all([
+      profileApi.createMentorProfile(userId),
+      profileApi.createLearnerProfile(userId),
+    ]);
+    router.push(ROUTES.interestsOnboarding);
   };
 
   const handleSubmit = async (event: FormEvent) => {
@@ -82,28 +105,140 @@ export default function SignupPage() {
     setFormError("");
     setLoading(true);
     try {
-      // Every account is dual-role — mentor and learner at once.
-      const { user } = await authApi.signUp({
+      const { user, needsVerification } = await authApi.signUp({
         email: email.trim(),
         password,
-        name: name.trim(),
-        role: "both",
       });
+      if (!user?.id) throw new Error("Sign up did not return a user.");
 
-      if (user?.id) {
-        await Promise.all([
-          profileApi.createMentorProfile(user.id),
-          profileApi.createLearnerProfile(user.id),
-        ]);
+      if (needsVerification) {
+        setStep("otp");
+        return;
       }
 
-      router.push(ROUTES.interestsOnboarding);
+      await finishSignup(user.id);
     } catch (error) {
       setFormError((error as Error)?.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
+
+  const handleVerifyOtp = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!otp.trim()) {
+      setOtpError("Enter the code we sent you");
+      return;
+    }
+    setOtpError("");
+    setVerifying(true);
+    try {
+      const { user } = await authApi.verifySignupOtp(email, otp);
+      if (!user?.id) throw new Error("Verification did not return a user.");
+      await finishSignup(user.id);
+    } catch (error) {
+      setOtpError((error as Error)?.message || "Invalid or expired code. Please try again.");
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setOtpError("");
+    setResending(true);
+    try {
+      await authApi.resendSignupOtp(email);
+      setResent(true);
+      setTimeout(() => setResent(false), 4000);
+    } catch (error) {
+      setOtpError((error as Error)?.message || "Could not resend the code. Please try again.");
+    } finally {
+      setResending(false);
+    }
+  };
+
+  if (step === "otp") {
+    return (
+      <div className="flex flex-1">
+        <AuthVisualPanel />
+
+        <main className="flex w-full flex-1 items-center justify-center px-6 py-6 lg:w-[40%]">
+          <div className="flex w-full max-w-sm flex-col gap-5">
+            <div className="flex flex-col gap-1.5">
+              <span
+                className="mb-1 flex h-10 w-10 items-center justify-center rounded-xl text-white"
+                style={{ backgroundImage: "var(--gradient-button-primary)" }}
+              >
+                <Mail size={18} />
+              </span>
+              <p className="text-sm text-text-secondary">
+                Welcome to <span className="font-semibold text-text-primary">Connectiqo</span>
+              </p>
+              <h1 className="text-2xl font-bold text-text-primary">Verify your email</h1>
+              <p className="text-sm text-text-secondary">
+                We sent a 6-digit code to <span className="font-semibold text-text-primary">{email}</span>.
+                Enter it below to finish creating your account.
+              </p>
+            </div>
+
+            <form onSubmit={handleVerifyOtp} noValidate className="flex flex-col gap-2.5">
+              {otpError ? (
+                <p className="rounded-xl border border-accent-error/35 bg-accent-error/10 px-3.5 py-2.5 text-sm text-accent-error">
+                  {otpError}
+                </p>
+              ) : null}
+              {resent ? (
+                <p className="rounded-xl border border-accent-success/35 bg-accent-success/10 px-3.5 py-2.5 text-sm text-accent-success">
+                  Code resent — check your inbox.
+                </p>
+              ) : null}
+
+              <AuthTextField
+                icon={Lock}
+                type="text"
+                placeholder="6-digit code"
+                autoComplete="one-time-code"
+                value={otp}
+                onChange={(e) => {
+                  setOtp(e.target.value);
+                  if (otpError) setOtpError("");
+                }}
+                disabled={verifying}
+              />
+
+              <AuthButton loading={verifying} className="mt-1">
+                {verifying ? "Verifying…" : "Verify & Continue"}
+              </AuthButton>
+            </form>
+
+            <div className="flex flex-col gap-2">
+              <p className="text-sm text-text-secondary">
+                Didn&apos;t get a code?{" "}
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  disabled={resending}
+                  className="font-semibold text-accent-link disabled:opacity-60"
+                >
+                  {resending ? "Resending…" : "Resend code"}
+                </button>
+              </p>
+              <p className="text-sm text-text-secondary">
+                Wrong email?{" "}
+                <button
+                  type="button"
+                  onClick={() => setStep("form")}
+                  className="font-semibold text-accent-link"
+                >
+                  Go back
+                </button>
+              </p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-1">

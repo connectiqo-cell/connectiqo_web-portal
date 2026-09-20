@@ -22,7 +22,14 @@ export type SignUpParams = {
 
 /** Ported from connectfront/src/api/authApi.js — same Supabase project, same auth flow. */
 export const authApi = {
-  signUp: async ({ email, password, name, role }: SignUpParams) => {
+  /** Only creates the auth.users row — does NOT create the `profiles` row
+   * anymore. That insert requires auth.uid() = id under RLS, which means it
+   * needs an active session; signUp() returns session: null whenever email
+   * confirmation is required (Supabase doesn't grant one until the OTP is
+   * verified). Call createProfile() below once a session actually exists —
+   * immediately if session is non-null here, or after verifySignupOtp()
+   * succeeds if it's null. */
+  signUp: async ({ email, password }: Omit<SignUpParams, "name" | "role">) => {
     const supabase = createClient();
     try {
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -31,10 +38,32 @@ export const authApi = {
       });
       if (authError) throw authError;
 
-      const userId = authData.user!.id;
-      const username = generateUsername(email);
+      return {
+        user: authData.user,
+        session: authData.session,
+        needsVerification: !authData.session,
+      };
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
 
-      const { data: profileData, error: profileError } = await supabase
+  /** Creates the `profiles` row — call only once a session exists (see signUp above). */
+  createProfile: async ({
+    userId,
+    email,
+    name,
+    role,
+  }: {
+    userId: string;
+    email: string;
+    name: string;
+    role: "mentor" | "learner" | "both";
+  }) => {
+    const supabase = createClient();
+    try {
+      const username = generateUsername(email);
+      const { data, error } = await supabase
         .from("profiles")
         .insert([
           {
@@ -46,17 +75,10 @@ export const authApi = {
             created_at: new Date().toISOString(),
           },
         ])
-        
         .select()
         .single();
-
-      if (profileError) throw profileError;
-
-      return {
-        user: authData.user,
-        profile: profileData,
-        message: "Account created! Check your email to verify.",
-      };
+      if (error) throw error;
+      return data;
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
     }
@@ -123,6 +145,39 @@ export const authApi = {
         email: email.trim().toLowerCase(),
         token: otp.trim(),
         type: "email",
+      });
+      if (error) throw error;
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  /** Confirms the 6-digit code from the "Confirm signup" email — distinct
+   * from verifyOtp above, which is for the passwordless-login/password-reset
+   * OTP (type "email"). A fresh signup's code must be verified as type
+   * "signup", or Supabase rejects it even though the code itself is valid. */
+  verifySignupOtp: async (email: string, otp: string) => {
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: email.trim().toLowerCase(),
+        token: otp.trim(),
+        type: "signup",
+      });
+      if (error) throw error;
+      return { user: data.user, session: data.session };
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  /** Re-sends the signup confirmation code (e.g. the first one expired or never arrived). */
+  resendSignupOtp: async (email: string) => {
+    const supabase = createClient();
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: email.trim().toLowerCase(),
       });
       if (error) throw error;
     } catch (error) {
