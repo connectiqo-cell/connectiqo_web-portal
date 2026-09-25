@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 
 import { ReportUserModal } from "@/components/ReportUserModal";
 import { MentorProfileCta } from "@/components/mentor/MentorProfileCta";
+import { MessageMentorButton } from "@/components/mentor/MessageMentorButton";
 import { MentorSocialLinks } from "@/components/mentor/MentorSocialLinks";
 import { MentorVideoLibrary } from "@/components/mentor/MentorVideoLibrary";
 import { ReviewCard } from "@/components/mentor/ReviewCard";
@@ -139,9 +140,12 @@ export default async function MentorProfilePage({ params }: PageProps) {
         </div>
       ) : null}
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="flex-1 sm:flex-none">
           <MentorProfileCta mentorId={mentorId} />
+        </div>
+        <div className="flex-1 sm:flex-none">
+          <MessageMentorButton mentorId={mentorId} />
         </div>
       </div>
 

@@ -49,6 +49,8 @@ export const ROUTES = {
   rescheduleResponse: (requestId: string) => `/reschedule/${requestId}`,
 
   transactions: "/transactions",
+  messages: "/messages",
+  messageThread: (conversationId: string) => `/messages/${conversationId}`,
   settings: "/settings",
   account: "/settings/account",
   editProfile: "/settings/profile",

@@ -16,18 +16,20 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import OptimizedImage from "@/components/OptimizedImage";
 import { useAuth } from "@/contexts/AuthContext";
+import { messagesApi } from "@/lib/api/messagesApi";
 import { ROUTES } from "@/lib/routes";
+import { createClient } from "@/lib/supabase/client";
 
 const NAV_ITEMS = [
   { href: ROUTES.home, label: "Home", icon: Home },
   { href: ROUTES.discover, label: "Discover", icon: Compass },
   { href: ROUTES.videos, label: "Videos", icon: PlayCircle },
   { href: ROUTES.bookings, label: "My Bookings", icon: Calendar },
-  { href: null, label: "Messages", icon: MessageSquare },
+  { href: ROUTES.messages, label: "Messages", icon: MessageSquare },
   { href: ROUTES.mentorSessions, label: "My Sessions", icon: VideoIcon },
   { href: ROUTES.wallet, label: "Earnings", icon: WalletIcon },
 ] as const;
@@ -46,48 +48,71 @@ function SidebarNavContent({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
+  const { user } = useAuth();
   const [storeNotice, setStoreNotice] = useState(false);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  // This component mounts twice at once — the desktop rail and the mobile
+  // drawer both render it simultaneously (CSS-hidden, not unmounted,
+  // depending on viewport) — so the realtime channel name must be unique
+  // per instance, or the second mount collides with the first's
+  // already-subscribed channel of the same name.
+  const instanceId = useId();
 
   const handleStoreClick = () => {
     setStoreNotice(true);
     setTimeout(() => setStoreNotice(false), 2000);
   };
 
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    const refresh = () => {
+      messagesApi.getUnreadConversationCount(user.id).then((count) => {
+        if (!cancelled) setUnreadMessages(count);
+      }).catch(() => {});
+    };
+    refresh();
+
+    // Any message or read-state change touching this user's conversations
+    // should re-check the badge — cheapest correct approach given the count
+    // itself depends on comparing two timestamps per conversation, not
+    // something a single realtime payload can update in place.
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`sidebar-unread-messages-${user.id}-${instanceId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, refresh)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "conversations", filter: `mentor_id=eq.${user.id}` },
+        refresh,
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "conversations", filter: `learner_id=eq.${user.id}` },
+        refresh,
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   return (
     <div className="flex flex-col gap-4 overflow-y-auto overflow-x-hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <nav className="flex flex-col gap-1">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
-          const active = !!item.href && pathname === item.href;
-          if (!item.href) {
-            return (
-              <span
-                key={item.label}
-                aria-disabled="true"
-                title="Coming soon"
-                className={`flex cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-text-disabled ${
-                  collapsed ? "justify-center px-0" : ""
-                }`}
-              >
-                <Icon size={18} className="shrink-0" />
-                {collapsed ? null : (
-                  <>
-                    {item.label}
-                    <span className="ml-auto rounded-full bg-surface-chip px-1.5 py-0.5 text-[10px] font-semibold text-text-muted">
-                      Soon
-                    </span>
-                  </>
-                )}
-              </span>
-            );
-          }
+          const active = pathname === item.href;
+          const badgeCount = item.href === ROUTES.messages ? unreadMessages : 0;
           return (
             <Link
               key={item.label}
               href={item.href}
               onClick={onNavigate}
               title={collapsed ? item.label : undefined}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+              className={`relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
                 collapsed ? "justify-center px-0" : ""
               } ${
                 active
@@ -95,8 +120,24 @@ function SidebarNavContent({
                   : "text-text-secondary hover:bg-surface-chip hover:text-text-primary"
               }`}
             >
-              <Icon size={18} className="shrink-0" />
-              {collapsed ? null : item.label}
+              <span className="relative shrink-0">
+                <Icon size={18} />
+                {collapsed && badgeCount > 0 ? (
+                  <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-error px-1 text-[9px] font-bold text-white">
+                    {badgeCount > 9 ? "9+" : badgeCount}
+                  </span>
+                ) : null}
+              </span>
+              {collapsed ? null : (
+                <>
+                  {item.label}
+                  {badgeCount > 0 ? (
+                    <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-error px-1.5 text-[11px] font-bold text-white">
+                      {badgeCount > 9 ? "9+" : badgeCount}
+                    </span>
+                  ) : null}
+                </>
+              )}
             </Link>
           );
         })}
