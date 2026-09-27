@@ -9,10 +9,13 @@ pipeline {
     }
 
     environment {
-        // Must match the project name of the currently running app,
-        // so Jenkins replaces the existing containers instead of creating duplicates.
-        // Check it on the server with: docker compose ls
-        COMPOSE_PROJECT_NAME = 'connectiqo'
+        // Must match the project name of the currently running app, so Jenkins
+        // updates the existing container instead of colliding with it on the
+        // fixed container_name. Compose defaults an unset project name to the
+        // directory it's run from — confirmed on the VPS via `docker ps`,
+        // where the already-running image is tagged connectiqo_web-portal-app
+        // (that's ~/connectiqo_web-portal, Compose's <project>-<service> tag).
+        COMPOSE_PROJECT_NAME = 'connectiqo_web-portal'
 
         // URL checked after deploy. Matches docker-compose.yml's localhost-only
         // port binding — Caddy is the public entry point, not this port directly.
