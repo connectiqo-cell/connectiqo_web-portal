@@ -16,10 +16,6 @@ pipeline {
         // where the already-running image is tagged connectiqo_web-portal-app
         // (that's ~/connectiqo_web-portal, Compose's <project>-<service> tag).
         COMPOSE_PROJECT_NAME = 'connectiqo_web-portal'
-
-        // URL checked after deploy. Matches docker-compose.yml's localhost-only
-        // port binding — Caddy is the public entry point, not this port directly.
-        HEALTH_URL = 'http://127.0.0.1:3000'
     }
 
     stages {
@@ -71,13 +67,27 @@ pipeline {
         }
 
         stage('Health Check') {
-            when {
-                expression { return env.HEALTH_URL?.trim() }
-            }
             steps {
-                retry(5) {
+                // Curling the app's own port from here doesn't work: Jenkins
+                // runs as its own container (talking to the host's Docker
+                // daemon over a mounted socket), so "127.0.0.1" here is
+                // Jenkins's loopback, not the VPS host's — and the app is
+                // deliberately bound to the host's 127.0.0.1 only, per
+                // docker-compose.yml. Asking Docker for the container's own
+                // healthcheck status sidesteps that entirely, since Docker
+                // computes it from inside the container regardless of which
+                // network namespace is asking.
+                retry(6) {
                     sleep 10
-                    sh 'curl -fsS "$HEALTH_URL" > /dev/null'
+                    script {
+                        def status = sh(
+                            script: "docker inspect --format='{{.State.Health.Status}}' connectweb",
+                            returnStdout: true,
+                        ).trim()
+                        if (status != 'healthy') {
+                            error "Container health status: ${status}"
+                        }
+                    }
                 }
             }
         }
