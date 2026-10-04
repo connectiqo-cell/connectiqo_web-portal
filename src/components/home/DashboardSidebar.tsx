@@ -182,13 +182,14 @@ function SidebarNavContent({
             >
               <OptimizedImage src="/appstore.png" alt="Download on the App Store" width={600} height={200} className="block h-auto w-full" />
             </button>
-            <button
-              type="button"
-              onClick={handleStoreClick}
+            <a
+              href="https://play.google.com/store/apps/details?id=com.connectiqo.app"
+              target="_blank"
+              rel="noopener noreferrer"
               className="block w-36 overflow-hidden rounded-lg border border-border-light hover:border-border-default"
             >
               <OptimizedImage src="/playstore.png" alt="Get it on Google Play" width={600} height={200} className="block h-auto w-full" />
-            </button>
+            </a>
           </div>
           {storeNotice ? (
             <div className="absolute inset-x-3 bottom-1 rounded-lg bg-surface-panel px-2.5 py-1.5 text-center text-[11px] font-medium text-text-secondary shadow-lg">
