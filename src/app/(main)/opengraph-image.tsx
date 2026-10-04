@@ -6,7 +6,7 @@ import { ImageResponse } from "next/og";
 // Falls back up the route tree to any segment without its own
 // opengraph-image — this one at the root layout covers every page that
 // doesn't define a more specific image (none do yet).
-export const alt = "Connectiqo — Connect Create Earn";
+export const alt = "Connectiqo — Connect . Create . Earn";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
