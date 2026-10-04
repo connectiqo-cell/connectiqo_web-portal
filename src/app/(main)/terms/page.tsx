@@ -22,6 +22,10 @@ export default function TermsOfServicePage() {
       <div>
         <h1 className="text-3xl font-bold text-text-primary">Terms of Service</h1>
         <p className="mt-2 text-sm text-text-muted">Last updated: July 2026</p>
+        <p className="mt-1 text-xs text-text-muted">
+          Connectiqo™ and the Connectiqo logo are trademarks of Connectiqo. Trademark
+          registration is currently pending.
+        </p>
       </div>
 
       <Section title="1. Acceptance of terms">
