@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, LogOut, Menu, Settings as SettingsIcon, Shield, User } from "lucide-react";
+import { ChevronDown, LogOut, Menu, Settings as SettingsIcon, Shield, Upload, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -50,6 +50,13 @@ export function AppTopBar({ onMenuClick }: { onMenuClick?: () => void }) {
           <HomeSearchBar placeholder="Search by name, @username or skill" compact />
         </div>
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+          <Link
+            href={ROUTES.mentorVideos}
+            aria-label="Upload video"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-text-secondary hover:text-text-primary"
+          >
+            <Upload size={18} />
+          </Link>
           <NotificationBell />
           <div className="hidden sm:block">
             <ThemeToggle />
