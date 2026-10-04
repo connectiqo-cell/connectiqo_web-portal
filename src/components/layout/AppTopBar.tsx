@@ -53,9 +53,15 @@ export function AppTopBar({ onMenuClick }: { onMenuClick?: () => void }) {
           <Link
             href={ROUTES.mentorVideos}
             aria-label="Upload video"
-            className="flex h-8 w-8 items-center justify-center rounded-full text-text-secondary hover:text-text-primary"
+            className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full"
           >
-            <Upload size={18} />
+            <span
+              aria-hidden
+              className="absolute inset-0 animate-[spin_3s_linear_infinite] bg-[conic-gradient(#ff0000,#ffff00,#00ff00,#00ffff,#0000ff,#ff00ff,#ff0000)] motion-reduce:animate-none"
+            />
+            <span className="relative flex h-7 w-7 items-center justify-center rounded-full bg-surface-sheet text-text-primary">
+              <Upload size={16} />
+            </span>
           </Link>
           <NotificationBell />
           <div className="hidden sm:block">
