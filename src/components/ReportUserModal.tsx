@@ -1,7 +1,7 @@
 "use client";
 
 import { Flag, X } from "lucide-react";
-import { useEffect, useState, type MouseEvent } from "react";
+import { useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,17 +30,15 @@ export function ReportUserModal({
   onBeforeOpen?: () => void;
 }) {
   const { user } = useAuth();
+  // No "mounted" gate needed before createPortal below: `open` only ever
+  // flips true from the trigger button's onClick, which can't fire before
+  // hydration — so document.body is always available by then.
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const [reason, setReason] = useState<ReportReason | "">("");
   const [details, setDetails] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [submitted, setSubmitted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const targetId = String(reportedUserId || "").trim();
   const myId = user?.id != null ? String(user.id) : "";
@@ -143,7 +141,7 @@ export function ReportUserModal({
     );
 
   const dialog =
-    open && mounted
+    open
       ? createPortal(
           <div
             className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 px-6"

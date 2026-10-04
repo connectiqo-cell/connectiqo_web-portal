@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,15 +12,13 @@ const CONFIRM_WORD = "DELETE";
 
 export function DeleteAccountButton() {
   const { signOut } = useAuth();
+  // No "mounted" gate needed before createPortal below: `open` only ever
+  // flips true from the trigger button's onClick, which can't fire before
+  // hydration — so document.body is always available by then.
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const close = () => {
     if (deleting) return;
@@ -45,7 +43,7 @@ export function DeleteAccountButton() {
   };
 
   const dialog =
-    open && mounted
+    open
       ? createPortal(
           <div
             className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 px-6"

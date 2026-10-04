@@ -51,7 +51,13 @@ export default function AdminVideosPage() {
   }, [page, appliedSearch]);
 
   useEffect(() => {
-    void load();
+    // `load` itself is also called directly from event handlers below (after
+    // toggling/deleting), so it stays a shared useCallback rather than being
+    // inlined here. Deferring this call by a microtask keeps its setState
+    // calls off the effect's own synchronous call stack.
+    queueMicrotask(() => {
+      void load();
+    });
   }, [load]);
 
   const togglePromote = async (row: AdminVideoRow) => {
