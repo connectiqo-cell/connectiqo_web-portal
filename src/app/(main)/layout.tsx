@@ -28,7 +28,7 @@ const SITE_DESCRIPTION =
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Connectiqo — Live 1-on-1 Mentorship",
+    default: "Connectiqo — Connect Create Earn",
     template: "%s | Connectiqo",
   },
   description: SITE_DESCRIPTION,
@@ -36,14 +36,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "Connectiqo",
-    title: "Connectiqo — Live 1-on-1 Mentorship",
+    title: "Connectiqo — Connect Create Earn",
     description: SITE_DESCRIPTION,
     url: SITE_URL,
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Connectiqo — Live 1-on-1 Mentorship",
+    title: "Connectiqo — Connect Create Earn",
     description: SITE_DESCRIPTION,
   },
 };

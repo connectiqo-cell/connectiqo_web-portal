@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { CameraCaptureModal } from "@/components/CameraCaptureModal";
+import { DeleteAccountButton } from "@/components/settings/DeleteAccountButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useInterestsStatus } from "@/contexts/InterestsStatusContext";
 import { fetchActiveCategories } from "@/lib/api/contentApi";
@@ -276,6 +277,10 @@ export default function EditProfilePage() {
       setError("That username is already taken. Try another one.");
       return;
     }
+    if (isMentor && Number(pricePerHour) < 1) {
+      setError("Price per session must be at least ₹1.");
+      return;
+    }
     setSaving(true);
     setError("");
     setSaved(false);
@@ -542,7 +547,7 @@ export default function EditProfilePage() {
               </span>
               <input
                 type="number"
-                min={0}
+                min={1}
                 value={pricePerHour}
                 onChange={(e) => setPricePerHour(e.target.value)}
                 className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary focus:outline-none"
@@ -735,6 +740,16 @@ export default function EditProfilePage() {
         >
           {saving ? "Saving…" : "Save changes"}
         </button>
+      </div>
+
+      <div className="flex flex-col gap-2 rounded-2xl border border-accent-error/25 bg-accent-error/5 p-4">
+        <span className="text-xs font-semibold uppercase tracking-wide text-accent-error">
+          Danger zone
+        </span>
+        <p className="text-xs text-text-muted">
+          Deleting your account signs you out everywhere and can&apos;t be undone.
+        </p>
+        <DeleteAccountButton />
       </div>
 
       {showCamera ? (

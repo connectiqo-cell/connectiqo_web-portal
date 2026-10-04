@@ -339,4 +339,18 @@ export const profileApi = {
       throw new Error(getSupabaseErrorMessage(error));
     }
   },
+
+  /** Soft-deletes the current user's own account via delete_my_account() —
+   * scrubs PII and locks the account out (is_frozen), but keeps financial
+   * rows intact. Throws with the guard's message if a wallet balance,
+   * pending withdrawal, or unresolved booking blocks it. */
+  deleteAccount: async (): Promise<void> => {
+    const supabase = createClient();
+    try {
+      const { error } = await supabase.rpc("delete_my_account");
+      if (error) throw error;
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
 };
