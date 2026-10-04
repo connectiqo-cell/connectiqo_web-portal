@@ -261,6 +261,8 @@ export default function MentorVideosPage() {
     }
   };
 
+  const hasLockedVideos = videos.some((v) => !v.is_free);
+
   if (loading) return <p className="text-sm text-text-muted">Loading…</p>;
 
   return (
@@ -286,7 +288,7 @@ export default function MentorVideosPage() {
               key={price}
               type="button"
               onClick={() => handlePriceChange(price)}
-              disabled={!hasMentorProfile}
+              disabled={!hasMentorProfile || (isFree && !hasLockedVideos)}
               className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                 unlockPrice === price
                   ? "border-accent-link/50 bg-accent-link/15 text-accent-link"
@@ -297,6 +299,13 @@ export default function MentorVideosPage() {
             </button>
           ))}
         </div>
+        {hasMentorProfile && isFree && (
+          <p className="rounded-xl border border-accent-warning/30 bg-accent-warning/10 px-3.5 py-2.5 text-xs text-text-secondary">
+            {hasLockedVideos
+              ? "The video you're uploading will be free to watch. This price still applies to your locked videos."
+              : "The video you're uploading will be free to watch and you have no locked videos, so learners won't be charged. This price applies once you have at least one locked video."}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4">
