@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Eye, EyeOff, Lock, Mail, Video, X } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, Lock, Mail, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent } from "react";
@@ -55,18 +55,12 @@ function LoginForm() {
   };
 
   return (
-    <div className="flex flex-1">
-      <AuthVisualPanel />
+    <div className="auth-landing-theme flex flex-1 bg-void text-text-primary">
+      <AuthVisualPanel imageSrc="/auth/login-hero.webp" />
 
       <main className="flex w-full flex-1 items-center justify-center px-6 py-16 lg:w-[40%]">
         <div className="flex w-full max-w-sm flex-col gap-8">
           <div className="flex flex-col gap-3">
-            <span
-              className="flex h-11 w-11 items-center justify-center rounded-xl text-white"
-              style={{ backgroundImage: "var(--gradient-button-primary)" }}
-            >
-              <Video size={20} />
-            </span>
             <p className="text-sm text-text-secondary">
               Welcome to <span className="font-semibold text-text-primary">Connectiqo</span>
             </p>
