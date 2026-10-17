@@ -6,6 +6,7 @@ import OptimizedImage from "@/components/OptimizedImage";
 import { useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useHlsSource } from "@/lib/hooks/useHlsSource";
 import { profileApi } from "@/lib/api/profileApi";
 import { videoLibraryApi, type MentorVideo } from "@/lib/api/videoLibraryApi";
 import { VIDEO_UNLOCK_PRICE_TIERS } from "@/lib/constants/videoUnlockTiers";
@@ -21,6 +22,9 @@ function formatFileSize(bytes: number): string {
 }
 
 function PlayerModal({ video, onClose }: { video: MentorVideo; onClose: () => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  useHlsSource(videoRef, video.hls_url, video.video_url);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={onClose}>
       <div className="flex w-full max-w-2xl flex-col gap-2" onClick={(e) => e.stopPropagation()}>
@@ -30,7 +34,7 @@ function PlayerModal({ video, onClose }: { video: MentorVideo; onClose: () => vo
             <X size={20} />
           </button>
         </div>
-        <video src={video.video_url} controls autoPlay className="max-h-[75vh] w-full rounded-xl bg-black" />
+        <video ref={videoRef} controls autoPlay className="max-h-[75vh] w-full rounded-xl bg-black" />
       </div>
     </div>
   );
@@ -241,7 +245,11 @@ export default function MentorVideosPage() {
 
   const handleDelete = async (video: MentorVideo) => {
     try {
-      await videoLibraryApi.deleteVideo({ id: video.id, storagePath: video.storage_path });
+      await videoLibraryApi.deleteVideo({
+        id: video.id,
+        storagePath: video.storage_path,
+        thumbnailUrl: video.thumbnail_url,
+      });
       setVideos((prev) => prev.filter((v) => v.id !== video.id));
     } catch (err) {
       setError((err as Error)?.message || "Could not delete video");
