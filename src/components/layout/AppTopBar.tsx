@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, LogOut, Menu, Settings as SettingsIcon, Shield, Sparkles, Upload, User } from "lucide-react";
+import { ChevronDown, LogOut, Menu, Plus, Settings as SettingsIcon, Shield, Sparkles, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -70,7 +70,7 @@ export function AppTopBar({ onMenuClick }: { onMenuClick?: () => void }) {
               className="absolute inset-0 animate-[spin_3s_linear_infinite] bg-[conic-gradient(#ff0000,#ffff00,#00ff00,#00ffff,#0000ff,#ff00ff,#ff0000)] motion-reduce:animate-none"
             />
             <span className="relative flex h-7 w-7 items-center justify-center rounded-full bg-surface-sheet text-text-primary">
-              <Upload size={16} />
+              <Plus size={16} />
             </span>
           </Link>
           <NotificationBell />
@@ -107,6 +107,14 @@ export function AppTopBar({ onMenuClick }: { onMenuClick?: () => void }) {
 
             {open ? (
               <div className="absolute right-0 top-12 sm:top-11 w-44 overflow-hidden rounded-xl border border-border-light bg-surface-panel py-1 shadow-lg">
+                <Link
+                  href={ROUTES.editProfile}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2 px-3.5 py-2 text-sm text-text-secondary hover:bg-surface-chip hover:text-text-primary"
+                >
+                  <User size={14} />
+                  Profile
+                </Link>
                 <Link
                   href={ROUTES.settings}
                   onClick={() => setOpen(false)}
