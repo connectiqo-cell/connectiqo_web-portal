@@ -160,8 +160,8 @@ export default function SignupPage() {
 
   if (step === "otp") {
     return (
-      <div className="flex flex-1">
-        <AuthVisualPanel />
+      <div className="auth-landing-theme flex flex-1 bg-void text-text-primary">
+        <AuthVisualPanel imageSrc="/auth/signup-hero.webp" />
 
         <main className="flex w-full flex-1 items-center justify-center px-6 py-6 lg:w-[40%]">
           <div className="flex w-full max-w-sm flex-col gap-5">
@@ -306,18 +306,12 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex flex-1">
-      <AuthVisualPanel />
+    <div className="auth-landing-theme flex flex-1 bg-void text-text-primary">
+      <AuthVisualPanel imageSrc="/auth/signup-hero.webp" />
 
       <main className="flex w-full flex-1 items-center justify-center px-6 py-6 lg:w-[40%]">
         <div className="flex w-full max-w-sm flex-col gap-5">
           <div className="flex flex-col gap-1.5">
-            <span
-              className="mb-1 flex h-10 w-10 items-center justify-center rounded-xl text-white"
-              style={{ backgroundImage: "var(--gradient-button-primary)" }}
-            >
-              <Video size={18} />
-            </span>
             <p className="text-sm text-text-secondary">
               Welcome to <span className="font-semibold text-text-primary">Connectiqo</span>
             </p>

@@ -104,6 +104,50 @@
   --pill-border: var(--color-border-light);
 }
 
+/*
+ * Landing-page palette (cream / ink / purple), scoped to whatever subtree
+ * carries this class. Used by the signup page so it matches the marketing
+ * site visitors arrive from, regardless of the app's dark/light theme.
+ */
+.auth-landing-theme {
+  --color-void: #f7f4ef;
+  --color-dark: #efe9e1;
+  --color-light: #ffffff;
+  --color-nebula: #efe9e1;
+
+  --color-accent-primary: #a63fc9;
+  --color-accent-secondary: #7c3aed;
+  --color-accent-success: #059669;
+  --color-accent-warning: #d97706;
+  --color-accent-error: #dc2626;
+  --color-accent-info: #7c3aed;
+  --color-accent-link: #a63fc9;
+
+  --color-text-primary: #161412;
+  --color-text-secondary: #57514b;
+  --color-text-muted: #7a736c;
+  --color-text-disabled: #b3aca4;
+  --color-text-on-accent: #ffffff;
+
+  --color-surface-panel: #ffffff;
+  --color-surface-sheet: #ffffff;
+  --color-surface-chip: #efe9e1;
+  --color-surface-chip-strong: #e8e1d8;
+
+  --color-border-light: rgba(22, 20, 18, 0.14);
+  --color-border-default: rgba(22, 20, 18, 0.22);
+  --color-border-strong: rgba(166, 63, 201, 0.5);
+  --color-border-accent: #a63fc9;
+
+  --gradient-button-primary: linear-gradient(135deg, #a63fc9, #7c3aed);
+
+  /** Dark ink panel with the landing page's purple glow (AuthVisualPanel). */
+  --auth-panel-bg:
+    radial-gradient(60% 55% at 70% 25%, rgba(124, 58, 237, 0.45), transparent 70%),
+    linear-gradient(#0d0b14, #0d0b14);
+  --auth-panel-accent: #c084fc;
+}
+
 @theme inline {
   --color-void: var(--color-void);
   --color-dark: var(--color-dark);
