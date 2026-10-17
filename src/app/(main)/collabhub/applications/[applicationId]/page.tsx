@@ -4,7 +4,9 @@ import {
   ArrowLeft,
   CheckCircle2,
   Clock,
+  Download,
   FileVideo,
+  IndianRupee,
   Loader2,
   RefreshCw,
   XCircle,
@@ -56,7 +58,7 @@ const STATUS_META: Record<
   approved: {
     icon: CheckCircle2,
     title: "Approved!",
-    body: "The brand approved your video. Payment is next on their side.",
+    body: "The brand approved your video.",
     className: "border-accent-success/25 bg-accent-success/10 text-accent-success",
   },
   rejected: {
@@ -242,11 +244,7 @@ export default function ApplicationSubmissionPage() {
                     <StatusIcon size={18} className={submission.status === "processing" ? "animate-spin" : ""} />
                     <div>
                       <p className="text-sm font-bold">{meta.title}</p>
-                      <p className="text-xs opacity-90">
-                        {submission.status === "approved" && unlock
-                          ? `Paid! The brand unlocked this video for ₹${unlock.amount_paid} — now in your wallet.`
-                          : meta.body}
-                      </p>
+                      <p className="text-xs opacity-90">{meta.body}</p>
                     </div>
                   </div>
                   {submission.feedback ? (
@@ -257,16 +255,33 @@ export default function ApplicationSubmissionPage() {
                   {submission.watermarked_video_url && submission.status !== "processing" ? (
                     <SubmissionVideoPlayer src={submission.watermarked_video_url} />
                   ) : null}
-                  {submission.status === "approved" && unlock ? (
-                    <button
-                      type="button"
-                      onClick={handleDownloadClean}
-                      disabled={downloading}
-                      className="flex h-10 w-fit items-center justify-center rounded-full px-4 text-sm font-semibold text-text-on-accent disabled:opacity-60"
-                      style={{ backgroundImage: "var(--gradient-button-primary)" }}
-                    >
-                      {downloading ? "Loading…" : "Download your clean video"}
-                    </button>
+                  {submission.status === "approved" ? (
+                    unlock ? (
+                      <div className="flex items-center gap-3 rounded-xl bg-surface-panel/70 p-3">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-success/15 text-accent-success">
+                          <IndianRupee size={16} />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold">Paid! ₹{unlock.amount_paid}</p>
+                          <p className="text-xs opacity-80">Now in your wallet.</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleDownloadClean}
+                          disabled={downloading}
+                          className="flex h-9 shrink-0 items-center gap-1.5 rounded-full px-4 text-xs font-semibold text-text-on-accent disabled:opacity-60"
+                          style={{ backgroundImage: "var(--gradient-button-primary)" }}
+                        >
+                          <Download size={13} />
+                          {downloading ? "Loading…" : "Download"}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2.5 rounded-xl bg-surface-panel/70 px-3 py-2.5">
+                        <Clock size={15} className="shrink-0 opacity-70" />
+                        <p className="text-xs opacity-90">Waiting for the brand to pay and unlock this video.</p>
+                      </div>
+                    )
                   ) : null}
                 </div>
               );

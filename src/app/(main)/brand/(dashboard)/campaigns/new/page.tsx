@@ -1,5 +1,6 @@
 "use client";
 
+import { FileText, IndianRupee, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -18,10 +19,21 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  icon: Icon,
+  children,
+}: {
+  title: string;
+  icon: typeof Sparkles;
+  children: React.ReactNode;
+}) {
   return (
     <div className="flex flex-col gap-4 rounded-2xl border border-border-light bg-surface-panel p-4 sm:p-5">
-      <h2 className="text-xs font-bold uppercase tracking-wide text-accent-link">{title}</h2>
+      <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-accent-link">
+        <Icon size={14} />
+        {title}
+      </h2>
       {children}
     </div>
   );
@@ -95,7 +107,7 @@ export default function NewCampaignPage() {
     <div className="flex flex-col gap-4">
       {error ? <p className="text-sm text-accent-error">{error}</p> : null}
 
-      <Section title="Campaign Basics">
+      <Section title="Campaign Basics" icon={Sparkles}>
         <Field label="Campaign Title *">
           <input value={title} onChange={(e) => setTitle(e.target.value)} className={inputClass} placeholder="e.g. Summer Skincare Launch" />
         </Field>
@@ -137,7 +149,7 @@ export default function NewCampaignPage() {
         </Field>
       </Section>
 
-      <Section title="Creator Requirements">
+      <Section title="Creator Requirements" icon={FileText}>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Video Duration (seconds)">
             <input type="number" min={0} value={videoDuration} onChange={(e) => setVideoDuration(e.target.value)} className={inputClass} />
@@ -162,7 +174,7 @@ export default function NewCampaignPage() {
         </Field>
       </Section>
 
-      <Section title="Budget & Timeline">
+      <Section title="Budget & Timeline" icon={IndianRupee}>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Budget per Winner (₹) *">
             <input type="number" min={1} value={budgetPerWinner} onChange={(e) => setBudgetPerWinner(e.target.value)} className={inputClass} />

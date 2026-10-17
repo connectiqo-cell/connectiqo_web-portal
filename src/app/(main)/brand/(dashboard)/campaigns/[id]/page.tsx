@@ -1,11 +1,14 @@
 "use client";
 
 import {
+  ArrowLeft,
   CheckCircle2,
   Clock,
+  Download,
   ExternalLink,
   IndianRupee,
   Loader2,
+  Lock,
   MapPin,
   User,
   Users,
@@ -238,34 +241,41 @@ function ApplicantCard({
                   </div>
                 ) : submission.status === "approved" ? (
                   unlock ? (
-                    <div className="flex items-center gap-2">
-                      <span className="flex items-center gap-1 text-xs font-semibold text-accent-success">
-                        <CheckCircle2 size={13} />
-                        Unlocked — ₹{unlock.amount_paid} paid
+                    <div className="flex items-center gap-3 rounded-xl border border-accent-success/25 bg-accent-success/5 p-3">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-success/15 text-accent-success">
+                        <CheckCircle2 size={16} />
                       </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-accent-success">Unlocked</p>
+                        <p className="text-xs text-text-muted">₹{unlock.amount_paid} paid — now in the creator&apos;s wallet</p>
+                      </div>
                       <button
                         type="button"
                         onClick={() => handleDownloadClean(app.id)}
                         disabled={busyId === app.id}
-                        className="h-9 rounded-full border border-border-light px-4 text-xs font-semibold text-text-primary disabled:opacity-60"
+                        className="flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-border-light bg-surface-panel px-4 text-xs font-semibold text-text-primary hover:bg-surface-chip disabled:opacity-60"
                       >
-                        {busyId === app.id ? "Loading…" : "Download clean video"}
+                        <Download size={13} />
+                        {busyId === app.id ? "Loading…" : "Download"}
                       </button>
                     </div>
                   ) : (
-                    <div className="flex flex-col gap-2">
-                      <p className="text-xs text-text-muted">
-                        Pay ₹{budgetPerWinner} to unlock the clean (non-watermarked) video — this becomes the
-                        creator&apos;s earnings.
-                      </p>
+                    <div className="flex items-center gap-3 rounded-xl border border-dashed border-accent-link/30 bg-accent-link/5 p-3">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-link/10 text-accent-link">
+                        <Lock size={15} />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-text-primary">Clean video locked</p>
+                        <p className="text-xs text-text-muted">Pay to unlock — becomes the creator&apos;s earnings</p>
+                      </div>
                       <button
                         type="button"
                         onClick={() => handleUnlockPayment(app.id)}
                         disabled={busyId === app.id}
-                        className="flex h-9 w-fit items-center justify-center rounded-full px-4 text-xs font-semibold text-text-on-accent disabled:opacity-60"
+                        className="flex h-9 shrink-0 items-center justify-center rounded-full px-4 text-xs font-semibold text-text-on-accent disabled:opacity-60"
                         style={{ backgroundImage: "var(--gradient-button-primary)" }}
                       >
-                        {busyId === app.id ? "Processing…" : `Pay ₹${budgetPerWinner} to unlock`}
+                        {busyId === app.id ? "Processing…" : `Pay ₹${budgetPerWinner}`}
                       </button>
                     </div>
                   )
@@ -397,6 +407,9 @@ export default function BrandCampaignDetailPage() {
   }, [campaignId, instanceId]);
 
   const handleDecision = async (applicationId: string, status: CampaignApplication["status"]) => {
+    if (status === "rejected" && !window.confirm("Reject this applicant? They'll be notified and won't be able to submit a video.")) {
+      return;
+    }
     setBusyId(applicationId);
     setError("");
     try {
@@ -413,6 +426,9 @@ export default function BrandCampaignDetailPage() {
     submissionId: string,
     status: "revision_requested" | "approved" | "rejected",
   ) => {
+    if (status === "rejected" && !window.confirm("Reject this submission? The creator will see this as final — they won't be asked to revise it.")) {
+      return;
+    }
     setBusyId(submissionId);
     setError("");
     try {
@@ -519,6 +535,14 @@ export default function BrandCampaignDetailPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <Link
+        href={ROUTES.brandCampaigns}
+        className="flex w-fit items-center gap-1.5 text-sm font-medium text-text-secondary hover:text-text-primary"
+      >
+        <ArrowLeft size={16} />
+        Back to Campaigns
+      </Link>
+
       {error ? <p className="text-sm text-accent-error">{error}</p> : null}
 
       <div className="flex flex-col gap-4 rounded-2xl border border-border-light bg-surface-panel p-5">
@@ -621,7 +645,13 @@ export default function BrandCampaignDetailPage() {
       {applications.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border-light py-16 text-center">
           <Users size={24} className="text-text-muted" />
-          <p className="text-sm text-text-muted">No applications yet.</p>
+          <p className="max-w-xs text-sm text-text-muted">
+            {campaign.status === "draft"
+              ? "This campaign is still a draft — publish it so creators can find and apply to it."
+              : campaign.status === "published"
+                ? "No applications yet — your campaign is live on Collab Hub. Creators will start applying soon."
+                : "No applications came in before this campaign closed."}
+          </p>
         </div>
       ) : null}
     </div>

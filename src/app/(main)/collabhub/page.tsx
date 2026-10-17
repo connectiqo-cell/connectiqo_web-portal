@@ -45,14 +45,16 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
         </span>
       </div>
 
-      <div className="flex flex-col gap-1">
+      <div className="flex min-h-[2.5rem] flex-col gap-1">
         <p className="text-sm font-bold leading-snug text-text-primary group-hover:text-accent-link">
           {campaign.title}
         </p>
-        <p className="line-clamp-2 text-xs text-text-muted">{campaign.description}</p>
+        {campaign.description ? (
+          <p className="line-clamp-2 text-xs text-text-muted">{campaign.description}</p>
+        ) : null}
       </div>
 
-      <div className="mt-auto flex items-center justify-between gap-2 border-t border-border-light pt-3">
+      {shownPlatforms.length > 0 ? (
         <div className="flex flex-wrap gap-1.5">
           {shownPlatforms.map((p) => (
             <span key={p} className="rounded-full bg-surface-chip px-2 py-0.5 text-[10px] font-medium text-text-secondary">
@@ -65,7 +67,10 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
             </span>
           ) : null}
         </div>
-        <span className="flex shrink-0 items-center gap-1 text-[11px] font-medium text-text-muted">
+      ) : null}
+
+      <div className="mt-auto flex items-center gap-2 border-t border-border-light pt-3">
+        <span className="flex items-center gap-1.5 rounded-full bg-accent-link/10 px-2.5 py-1 text-[11px] font-semibold text-accent-link">
           <Users size={11} />
           {campaign.winner_count} winner{campaign.winner_count === 1 ? "" : "s"}
         </span>
@@ -121,7 +126,7 @@ export default function CollabHubPage() {
           <p className="text-sm text-text-muted">No active campaigns right now — check back soon.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2">
           {campaigns.map((c) => (
             <CampaignCard key={c.id} campaign={c} />
           ))}

@@ -1,6 +1,6 @@
 "use client";
 
-import { IndianRupee, Plus, Users } from "lucide-react";
+import { IndianRupee, Megaphone, Plus, Sparkles, Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 
@@ -16,6 +16,20 @@ const STATUS_STYLES: Record<Campaign["status"], string> = {
   completed: "bg-accent-link/10 text-accent-link",
   cancelled: "bg-accent-error/10 text-accent-error",
 };
+
+function StatCard({ icon: Icon, label, value, accent }: { icon: typeof Users; label: string; value: number; accent?: string }) {
+  return (
+    <div className="flex items-center gap-3 rounded-2xl border border-border-light bg-surface-panel p-4">
+      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-link/10 ${accent || "text-accent-link"}`}>
+        <Icon size={17} />
+      </span>
+      <div>
+        <p className="text-lg font-bold text-text-primary">{value}</p>
+        <p className="text-xs text-text-muted">{label}</p>
+      </div>
+    </div>
+  );
+}
 
 export default function BrandCampaignsPage() {
   const { user } = useAuth();
@@ -75,23 +89,14 @@ export default function BrandCampaignsPage() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-4 text-sm">
-          <div>
-            <p className="text-lg font-bold text-text-primary">{campaigns.length}</p>
-            <p className="text-xs text-text-muted">Total campaigns</p>
-          </div>
-          <div className="border-l border-border-light pl-4">
-            <p className="text-lg font-bold text-accent-success">{publishedCount}</p>
-            <p className="text-xs text-text-muted">Live</p>
-          </div>
-          <div className="border-l border-border-light pl-4">
-            <p className="text-lg font-bold text-accent-link">{totalApplicants}</p>
-            <p className="text-xs text-text-muted">Applicants</p>
-          </div>
+        <div className="grid flex-1 grid-cols-3 gap-2.5 sm:max-w-md">
+          <StatCard icon={Megaphone} label="Campaigns" value={campaigns.length} />
+          <StatCard icon={Sparkles} label="Live" value={publishedCount} accent="text-accent-success" />
+          <StatCard icon={Users} label="Applicants" value={totalApplicants} />
         </div>
         <Link
           href={ROUTES.brandCampaignNew}
-          className="flex h-10 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold text-text-on-accent"
+          className="flex h-10 shrink-0 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold text-text-on-accent transition-transform hover:scale-[1.02]"
           style={{ backgroundImage: "var(--gradient-button-primary)" }}
         >
           <Plus size={16} />
@@ -118,10 +123,13 @@ export default function BrandCampaignsPage() {
             <Link
               key={c.id}
               href={ROUTES.brandCampaign(c.id)}
-              className="flex items-center gap-3 rounded-xl border border-border-light bg-surface-panel px-4 py-3.5 transition-colors hover:bg-surface-chip"
+              className="group flex items-center gap-3 rounded-xl border border-border-light bg-surface-panel px-4 py-3.5 transition-all hover:-translate-y-0.5 hover:border-accent-link/30 hover:shadow-md"
             >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-link/10 text-accent-link">
+                <Megaphone size={16} />
+              </span>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-text-primary">{c.title}</p>
+                <p className="truncate text-sm font-semibold text-text-primary group-hover:text-accent-link">{c.title}</p>
                 <div className="mt-0.5 flex items-center gap-3 text-xs text-text-muted">
                   <span className="flex items-center gap-1">
                     <IndianRupee size={11} />

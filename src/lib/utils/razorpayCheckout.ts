@@ -25,18 +25,41 @@ declare global {
 
 let scriptPromise: Promise<void> | null = null;
 
+// A blocked/never-resolving <script> load (ad blocker, a restrictive
+// network, or an insecure non-localhost origin some browsers silently
+// degrade payment UI on) used to hang openRazorpayCheckout's caller forever
+// with zero feedback — the button just stayed disabled, no error, nothing
+// visibly wrong. This timeout turns that into a real, catchable error.
+const SCRIPT_LOAD_TIMEOUT_MS = 15_000;
+
 function loadRazorpayScript(): Promise<void> {
   if (typeof window === "undefined") {
     return Promise.reject(new Error("Razorpay checkout is only available in the browser"));
   }
   if (window.Razorpay) return Promise.resolve();
   if (!scriptPromise) {
-    scriptPromise = new Promise((resolve, reject) => {
+    scriptPromise = new Promise<void>((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error("Razorpay checkout didn't load in time. Check your connection and try again."));
+      }, SCRIPT_LOAD_TIMEOUT_MS);
       const script = document.createElement("script");
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error("Failed to load Razorpay checkout script"));
+      script.onload = () => {
+        clearTimeout(timeoutId);
+        resolve();
+      };
+      script.onerror = () => {
+        clearTimeout(timeoutId);
+        reject(new Error("Failed to load Razorpay checkout script"));
+      };
       document.body.appendChild(script);
+    });
+    // Reset on failure so the next attempt retries the script load instead
+    // of replaying this same rejected promise forever. A separate .catch
+    // (rather than chaining) keeps scriptPromise's own type as the original
+    // promise, so a caller's rejection isn't masked by this bookkeeping.
+    scriptPromise.catch(() => {
+      scriptPromise = null;
     });
   }
   return scriptPromise;

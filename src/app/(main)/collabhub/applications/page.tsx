@@ -95,13 +95,15 @@ export default function MyApplicationsPage() {
               <Link
                 key={app.id}
                 href={ROUTES.collabHubApplicationDetail(app.id)}
-                className="flex items-center gap-3 rounded-xl border border-border-light bg-surface-panel px-4 py-3.5 transition-colors hover:bg-surface-chip"
+                className="group flex items-center gap-3 rounded-xl border border-border-light bg-surface-panel px-4 py-3.5 transition-all hover:-translate-y-0.5 hover:border-accent-link/30 hover:shadow-md"
               >
                 <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${meta.className}`}>
                   <StatusIcon size={17} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-text-primary">{app.campaign?.title || "Campaign"}</p>
+                  <p className="truncate text-sm font-semibold text-text-primary group-hover:text-accent-link">
+                    {app.campaign?.title || "Campaign"}
+                  </p>
                   <p className="flex items-center gap-1 text-xs text-text-muted">
                     <IndianRupee size={11} />
                     {app.campaign?.budget_per_winner ?? 0} · Applied {new Date(app.applied_at).toLocaleDateString()}
