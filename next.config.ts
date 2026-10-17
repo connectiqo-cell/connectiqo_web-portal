@@ -38,8 +38,14 @@ const nextConfig: NextConfig = {
   // WSL2/Hyper-V's vEthernet adapter (172.16-172.31.x.x) and typical home-router
   // LANs (192.168.x.x) hand out a new IP on every restart, so pin wildcards
   // instead of chasing individual addresses each time dev access breaks.
-  allowedDevOrigins: ['172.*.*.*', '192.168.*.*'],
+  allowedDevOrigins: ['172.*.*.*', '192.168.*.*', '10.*.*.*'],
 
+  // Our root layout lives inside the (main) route group rather than at
+  // app/layout.tsx, so Next has no single root layout to compose the
+  // auto-generated 404 from — it needs app/global-not-found.tsx instead.
+  experimental: {
+    globalNotFound: true,
+  },
 };
 
 export default withSentryConfig(nextConfig, {
