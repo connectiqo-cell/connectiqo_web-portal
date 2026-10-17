@@ -9,15 +9,32 @@ import { AuthButton } from "@/components/auth/AuthButton";
 import { AuthTextField } from "@/components/auth/AuthTextField";
 import { AuthVisualPanel } from "@/components/auth/AuthVisualPanel";
 import { authApi } from "@/lib/api/authApi";
+import { profileApi } from "@/lib/api/profileApi";
 import { ROUTES } from "@/lib/routes";
+import { createClient } from "@/lib/supabase/client";
 import { toSafeRelativePath } from "@/lib/utils/safeRedirect";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** Where to land after login when the caller didn't ask for a specific page
+ * (e.g. a deep link via ?next=). Brands get a totally different dashboard
+ * from mentors/learners — sending them to the generic home feed by default
+ * would land them on mentor/video content that has nothing to do with
+ * their account, which is exactly the confusion this avoids. */
+async function resolveDefaultDestination(userId: string): Promise<string> {
+  const supabase = createClient();
+  const { data } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
+  if (data?.role !== "brand") return ROUTES.home;
+
+  const brandProfile = await profileApi.getBrandProfile(userId).catch(() => null);
+  if (!brandProfile?.industry || !brandProfile?.description) return ROUTES.brandOnboarding;
+  return ROUTES.brandCampaigns;
+}
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = toSafeRelativePath(searchParams.get("next")) || ROUTES.home;
+  const explicitNext = toSafeRelativePath(searchParams.get("next"));
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,8 +62,8 @@ function LoginForm() {
     setLoginError("");
     setLoading(true);
     try {
-      await authApi.signIn({ email: trimmedEmail, password });
-      router.push(next);
+      const { user } = await authApi.signIn({ email: trimmedEmail, password });
+      router.push(explicitNext || (user?.id ? await resolveDefaultDestination(user.id) : ROUTES.home));
     } catch (error) {
       setLoginError((error as Error)?.message || "Something went wrong. Please try again.");
       setLoading(false);

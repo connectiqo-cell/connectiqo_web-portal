@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
+import { Building2, Eye, EyeOff, Lock, Mail, Sparkles, User, Video } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
@@ -70,7 +70,7 @@ export default function SignupPage() {
   // is required. If confirmation isn't enabled (or gets disabled again),
   // signUp() returns a session immediately and this step is skipped
   // entirely, so this file keeps working either way.
-  const [step, setStep] = useState<"form" | "otp">("form");
+  const [step, setStep] = useState<"role" | "form" | "otp">("role");
   const [otp, setOtp] = useState("");
   const [otpError, setOtpError] = useState("");
   const [verifying, setVerifying] = useState(false);
@@ -89,6 +89,7 @@ export default function SignupPage() {
     await Promise.all([
       profileApi.createMentorProfile(userId),
       profileApi.createLearnerProfile(userId),
+      profileApi.createCreatorProfile(userId),
     ]);
     router.push(ROUTES.interestsOnboarding);
   };
@@ -234,6 +235,70 @@ export default function SignupPage() {
                 </button>
               </p>
             </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (step === "role") {
+    return (
+      <div className="flex flex-1">
+        <AuthVisualPanel />
+
+        <main className="flex w-full flex-1 items-center justify-center px-6 py-6 lg:w-[40%]">
+          <div className="flex w-full max-w-sm flex-col gap-5">
+            <div className="flex flex-col gap-1.5">
+              <span
+                className="mb-1 flex h-10 w-10 items-center justify-center rounded-xl text-white"
+                style={{ backgroundImage: "var(--gradient-button-primary)" }}
+              >
+                <Video size={18} />
+              </span>
+              <p className="text-sm text-text-secondary">
+                Welcome to <span className="font-semibold text-text-primary">Connectiqo</span>
+              </p>
+              <h1 className="text-2xl font-bold text-text-primary">Who are you signing up as?</h1>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <button
+                type="button"
+                onClick={() => setStep("form")}
+                className="flex items-center gap-3 rounded-xl border border-border-light bg-surface-sheet px-4 py-4 text-left transition-colors hover:border-accent-link"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-link/10 text-accent-link">
+                  <Sparkles size={18} />
+                </span>
+                <span>
+                  <span className="block text-sm font-semibold text-text-primary">I&apos;m a Creator</span>
+                  <span className="block text-xs text-text-muted">
+                    Mentor, learn, and apply to brand campaigns on CollabHub
+                  </span>
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => router.push(ROUTES.signupBrand)}
+                className="flex items-center gap-3 rounded-xl border border-border-light bg-surface-sheet px-4 py-4 text-left transition-colors hover:border-accent-link"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-link/10 text-accent-link">
+                  <Building2 size={18} />
+                </span>
+                <span>
+                  <span className="block text-sm font-semibold text-text-primary">I&apos;m a Company / Brand</span>
+                  <span className="block text-xs text-text-muted">Post paid campaigns for creators</span>
+                </span>
+              </button>
+            </div>
+
+            <p className="text-sm text-text-secondary">
+              Already have an account?{" "}
+              <Link href={ROUTES.login} className="font-semibold text-accent-link">
+                Sign In
+              </Link>
+            </p>
           </div>
         </main>
       </div>

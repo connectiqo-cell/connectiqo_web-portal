@@ -40,8 +40,15 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
+# dumb-init for proper signal handling; ffmpeg for CollabHub's server-side
+# video watermarking (src/app/api/campaigns/process-submission/route.ts) —
+# that step can't run in Supabase Edge Functions' Deno isolate, so it runs
+# here instead, in this app's own container. font-dejavu is required too:
+# ffmpeg's drawtext filter needs an actual font file to render the
+# watermark text, and the bare Alpine image ships none — the route points
+# at this exact font path rather than relying on fontconfig family-name
+# matching (which has no fonts to match against either way).
+RUN apk add --no-cache dumb-init ffmpeg font-dejavu
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001

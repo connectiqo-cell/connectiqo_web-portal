@@ -10,3 +10,8 @@ npm-debug.log*
 .vscode
 .vercel
 coverage
+
+# Docker Desktop's own WSL2 virtual disk, if it ends up inside this folder
+# (see Docker Desktop -> Settings -> Resources -> Advanced) — without this,
+# the entire multi-GB VM disk gets bundled into every build's context.
+DockerDesktopWSL

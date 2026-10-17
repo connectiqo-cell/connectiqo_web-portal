@@ -123,6 +123,151 @@ export const profileApi = {
     }
   },
 
+  /** CollabHub: auto-created at signup alongside mentor/learner profiles — every account is already a potential creator. */
+  createCreatorProfile: async (userId: string) => {
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase
+        .from("creator_profiles")
+        .upsert({ id: userId, portfolio_links: [], social_links: {}, bio: "" }, { onConflict: "id" })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  getCreatorProfile: async (userId: string) => {
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase.from("creator_profiles").select("*").eq("id", userId).maybeSingle();
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  /** CollabHub: edited from the shared settings/profile/edit page, same as mentor/learner fields. */
+  updateCreatorProfile: async ({
+    userId,
+    bio,
+    portfolioLinks,
+    socialLinks,
+    followerCount,
+    primaryPlatform,
+    location,
+  }: {
+    userId: string;
+    bio?: string;
+    portfolioLinks?: string[];
+    socialLinks?: Record<string, string>;
+    followerCount?: number | null;
+    primaryPlatform?: string;
+    location?: string;
+  }) => {
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase
+        .from("creator_profiles")
+        .upsert(
+          {
+            id: userId,
+            ...(bio !== undefined ? { bio } : {}),
+            ...(portfolioLinks !== undefined ? { portfolio_links: portfolioLinks } : {}),
+            ...(socialLinks !== undefined ? { social_links: socialLinks } : {}),
+            ...(followerCount !== undefined ? { follower_count: followerCount } : {}),
+            ...(primaryPlatform !== undefined ? { primary_platform: primaryPlatform } : {}),
+            ...(location !== undefined ? { location } : {}),
+          },
+          { onConflict: "id" },
+        )
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  /** CollabHub: created once, right after a brand finishes signup (src/app/(main)/signup/brand/page.tsx). */
+  createBrandProfile: async ({
+    userId,
+    companyName,
+    workEmail,
+  }: {
+    userId: string;
+    companyName: string;
+    workEmail: string;
+  }) => {
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase
+        .from("brand_profiles")
+        .upsert({ id: userId, company_name: companyName, work_email: workEmail }, { onConflict: "id" })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  getBrandProfile: async (userId: string) => {
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase.from("brand_profiles").select("*").eq("id", userId).maybeSingle();
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  /** Brand onboarding (src/app/(main)/onboarding/brand/page.tsx) — campaign creation is gated on this being filled in. */
+  updateBrandProfile: async ({
+    userId,
+    companyName,
+    logoUrl,
+    website,
+    industry,
+    description,
+  }: {
+    userId: string;
+    companyName?: string;
+    logoUrl?: string | null;
+    website?: string;
+    industry?: string;
+    description?: string;
+  }) => {
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase
+        .from("brand_profiles")
+        .upsert(
+          {
+            id: userId,
+            ...(companyName !== undefined ? { company_name: companyName } : {}),
+            ...(logoUrl !== undefined ? { logo_url: logoUrl } : {}),
+            ...(website !== undefined ? { website } : {}),
+            ...(industry !== undefined ? { industry } : {}),
+            ...(description !== undefined ? { description } : {}),
+          },
+          { onConflict: "id" },
+        )
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
   getMentorProfile: async (mentorId: string): Promise<MentorProfileFields> => {
     const supabase = createClient();
     try {

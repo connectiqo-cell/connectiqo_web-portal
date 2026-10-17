@@ -4,11 +4,13 @@ import {
   Calendar,
   Compass,
   Home,
+  Megaphone,
   MessageSquare,
   PanelLeftClose,
   PanelLeftOpen,
   PlayCircle,
   Settings,
+  Sparkles,
   User,
   Video as VideoIcon,
   Wallet as WalletIcon,
@@ -28,10 +30,23 @@ const NAV_ITEMS = [
   { href: ROUTES.home, label: "Home", icon: Home },
   { href: ROUTES.discover, label: "Discover", icon: Compass },
   { href: ROUTES.videos, label: "Videos", icon: PlayCircle },
+  { href: ROUTES.collabHub, label: "Collab Hub", icon: Sparkles },
   { href: ROUTES.bookings, label: "My Bookings", icon: Calendar },
   { href: ROUTES.messages, label: "Messages", icon: MessageSquare },
   { href: ROUTES.mentorSessions, label: "My Sessions", icon: VideoIcon },
   { href: ROUTES.wallet, label: "Earnings", icon: WalletIcon },
+] as const;
+
+/** Brand accounts (profiles.role === "brand") get Campaigns (their own
+ * management nav) plus the same Discover/Videos/My Bookings pages everyone
+ * else uses — browsing a creator's profile/videos and booking a session
+ * isn't campaign-specific, so it reuses those routes unmodified rather than
+ * building brand-only equivalents. */
+const BRAND_NAV_ITEMS = [
+  { href: ROUTES.brandCampaigns, label: "Campaigns", icon: Megaphone },
+  { href: ROUTES.discover, label: "Discover", icon: Compass },
+  { href: ROUTES.videos, label: "Videos", icon: PlayCircle },
+  { href: ROUTES.bookings, label: "My Bookings", icon: Calendar },
 ] as const;
 
 const BOTTOM_ITEMS = [
@@ -48,7 +63,9 @@ function SidebarNavContent({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const isBrand = profile?.role === "brand";
+  const items = isBrand ? BRAND_NAV_ITEMS : NAV_ITEMS;
   const [storeNotice, setStoreNotice] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
   // This component mounts twice at once — the desktop rail and the mobile
@@ -102,7 +119,7 @@ function SidebarNavContent({
   return (
     <div className="flex flex-col gap-4 overflow-y-auto overflow-x-hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <nav className="flex flex-col gap-1">
-        {NAV_ITEMS.map((item) => {
+        {items.map((item) => {
           const Icon = item.icon;
           const active = pathname === item.href;
           const badgeCount = item.href === ROUTES.messages ? unreadMessages : 0;
@@ -166,7 +183,7 @@ function SidebarNavContent({
         })}
       </nav>
 
-      {collapsed ? (
+      {isBrand ? null : collapsed ? (
         <OptimizedImage src="/connectiqo_logo.png" alt="Connectiqo App" width={40} height={40} className="mx-auto h-10 w-10" />
       ) : (
         <div className="relative flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-chip/50 p-4">
@@ -237,7 +254,13 @@ function SidebarAccountButton({
             {profile?.name || "My Account"}
           </span>
           <span className="truncate text-xs text-text-muted">
-            {profile?.role === "mentor" ? "Mentor" : profile?.role === "learner" ? "Learner" : "Mentor & Learner"}
+            {profile?.role === "brand"
+              ? "Brand"
+              : profile?.role === "mentor"
+                ? "Mentor"
+                : profile?.role === "learner"
+                  ? "Learner"
+                  : "Mentor & Learner"}
           </span>
         </span>
       )}

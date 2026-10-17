@@ -114,7 +114,13 @@ export default function SettingsHubPage() {
     ? "…"
     : `₹${(walletBalance ?? 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
   const roleLabel =
-    profile?.role === "mentor" ? "Mentor" : profile?.role === "learner" ? "Learner" : "Mentor & Learner";
+    profile?.role === "brand"
+      ? "Brand"
+      : profile?.role === "mentor"
+        ? "Mentor"
+        : profile?.role === "learner"
+          ? "Learner"
+          : "Mentor & Learner";
 
   const handleShare = async () => {
     const url = window.location.origin;

@@ -17,9 +17,11 @@ export const ROUTES = {
   // Auth
   login: "/login",
   signup: "/signup",
+  signupBrand: "/signup/brand",
   forgotPassword: "/forgot-password",
   onboardingVideo: "/onboarding",
   interestsOnboarding: "/onboarding/interests",
+  brandOnboarding: "/onboarding/brand",
 
   // Learner
   discover: "/discover",
@@ -35,10 +37,22 @@ export const ROUTES = {
   mentorVideos: "/mentor/videos",
   rescheduleRequest: (bookingId: string) => `/mentor/reschedule/${bookingId}`,
 
+  // Brand (CollabHub) — web-only, campaign management
+  brandCampaigns: "/brand/campaigns",
+  brandCampaignNew: "/brand/campaigns/new",
+  brandCampaign: (campaignId: string) => `/brand/campaigns/${campaignId}`,
+
+  // CollabHub — creator-facing campaign discovery/applications
+  collabHub: "/collabhub",
+  collabHubCampaign: (campaignId: string) => `/collabhub/${campaignId}`,
+  collabHubApplications: "/collabhub/applications",
+  collabHubApplicationDetail: (applicationId: string) => `/collabhub/applications/${applicationId}`,
+
   // Admin
   admin: "/admin",
   adminUsers: "/admin/users",
   adminVideos: "/admin/videos",
+  adminCampaigns: "/admin/campaigns",
 
   // Shared / modal-equivalent routes
   mentorProfile: (mentorId: string) => `/mentor/${mentorId}`,
