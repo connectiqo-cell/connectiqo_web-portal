@@ -35,6 +35,7 @@ export interface Campaign {
   winner_count: number;
   content_usage_rights: string | null;
   category: string | null;
+  cover_image_url: string | null;
   location: string | null;
   application_deadline: string | null;
   submission_deadline: string | null;
@@ -185,6 +186,26 @@ export const collabHubApi = {
         .maybeSingle();
       if (error) throw error;
       return data as unknown as Campaign | null;
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  /** Keyed by the uploading brand's own id, not the campaign's — lets the
+   * "new campaign" form upload an image before the campaign row exists yet,
+   * same pattern as profileApi.uploadAvatar. Returns the public URL only;
+   * the caller includes it in the create/update fields itself. */
+  uploadCampaignCoverImage: async ({ brandId, file }: { brandId: string; file: File }): Promise<string> => {
+    const supabase = createClient();
+    try {
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const filePath = `${brandId}/${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("campaign-covers")
+        .upload(filePath, file, { contentType: file.type || "image/jpeg", upsert: true });
+      if (uploadError) throw uploadError;
+      const { data } = supabase.storage.from("campaign-covers").getPublicUrl(filePath);
+      return data.publicUrl;
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
     }

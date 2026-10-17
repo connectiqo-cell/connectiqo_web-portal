@@ -2,16 +2,24 @@
 
 import {
   ArrowLeft,
+  CalendarClock,
   CheckCircle2,
+  ChevronDown,
   Clock,
   Download,
   ExternalLink,
+  FileText,
   IndianRupee,
   Loader2,
   Lock,
   MapPin,
+  Pencil,
+  ShieldCheck,
+  Tag,
+  Target,
   User,
   Users,
+  Video,
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
@@ -38,6 +46,32 @@ function formatFollowerCount(count: number): string {
   if (count >= 1_000) return `${(count / 1_000).toFixed(1)}K`;
   return String(count);
 }
+
+function formatDeadline(iso: string | null) {
+  if (!iso) return null;
+  return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+}
+
+// Everything the brand filled in on the campaign form that isn't already
+// shown as a stat tile — without this, the only way to see what you'd
+// entered (objectives, category, eligibility, deadlines, etc.) was to open
+// Edit and read the form fields back.
+function DetailRow({ icon: Icon, label, value }: { icon: typeof Tag; label: string; value?: string | null }) {
+  if (!value) return null;
+  return (
+    <div className="flex items-start gap-3 rounded-xl border border-border-light bg-surface-sheet p-3">
+      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent-link/10 text-accent-link">
+        <Icon size={14} />
+      </span>
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <span className="text-[11px] font-semibold uppercase tracking-wide text-text-muted">{label}</span>
+        <span className="text-sm leading-snug text-text-secondary">{value}</span>
+      </div>
+    </div>
+  );
+}
+
+const APPLICANTS_PAGE_SIZE = 10;
 
 const APPLICATION_STATUS_STYLES: Record<CampaignApplication["status"], string> = {
   pending: "bg-surface-chip text-text-muted",
@@ -117,10 +151,10 @@ function ApplicantCard({
 
       <Link
         href={ROUTES.mentorProfile(app.creator_id)}
-        className="flex w-fit items-center gap-1 text-xs font-semibold text-accent-link hover:underline"
+        className="flex w-fit items-center gap-1.5 rounded-full border border-accent-link/25 bg-accent-link/5 px-3 py-1.5 text-xs font-semibold text-accent-link hover:bg-accent-link/10"
       >
         View full profile, videos & book a call
-        <ExternalLink size={11} />
+        <ExternalLink size={12} />
       </Link>
       {creatorProfile &&
       (creatorProfile.follower_count ||
@@ -182,7 +216,10 @@ function ApplicantCard({
         </div>
       ) : null}
 
-      <p className="text-sm text-text-secondary">{app.pitch}</p>
+      <div className="flex flex-col gap-1 rounded-lg border border-border-light bg-surface-sheet p-3">
+        <span className="text-[11px] font-semibold uppercase tracking-wide text-text-muted">Pitch</span>
+        <p className="text-sm leading-relaxed text-text-secondary">{app.pitch}</p>
+      </div>
 
       {app.status === "accepted" || app.status === "shortlisted" ? (
         !submission ? (
@@ -336,6 +373,9 @@ export default function BrandCampaignDetailPage() {
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [feedbackDrafts, setFeedbackDrafts] = useState<Record<string, string>>({});
+  const [detailsExpanded, setDetailsExpanded] = useState(false);
+  const [needsReviewVisible, setNeedsReviewVisible] = useState(APPLICANTS_PAGE_SIZE);
+  const [inProductionVisible, setInProductionVisible] = useState(APPLICANTS_PAGE_SIZE);
 
   const load = async () => {
     try {
@@ -546,35 +586,53 @@ export default function BrandCampaignDetailPage() {
       {error ? <p className="text-sm text-accent-error">{error}</p> : null}
 
       <div className="flex flex-col gap-4 rounded-2xl border border-border-light bg-surface-panel p-5">
+        {campaign.cover_image_url ? (
+          <div
+            className="-m-5 mb-0 h-40 w-[calc(100%+2.5rem)] rounded-t-2xl bg-surface-chip bg-cover bg-center sm:h-48"
+            style={{ backgroundImage: `url(${campaign.cover_image_url})` }}
+            role="img"
+            aria-label={campaign.title}
+          />
+        ) : null}
         <div className="flex items-start justify-between gap-3">
           <h2 className="text-lg font-bold text-text-primary">{campaign.title}</h2>
-          {campaign.status === "draft" ? (
-            <button
-              type="button"
-              onClick={handlePublish}
-              className="h-9 shrink-0 rounded-full px-4 text-xs font-semibold text-text-on-accent"
-              style={{ backgroundImage: "var(--gradient-button-primary)" }}
+          <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href={ROUTES.brandCampaignEdit(campaign.id)}
+              aria-label="Edit campaign"
+              title="Edit campaign"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-border-light text-text-secondary hover:bg-surface-chip hover:text-text-primary"
             >
-              Publish
-            </button>
-          ) : campaign.status === "published" ? (
-            <div className="flex shrink-0 items-center gap-2">
-              <span className="rounded-full bg-accent-success/10 px-2.5 py-1 text-xs font-semibold capitalize text-accent-success">
-                {campaign.status}
-              </span>
+              <Pencil size={14} />
+            </Link>
+            {campaign.status === "draft" ? (
               <button
                 type="button"
-                onClick={handleClose}
-                className="h-9 rounded-full border border-border-light px-4 text-xs font-semibold text-text-secondary hover:bg-surface-chip"
+                onClick={handlePublish}
+                className="h-9 rounded-full px-4 text-xs font-semibold text-text-on-accent"
+                style={{ backgroundImage: "var(--gradient-button-primary)" }}
               >
-                Close Campaign
+                Publish
               </button>
-            </div>
-          ) : (
-            <span className="shrink-0 rounded-full bg-surface-chip px-2.5 py-1 text-xs font-semibold capitalize text-text-muted">
-              {campaign.status}
-            </span>
-          )}
+            ) : campaign.status === "published" ? (
+              <>
+                <span className="rounded-full bg-accent-success/10 px-2.5 py-1 text-xs font-semibold capitalize text-accent-success">
+                  {campaign.status}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="h-9 rounded-full border border-border-light px-4 text-xs font-semibold text-text-secondary hover:bg-surface-chip"
+                >
+                  Close Campaign
+                </button>
+              </>
+            ) : (
+              <span className="rounded-full bg-surface-chip px-2.5 py-1 text-xs font-semibold capitalize text-text-muted">
+                {campaign.status}
+              </span>
+            )}
+          </div>
         </div>
         <p className="text-sm text-text-secondary">{campaign.description}</p>
 
@@ -584,6 +642,38 @@ export default function BrandCampaignDetailPage() {
           <StatTile label="Applicants" value={applications.length} accent="text-accent-link" />
           <StatTile label="Accepted" value={acceptedCount} accent="text-accent-success" />
         </div>
+
+        <button
+          type="button"
+          onClick={() => setDetailsExpanded((v) => !v)}
+          className="flex items-center gap-1.5 border-t border-border-light pt-4 text-xs font-semibold text-accent-link"
+        >
+          <ChevronDown size={14} className={`transition-transform ${detailsExpanded ? "rotate-180" : ""}`} />
+          {detailsExpanded ? "Hide full details" : "Show full details"}
+        </button>
+
+        {detailsExpanded ? (
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+            <DetailRow icon={Tag} label="Category" value={campaign.category} />
+            <DetailRow icon={Video} label="Content Type" value={campaign.content_type} />
+            <DetailRow icon={Target} label="Objectives" value={campaign.objectives} />
+            <DetailRow icon={Users} label="Target Audience" value={campaign.target_audience} />
+            <DetailRow
+              icon={Users}
+              label="Minimum Followers"
+              value={campaign.min_followers ? formatFollowerCount(campaign.min_followers) : null}
+            />
+            <DetailRow
+              icon={Clock}
+              label="Video Duration"
+              value={campaign.video_duration_seconds ? `${campaign.video_duration_seconds}s` : null}
+            />
+            <DetailRow icon={ShieldCheck} label="Eligibility" value={campaign.eligibility_criteria} />
+            <DetailRow icon={FileText} label="Content Usage Rights" value={campaign.content_usage_rights} />
+            <DetailRow icon={CalendarClock} label="Application Deadline" value={formatDeadline(campaign.application_deadline)} />
+            <DetailRow icon={CalendarClock} label="Submission Deadline" value={formatDeadline(campaign.submission_deadline)} />
+          </div>
+        ) : null}
       </div>
 
       {needsReview.length > 0 ? (
@@ -593,7 +683,7 @@ export default function BrandCampaignDetailPage() {
             New Applicants ({needsReview.length})
           </h3>
           <div className="flex flex-col gap-2">
-            {needsReview.map((app) => (
+            {needsReview.slice(0, needsReviewVisible).map((app) => (
               <ApplicantCard
                 key={app.id}
                 app={app}
@@ -610,6 +700,15 @@ export default function BrandCampaignDetailPage() {
                 handleDownloadClean={handleDownloadClean}
               />
             ))}
+            {needsReviewVisible < needsReview.length ? (
+              <button
+                type="button"
+                onClick={() => setNeedsReviewVisible((c) => c + APPLICANTS_PAGE_SIZE)}
+                className="rounded-xl border border-border-light py-2.5 text-sm font-semibold text-accent-link hover:bg-surface-chip"
+              >
+                Load more
+              </button>
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -621,7 +720,7 @@ export default function BrandCampaignDetailPage() {
             In Production ({inProduction.length})
           </h3>
           <div className="flex flex-col gap-2">
-            {inProduction.map((app) => (
+            {inProduction.slice(0, inProductionVisible).map((app) => (
               <ApplicantCard
                 key={app.id}
                 app={app}
@@ -638,6 +737,15 @@ export default function BrandCampaignDetailPage() {
                 handleDownloadClean={handleDownloadClean}
               />
             ))}
+            {inProductionVisible < inProduction.length ? (
+              <button
+                type="button"
+                onClick={() => setInProductionVisible((c) => c + APPLICANTS_PAGE_SIZE)}
+                className="rounded-xl border border-border-light py-2.5 text-sm font-semibold text-accent-link hover:bg-surface-chip"
+              >
+                Load more
+              </button>
+            ) : null}
           </div>
         </div>
       ) : null}

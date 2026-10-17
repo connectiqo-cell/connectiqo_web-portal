@@ -41,6 +41,7 @@ export const ROUTES = {
   brandCampaigns: "/brand/campaigns",
   brandCampaignNew: "/brand/campaigns/new",
   brandCampaign: (campaignId: string) => `/brand/campaigns/${campaignId}`,
+  brandCampaignEdit: (campaignId: string) => `/brand/campaigns/${campaignId}/edit`,
 
   // CollabHub — creator-facing campaign discovery/applications
   collabHub: "/collabhub",

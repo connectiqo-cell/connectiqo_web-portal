@@ -4,6 +4,7 @@ import { IndianRupee, Megaphone, Plus, Sparkles, Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 
+import OptimizedImage from "@/components/OptimizedImage";
 import { useAuth } from "@/contexts/AuthContext";
 import { collabHubApi, type Campaign } from "@/lib/api/collabHubApi";
 import { ROUTES } from "@/lib/routes";
@@ -31,11 +32,14 @@ function StatCard({ icon: Icon, label, value, accent }: { icon: typeof Users; la
   );
 }
 
+const PAGE_SIZE = 10;
+
 export default function BrandCampaignsPage() {
   const { user } = useAuth();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   useEffect(() => {
     if (!user) return;
@@ -119,14 +123,18 @@ export default function BrandCampaignsPage() {
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          {campaigns.map((c) => (
+          {campaigns.slice(0, visibleCount).map((c) => (
             <Link
               key={c.id}
               href={ROUTES.brandCampaign(c.id)}
               className="group flex items-center gap-3 rounded-xl border border-border-light bg-surface-panel px-4 py-3.5 transition-all hover:-translate-y-0.5 hover:border-accent-link/30 hover:shadow-md"
             >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-link/10 text-accent-link">
-                <Megaphone size={16} />
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-accent-link/10 text-accent-link">
+                {c.cover_image_url ? (
+                  <OptimizedImage src={c.cover_image_url} alt={c.title} width={40} height={40} className="h-full w-full object-cover" />
+                ) : (
+                  <Megaphone size={16} />
+                )}
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-text-primary group-hover:text-accent-link">{c.title}</p>
@@ -146,6 +154,15 @@ export default function BrandCampaignsPage() {
               </span>
             </Link>
           ))}
+          {visibleCount < campaigns.length ? (
+            <button
+              type="button"
+              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+              className="rounded-xl border border-border-light py-2.5 text-sm font-semibold text-accent-link hover:bg-surface-chip"
+            >
+              Load more
+            </button>
+          ) : null}
         </div>
       )}
     </div>

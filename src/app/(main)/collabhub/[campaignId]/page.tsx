@@ -145,6 +145,14 @@ export default function CollabHubCampaignDetailPage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-border-light bg-surface-panel shadow-sm">
+        {campaign.cover_image_url ? (
+          <div
+            className="h-40 w-full bg-surface-chip bg-cover bg-center sm:h-52"
+            style={{ backgroundImage: `url(${campaign.cover_image_url})` }}
+            role="img"
+            aria-label={campaign.title}
+          />
+        ) : null}
         <div className="flex items-start gap-3 px-5 pb-6 pt-5" style={{ backgroundImage: "var(--gradient-button-primary)" }}>
           <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/90 ring-2 ring-white/40">
             {campaign.brand?.avatar_url ? (
@@ -208,8 +216,13 @@ export default function CollabHubCampaignDetailPage() {
             </div>
           </div>
 
-          {campaign.video_duration_seconds || platforms.length ? (
+          {campaign.category || campaign.video_duration_seconds || platforms.length ? (
             <div className="flex flex-wrap items-center gap-2">
+              {campaign.category ? (
+                <span className="rounded-full bg-accent-link/10 px-3 py-1.5 text-xs font-semibold text-accent-link">
+                  {campaign.category}
+                </span>
+              ) : null}
               {campaign.video_duration_seconds ? (
                 <span className="flex items-center gap-1.5 rounded-full border border-border-light bg-surface-sheet px-3 py-1.5 text-xs font-medium text-text-secondary">
                   <Clock size={12} className="text-accent-link" />

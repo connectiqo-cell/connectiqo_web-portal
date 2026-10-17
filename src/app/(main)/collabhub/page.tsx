@@ -13,36 +13,52 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
   const shownPlatforms = platforms.slice(0, 3);
   const extraPlatforms = platforms.length - shownPlatforms.length;
 
+  const priceBadge = (
+    <span
+      className="shrink-0 rounded-full px-2.5 py-1 text-xs font-bold text-white shadow-sm"
+      style={{ backgroundImage: "var(--gradient-button-primary)" }}
+    >
+      ₹{campaign.budget_per_winner}
+    </span>
+  );
+
   return (
     <Link
       href={ROUTES.collabHubCampaign(campaign.id)}
       className="group flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4 transition-all hover:-translate-y-0.5 hover:border-accent-link/40 hover:shadow-lg"
     >
-      <div className="flex items-start justify-between gap-3">
+      {campaign.cover_image_url ? (
+        <div className="relative -m-4 mb-0 h-28 overflow-hidden rounded-t-2xl bg-surface-chip">
+          <div
+            className="h-full w-full bg-cover bg-center"
+            style={{ backgroundImage: `url(${campaign.cover_image_url})` }}
+            role="img"
+            aria-label={campaign.title}
+          />
+          <div className="absolute right-3 top-3">{priceBadge}</div>
+        </div>
+      ) : null}
+
+      <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip ring-1 ring-border-light">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip ring-1 ring-border-light">
             {campaign.brand?.avatar_url ? (
               <OptimizedImage
                 src={campaign.brand.avatar_url}
                 alt={campaign.brand?.name || "Brand"}
-                width={32}
-                height={32}
+                width={28}
+                height={28}
                 className="h-full w-full object-cover"
               />
             ) : (
-              <Sparkles size={14} className="text-text-muted" />
+              <Sparkles size={12} className="text-text-muted" />
             )}
           </span>
           <p className="truncate text-xs font-semibold uppercase tracking-wide text-accent-link">
             {campaign.brand?.name || "Brand"}
           </p>
         </div>
-        <span
-          className="shrink-0 rounded-full px-2.5 py-1 text-xs font-bold text-white"
-          style={{ backgroundImage: "var(--gradient-button-primary)" }}
-        >
-          ₹{campaign.budget_per_winner}
-        </span>
+        {campaign.cover_image_url ? null : priceBadge}
       </div>
 
       <div className="flex min-h-[2.5rem] flex-col gap-1">
@@ -54,8 +70,13 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
         ) : null}
       </div>
 
-      {shownPlatforms.length > 0 ? (
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-border-light pt-3">
         <div className="flex flex-wrap gap-1.5">
+          {campaign.category ? (
+            <span className="rounded-full bg-accent-link/10 px-2 py-0.5 text-[10px] font-semibold text-accent-link">
+              {campaign.category}
+            </span>
+          ) : null}
           {shownPlatforms.map((p) => (
             <span key={p} className="rounded-full bg-surface-chip px-2 py-0.5 text-[10px] font-medium text-text-secondary">
               {p}
@@ -67,10 +88,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
             </span>
           ) : null}
         </div>
-      ) : null}
-
-      <div className="mt-auto flex items-center gap-2 border-t border-border-light pt-3">
-        <span className="flex items-center gap-1.5 rounded-full bg-accent-link/10 px-2.5 py-1 text-[11px] font-semibold text-accent-link">
+        <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-accent-link/10 px-2.5 py-1 text-[11px] font-semibold text-accent-link">
           <Users size={11} />
           {campaign.winner_count} winner{campaign.winner_count === 1 ? "" : "s"}
         </span>
@@ -79,10 +97,13 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
   );
 }
 
+const PAGE_SIZE = 10;
+
 export default function CollabHubPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   useEffect(() => {
     let cancelled = false;
@@ -126,10 +147,21 @@ export default function CollabHubPage() {
           <p className="text-sm text-text-muted">No active campaigns right now — check back soon.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2">
-          {campaigns.map((c) => (
-            <CampaignCard key={c.id} campaign={c} />
-          ))}
+        <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2">
+            {campaigns.slice(0, visibleCount).map((c) => (
+              <CampaignCard key={c.id} campaign={c} />
+            ))}
+          </div>
+          {visibleCount < campaigns.length ? (
+            <button
+              type="button"
+              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+              className="rounded-xl border border-border-light py-2.5 text-sm font-semibold text-accent-link hover:bg-surface-chip"
+            >
+              Load more
+            </button>
+          ) : null}
         </div>
       )}
     </main>

@@ -17,11 +17,14 @@ const STATUS_META: Record<CampaignApplication["status"], { icon: typeof Clock; c
   rejected: { icon: XCircle, className: "bg-accent-error/10 text-accent-error" },
 };
 
+const PAGE_SIZE = 15;
+
 export default function MyApplicationsPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [applications, setApplications] = useState<CampaignApplication[]>([]);
   const [loading, setLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace(ROUTES.login);
@@ -88,7 +91,7 @@ export default function MyApplicationsPage() {
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          {applications.map((app) => {
+          {applications.slice(0, visibleCount).map((app) => {
             const meta = STATUS_META[app.status];
             const StatusIcon = meta.icon;
             return (
@@ -115,6 +118,15 @@ export default function MyApplicationsPage() {
               </Link>
             );
           })}
+          {visibleCount < applications.length ? (
+            <button
+              type="button"
+              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+              className="rounded-xl border border-border-light py-2.5 text-sm font-semibold text-accent-link hover:bg-surface-chip"
+            >
+              Load more
+            </button>
+          ) : null}
         </div>
       )}
     </main>
