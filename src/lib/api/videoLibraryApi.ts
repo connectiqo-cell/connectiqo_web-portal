@@ -7,12 +7,27 @@ import { isMentorFreezeActive } from "@/lib/utils/mentorFreeze";
 const BUCKET = "mentor-videos";
 const THUMB_BUCKET = "mentor-videos-thumbnail";
 
+/**
+ * Recover an object's storage path from its public URL.
+ * Public URLs look like .../object/public/<bucket>/<path>?maybe=query
+ */
+function storagePathFromPublicUrl(url: string | null | undefined, bucket: string): string | null {
+  if (!url) return null;
+  const marker = `/${bucket}/`;
+  const at = url.indexOf(marker);
+  if (at === -1) return null;
+  const path = url.slice(at + marker.length).split("?")[0];
+  return path ? decodeURIComponent(path) : null;
+}
+
 export interface MentorVideo {
   id: string;
   mentor_id: string;
   title: string;
   description: string | null;
   video_url: string;
+  /** HLS master playlist, set by the transcoder. Null until it has run. */
+  hls_url?: string | null;
   thumbnail_url: string | null;
   is_free: boolean;
   position: number | null;
@@ -158,7 +173,7 @@ export const videoLibraryApi = {
       const { data, error } = await supabase
         .from("mentor_videos")
         .select(
-          "id, mentor_id, title, description, video_url, thumbnail_url, is_free, position, is_promoted, promoted_at, storage_path, created_at",
+          "id, mentor_id, title, description, video_url, hls_url, thumbnail_url, is_free, position, is_promoted, promoted_at, storage_path, created_at",
         )
         .eq("mentor_id", mentorId)
         .order("position", { ascending: true })
@@ -201,12 +216,43 @@ export const videoLibraryApi = {
     }
   },
 
-  deleteVideo: async ({ id, storagePath }: { id: string; storagePath?: string }) => {
+  deleteVideo: async ({
+    id,
+    storagePath,
+    thumbnailUrl,
+  }: { id: string; storagePath?: string; thumbnailUrl?: string | null }) => {
     const supabase = createClient();
     try {
+      // Storage cleanup is best-effort and runs first. A storage hiccup must not
+      // leave the mentor unable to remove their video — an orphaned file is a
+      // smaller problem than a video that refuses to disappear.
+      const cleanup = async (label: string, fn: () => Promise<unknown>) => {
+        try {
+          await fn();
+        } catch (e) {
+          console.warn(`[deleteVideo] ${label} cleanup failed:`, e);
+        }
+      };
+
       if (storagePath) {
-        await supabase.storage.from(BUCKET).remove([storagePath]);
+        await cleanup("original", () => supabase.storage.from(BUCKET).remove([storagePath]));
       }
+
+      // The HLS ladder is a folder of manifests and segments, not a single file.
+      await cleanup("hls", async () => {
+        const { data: files } = await supabase.storage.from(BUCKET).list(`hls/${id}`);
+        if (files?.length) {
+          await supabase.storage.from(BUCKET).remove(files.map((f) => `hls/${id}/${f.name}`));
+        }
+      });
+
+      const thumbPath = storagePathFromPublicUrl(thumbnailUrl, THUMB_BUCKET);
+      if (thumbPath) {
+        await cleanup("thumbnail", () =>
+          supabase.storage.from(THUMB_BUCKET).remove([thumbPath]),
+        );
+      }
+
       const { error } = await supabase.from("mentor_videos").delete().eq("id", id);
       if (error) throw error;
     } catch (error) {
@@ -227,7 +273,7 @@ export const videoLibraryApi = {
       const { data: videos, error } = await supabase
         .from("mentor_videos")
         .select(
-          "id, mentor_id, title, description, video_url, thumbnail_url, is_free, position, is_promoted, promoted_at, created_at, profiles:mentor_id (id, name, avatar_url)",
+          "id, mentor_id, title, description, video_url, hls_url, thumbnail_url, is_free, position, is_promoted, promoted_at, created_at, profiles:mentor_id (id, name, avatar_url)",
         )
         .order("is_promoted", { ascending: false })
         .order("promoted_at", { ascending: false, nullsFirst: false })
@@ -271,7 +317,7 @@ export const videoLibraryApi = {
       const { data: video, error } = await supabase
         .from("mentor_videos")
         .select(
-          "id, mentor_id, title, description, video_url, thumbnail_url, is_free, position, is_promoted, promoted_at, created_at, profiles:mentor_id (id, name, avatar_url)",
+          "id, mentor_id, title, description, video_url, hls_url, thumbnail_url, is_free, position, is_promoted, promoted_at, created_at, profiles:mentor_id (id, name, avatar_url)",
         )
         .eq("id", videoId)
         .maybeSingle();

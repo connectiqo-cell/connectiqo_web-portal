@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { ReportUserModal } from "@/components/ReportUserModal";
 import { useAuth } from "@/contexts/AuthContext";
 import type { PublicVideo } from "@/lib/api/videoLibraryApi";
+import { useHlsSource } from "@/lib/hooks/useHlsSource";
 import { ROUTES } from "@/lib/routes";
 
 export function VideoFeedSlide({
@@ -32,6 +33,8 @@ export function VideoFeedSlide({
   onReact: (reaction: "like" | "dislike") => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  // Adaptive ladder when the transcoder has produced one, original MP4 otherwise.
+  useHlsSource(videoRef, video.hls_url, video.video_url);
   const [copied, setCopied] = useState(false);
   const [showPlayPauseIcon, setShowPlayPauseIcon] = useState(false);
   const [isPaused, setIsPaused] = useState(true);
@@ -106,7 +109,6 @@ export function VideoFeedSlide({
           <>
             <video
               ref={videoRef}
-              src={video.video_url}
               poster={video.thumbnail_url || undefined}
               muted={muted}
               loop
