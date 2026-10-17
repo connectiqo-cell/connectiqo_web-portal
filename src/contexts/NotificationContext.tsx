@@ -36,7 +36,8 @@ const NotificationContext = createContext<NotificationContextValue | null>(null)
  * feed updates live instead of only on next app open.
  */
 export function NotificationProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const isBrand = profile?.role === "brand";
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -60,12 +61,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const loadNotifications = useCallback(async () => {
     if (!user) return;
     try {
-      const rows = await notificationApi.getNotifications(user.id);
+      const rows = await notificationApi.getNotifications(user.id, isBrand);
       setNotifications(rows);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, isBrand]);
 
   useEffect(() => {
     if (!user) return;
@@ -87,25 +88,31 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     };
 
     const supabase = createClient();
-    const channel = supabase
-      .channel(`notifications-${user.id}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "bookings", filter: `mentor_id=eq.${user.id}` },
-        triggerDebounced,
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "bookings", filter: `learner_id=eq.${user.id}` },
-        triggerDebounced,
-      )
-      .subscribe();
+    const channel = supabase.channel(`notifications-${user.id}`);
+    if (isBrand) {
+      channel
+        .on("postgres_changes", { event: "*", schema: "public", table: "campaign_applications" }, triggerDebounced)
+        .on("postgres_changes", { event: "*", schema: "public", table: "campaign_submissions" }, triggerDebounced);
+    } else {
+      channel
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "bookings", filter: `mentor_id=eq.${user.id}` },
+          triggerDebounced,
+        )
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "bookings", filter: `learner_id=eq.${user.id}` },
+          triggerDebounced,
+        );
+    }
+    channel.subscribe();
 
     return () => {
       if (debounceTimer) clearTimeout(debounceTimer);
       supabase.removeChannel(channel);
     };
-  }, [user, loadNotifications]);
+  }, [user, loadNotifications, isBrand]);
 
   const persist = useCallback(
     (next: Set<string>) => {

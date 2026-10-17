@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, LogOut, Menu, Settings as SettingsIcon, Shield, Upload, User } from "lucide-react";
+import { ChevronDown, LogOut, Menu, Settings as SettingsIcon, Shield, Sparkles, Upload, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -50,6 +50,16 @@ export function AppTopBar({ onMenuClick }: { onMenuClick?: () => void }) {
           <HomeSearchBar placeholder="Search by name, @username or skill" compact />
         </div>
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+          {profile?.role !== "brand" ? (
+            <Link
+              href={ROUTES.collabHub}
+              aria-label="Collab Hub"
+              title="Collab Hub"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-text-secondary hover:bg-surface-chip hover:text-accent-link"
+            >
+              <Sparkles size={18} />
+            </Link>
+          ) : null}
           <Link
             href={ROUTES.mentorVideos}
             aria-label="Upload video"
@@ -83,7 +93,13 @@ export function AppTopBar({ onMenuClick }: { onMenuClick?: () => void }) {
               <span className="hidden flex-col items-start leading-tight sm:flex">
                 <span className="text-xs font-semibold text-text-primary">{profile?.name || "Account"}</span>
                 <span className="text-[10px] text-text-muted">
-                  {profile?.role === "mentor" ? "Mentor" : profile?.role === "learner" ? "Learner" : "Mentor & Learner"}
+                  {profile?.role === "brand"
+                    ? "Brand"
+                    : profile?.role === "mentor"
+                      ? "Mentor"
+                      : profile?.role === "learner"
+                        ? "Learner"
+                        : "Mentor & Learner"}
                 </span>
               </span>
               <ChevronDown size={12} className="sm:size-3.5 text-text-muted" />

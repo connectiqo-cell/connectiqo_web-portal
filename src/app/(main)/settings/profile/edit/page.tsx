@@ -33,7 +33,7 @@ export default function EditProfilePage() {
   const [saved, setSaved] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
 
-  const isLearner = profile?.role !== "mentor";
+  const isLearner = profile?.role !== "mentor" && profile?.role !== "brand";
   const isMentor = profile?.role === "mentor" || profile?.role === "both";
 
   // Category list — live from mentor_categories, shared by the learner interests
@@ -61,9 +61,46 @@ export default function EditProfilePage() {
   const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState("");
 
+  // CollabHub creator-profile fields — every non-brand account has one
+  // (auto-created at signup, see authApi/signup page), shown here rather
+  // than a separate settings page to keep one profile editor, same as
+  // mentor/learner fields above.
+  const isBrandAccount = profile?.role === "brand";
+  // CollabHub's creator_profiles only needs bio/location/website/social —
+  // all already collected by the mentor fields above — so nothing here adds
+  // new inputs of its own.
+
+  // Brand company-profile fields — editable here now (previously only
+  // settable once, at /onboarding/brand, with no way back in).
+  const [brandLoading, setBrandLoading] = useState(true);
+  const [brandWebsite, setBrandWebsite] = useState("");
+  const [brandIndustry, setBrandIndustry] = useState("");
+  const [brandDescription, setBrandDescription] = useState("");
+
   useEffect(() => {
     if (!authLoading && !user) router.replace(ROUTES.login);
   }, [authLoading, user, router]);
+
+  useEffect(() => {
+    if (!user || !isBrandAccount) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await profileApi.getBrandProfile(user.id);
+        if (cancelled || !data) return;
+        setBrandWebsite(data.website || "");
+        setBrandIndustry(data.industry || "");
+        setBrandDescription(data.description || "");
+      } catch (err) {
+        console.error("Could not load brand profile:", err);
+      } finally {
+        if (!cancelled) setBrandLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, isBrandAccount]);
 
   useEffect(() => {
     if (!profile) return;
@@ -265,7 +302,7 @@ export default function EditProfilePage() {
     setSkills((prev) => prev.filter((s) => s !== skill));
   };
 
-  const sectionsLoading = (isMentor && mentorLoading) || (isLearner && !interestsLoaded);
+  const sectionsLoading = (isMentor && mentorLoading) || (isLearner && !interestsLoaded) || (isBrandAccount && brandLoading);
 
   const handleSave = async () => {
     if (!user) return;
@@ -308,6 +345,31 @@ export default function EditProfilePage() {
       if (isLearner) {
         tasks.push(
           profileApi.updateLearnerProfile({ userId: user.id, bio: bio.trim(), interests }),
+        );
+      }
+      if (isBrandAccount) {
+        tasks.push(
+          profileApi.updateBrandProfile({
+            userId: user.id,
+            companyName: name.trim(),
+            website: brandWebsite.trim(),
+            industry: brandIndustry,
+            description: brandDescription.trim(),
+          }),
+        );
+      }
+      if (!isBrandAccount) {
+        tasks.push(
+          profileApi.updateCreatorProfile({
+            userId: user.id,
+            bio: bio.trim(),
+            portfolioLinks: website.trim() ? [website.trim()] : [],
+            socialLinks: {
+              ...(instagramUrl.trim() ? { instagram: instagramUrl.trim() } : {}),
+              ...(youtubeUrl.trim() ? { youtube: youtubeUrl.trim() } : {}),
+            },
+            location: location.trim(),
+          }),
         );
       }
       await Promise.all(tasks);
@@ -573,7 +635,7 @@ export default function EditProfilePage() {
             <input
               value={website}
               onChange={(e) => setWebsite(e.target.value)}
-              placeholder="e.g. www.example.com"
+              placeholder="e.g. www.example.com — also shown as your Collab Hub portfolio link"
               className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
             />
           </label>
@@ -670,6 +732,64 @@ export default function EditProfilePage() {
               />
             </label>
           </div>
+        </div>
+      ) : null}
+
+      {isBrandAccount && !brandLoading ? (
+        <div className="flex flex-col gap-4 border-t border-border-light pt-6">
+          <div>
+            <h2 className="text-sm font-semibold text-text-primary">Company Profile</h2>
+            <p className="text-xs text-text-muted">Shown to creators on every campaign you publish.</p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">Industry</span>
+              <select
+                value={brandIndustry}
+                onChange={(e) => setBrandIndustry(e.target.value)}
+                className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary focus:outline-none"
+              >
+                <option value="">Select an industry</option>
+                {[
+                  "Fashion & Apparel",
+                  "Beauty & Cosmetics",
+                  "Food & Beverage",
+                  "Tech & Apps",
+                  "Fitness & Wellness",
+                  "Travel & Hospitality",
+                  "Finance",
+                  "Other",
+                ].map((i) => (
+                  <option key={i} value={i}>
+                    {i}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">Website</span>
+              <input
+                value={brandWebsite}
+                onChange={(e) => setBrandWebsite(e.target.value)}
+                placeholder="https://yourbrand.com"
+                className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
+              />
+            </label>
+          </div>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">About your brand</span>
+            <textarea
+              value={brandDescription}
+              onChange={(e) => setBrandDescription(e.target.value)}
+              rows={4}
+              maxLength={500}
+              placeholder="What does your brand sell, and what kind of creators are you looking for?"
+              className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
+            />
+            <span className="self-end text-[11px] text-text-muted">{brandDescription.length}/500</span>
+          </label>
         </div>
       ) : null}
 

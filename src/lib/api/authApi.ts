@@ -17,7 +17,7 @@ export type SignUpParams = {
   email: string;
   password: string;
   name: string;
-  role: "mentor" | "learner" | "both";
+  role: "mentor" | "learner" | "both" | "brand";
 };
 
 /** Ported from connectfront/src/api/authApi.js — same Supabase project, same auth flow. */
@@ -58,7 +58,7 @@ export const authApi = {
     userId: string;
     email: string;
     name: string;
-    role: "mentor" | "learner" | "both";
+    role: "mentor" | "learner" | "both" | "brand";
   }) => {
     const supabase = createClient();
     try {

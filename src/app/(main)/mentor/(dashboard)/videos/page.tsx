@@ -38,14 +38,16 @@ function PlayerModal({ video, onClose }: { video: MentorVideo; onClose: () => vo
 
 function EditModal({
   video,
+  isBrand,
   onClose,
   onSaved,
 }: {
   video: MentorVideo;
+  isBrand: boolean;
   onClose: () => void;
   onSaved: (v: MentorVideo) => void;
 }) {
-  
+
   const [title, setTitle] = useState(video.title);
   const [description, setDescription] = useState(video.description || "");
   const [isFree, setIsFree] = useState(video.is_free);
@@ -64,7 +66,7 @@ function EditModal({
         id: video.id,
         title: title.trim(),
         description: description.trim(),
-        isFree,
+        isFree: isBrand ? true : isFree,
       });
       onSaved({ ...video, ...updated } as MentorVideo);
       onClose();
@@ -101,10 +103,14 @@ function EditModal({
           placeholder="Description (optional)"
           className="rounded-xl border border-border-light bg-surface-sheet px-3.5 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
         />
-        <label className="flex items-center gap-2 text-sm text-text-secondary">
-          <input type="checkbox" checked={isFree} onChange={(e) => setIsFree(e.target.checked)} />
-          Free preview (visible without unlocking)
-        </label>
+        {isBrand ? (
+          <p className="text-xs text-text-muted">Company videos are always free to watch.</p>
+        ) : (
+          <label className="flex items-center gap-2 text-sm text-text-secondary">
+            <input type="checkbox" checked={isFree} onChange={(e) => setIsFree(e.target.checked)} />
+            Free preview (visible without unlocking)
+          </label>
+        )}
 
         {error ? <p className="text-sm text-accent-error">{error}</p> : null}
 
@@ -133,7 +139,8 @@ function EditModal({
 }
 
 export default function MentorVideosPage() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const isBrand = profile?.role === "brand";
   const [videos, setVideos] = useState<MentorVideo[]>([]);
   const [unlockPrice, setUnlockPriceState] = useState<number | null>(null);
   const [hasMentorProfile, setHasMentorProfile] = useState(true);
@@ -221,7 +228,7 @@ export default function MentorVideosPage() {
         title: title.trim(),
         description: description.trim(),
         file,
-        isFree,
+        isFree: isBrand ? true : isFree,
         thumbnailFile: thumbnailToUpload || undefined,
         onProgress: setUploadProgress,
       });
@@ -267,6 +274,7 @@ export default function MentorVideosPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
+      {isBrand ? null : (
       <div className="flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4">
         <h2 className="text-sm font-semibold text-text-primary">Video library unlock price</h2>
         {!hasMentorProfile ? (
@@ -307,6 +315,7 @@ export default function MentorVideosPage() {
           </p>
         )}
       </div>
+      )}
 
       <div className="flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4">
         <h2 className="text-sm font-semibold text-text-primary">Upload a video</h2>
@@ -325,10 +334,14 @@ export default function MentorVideosPage() {
           className="rounded-xl border border-border-light bg-surface-sheet px-3.5 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
         />
 
-        <label className="flex items-center gap-2 text-sm text-text-secondary">
-          <input type="checkbox" checked={isFree} onChange={(e) => setIsFree(e.target.checked)} />
-          Free preview (visible without unlocking)
-        </label>
+        {isBrand ? (
+          <p className="text-xs text-text-muted">Company videos are always free to watch.</p>
+        ) : (
+          <label className="flex items-center gap-2 text-sm text-text-secondary">
+            <input type="checkbox" checked={isFree} onChange={(e) => setIsFree(e.target.checked)} />
+            Free preview (visible without unlocking)
+          </label>
+        )}
 
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
@@ -463,14 +476,18 @@ export default function MentorVideosPage() {
                 </button>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-text-primary">{video.title}</p>
-                  <button
-                    type="button"
-                    onClick={() => handleToggleFree(video)}
-                    disabled={togglingId === video.id}
-                    className={`text-xs font-medium ${video.is_free ? "text-accent-success" : "text-text-muted"} hover:underline disabled:opacity-50`}
-                  >
-                    {togglingId === video.id ? "Updating…" : video.is_free ? "Free preview — tap to lock" : "Locked — tap to make free"}
-                  </button>
+                  {isBrand ? (
+                    <span className="text-xs font-medium text-accent-success">Free</span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleToggleFree(video)}
+                      disabled={togglingId === video.id}
+                      className={`text-xs font-medium ${video.is_free ? "text-accent-success" : "text-text-muted"} hover:underline disabled:opacity-50`}
+                    >
+                      {togglingId === video.id ? "Updating…" : video.is_free ? "Free preview — tap to lock" : "Locked — tap to make free"}
+                    </button>
+                  )}
                 </div>
                 <div className="hidden shrink-0 items-center gap-3 text-xs font-medium text-text-muted sm:flex">
                   <span className="flex items-center gap-1">
@@ -517,6 +534,7 @@ export default function MentorVideosPage() {
       {editingVideo ? (
         <EditModal
           video={editingVideo}
+          isBrand={isBrand}
           onClose={() => setEditingVideo(null)}
           onSaved={(updated) => setVideos((prev) => prev.map((v) => (v.id === updated.id ? updated : v)))}
         />

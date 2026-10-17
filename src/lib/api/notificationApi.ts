@@ -1,9 +1,11 @@
 import { bookingApi, type BookingRow } from "@/lib/api/bookingApi";
+import { collabHubApi } from "@/lib/api/collabHubApi";
+import { ROUTES } from "@/lib/routes";
 
 export interface Notification {
   id: string;
   type: string;
-  category: "sessions";
+  category: "sessions" | "collabhub";
   title: string;
   body: string;
   timestamp: string;
@@ -12,6 +14,8 @@ export interface Notification {
   bookingId: string;
   role: "learner" | "mentor";
   status: string;
+  /** Set only for category "collabhub" — the notifications page links straight here instead of deriving a booking-shaped destination. */
+  href?: string;
 }
 
 type Role = "learner" | "mentor";
@@ -136,21 +140,118 @@ function bookingToNotification(booking: BookingRow, role: Role): Notification | 
   };
 }
 
+/** CollabHub: a creator being shortlisted/accepted/rejected is derived the
+ * same way booking-status notifications are — no separate notifications
+ * table exists in this app (see module comment below), so this follows suit
+ * rather than introducing one just for this. */
+async function collabHubNotifications(userId: string): Promise<Notification[]> {
+  const applications = await collabHubApi.getMyApplications(userId).catch(() => []);
+  const notifications: Notification[] = [];
+  for (const app of applications) {
+    if (app.status !== "shortlisted" && app.status !== "accepted" && app.status !== "rejected") continue;
+    const title = app.campaign?.title || "a campaign";
+    notifications.push({
+      id: `collabhub-${app.id}-${app.status}`,
+      type: `campaign_application_${app.status}`,
+      category: "collabhub",
+      title:
+        app.status === "accepted"
+          ? "You're in!"
+          : app.status === "shortlisted"
+            ? "You've been shortlisted"
+            : "Application update",
+      body:
+        app.status === "accepted"
+          ? `You were selected for "${title}" — start creating your video.`
+          : app.status === "shortlisted"
+            ? `You've been shortlisted for "${title}" — the brand is reviewing finalists.`
+            : `Your application to "${title}" wasn't selected this time.`,
+      timestamp: app.decided_at || app.applied_at,
+      accent: app.status === "accepted" ? "teal" : app.status === "shortlisted" ? "gold" : "muted",
+      avatarUrl: null,
+      bookingId: "",
+      role: "learner",
+      status: app.status,
+      href: ROUTES.collabHubCampaign(app.campaign_id),
+    });
+  }
+  return notifications;
+}
+
+/** Brand side: new applicants + submitted videos awaiting review, across
+ * every campaign the brand owns. Same derived-not-stored pattern as
+ * collabHubNotifications above, mirrored for the other side of the feature. */
+async function brandCollabHubNotifications(brandId: string): Promise<Notification[]> {
+  const [pendingApplications, awaitingReview] = await Promise.all([
+    collabHubApi.getPendingApplicationsForBrand(brandId).catch(() => []),
+    collabHubApi.getSubmissionsAwaitingReviewForBrand(brandId).catch(() => []),
+  ]);
+
+  const notifications: Notification[] = [];
+  for (const app of pendingApplications) {
+    const campaignTitle = app.campaign?.title || "your campaign";
+    const creatorName = app.creator?.name || "A creator";
+    const isShortlisted = app.status === "shortlisted";
+    notifications.push({
+      id: `brand-applicant-${app.id}-${app.status}`,
+      type: isShortlisted ? "campaign_shortlisted_awaiting_decision" : "campaign_new_applicant",
+      category: "collabhub",
+      title: isShortlisted ? "Shortlisted — needs a decision" : "New applicant",
+      body: isShortlisted
+        ? `${creatorName} is shortlisted for "${campaignTitle}" — accept or reject to move forward.`
+        : `${creatorName} applied to "${campaignTitle}".`,
+      timestamp: app.decided_at || app.applied_at,
+      accent: "gold",
+      avatarUrl: app.creator?.avatar_url ?? null,
+      bookingId: "",
+      role: "mentor",
+      status: app.status,
+      href: ROUTES.brandCampaign(app.campaign_id),
+    });
+  }
+  for (const submission of awaitingReview) {
+    const campaignTitle = submission.campaign_title || "your campaign";
+    notifications.push({
+      id: `brand-submission-${submission.id}`,
+      type: "campaign_submission_awaiting_review",
+      category: "collabhub",
+      title: "Video submitted",
+      body: `A creator submitted a video for "${campaignTitle}" — ready for your review.`,
+      timestamp: submission.submitted_at,
+      accent: "teal",
+      avatarUrl: null,
+      bookingId: "",
+      role: "mentor",
+      status: submission.status,
+      href: ROUTES.brandCampaign(submission.campaign_id || ""),
+    });
+  }
+  return notifications;
+}
+
 /**
  * Ported from connectfront/src/api/notificationApi.js — notifications are
  * derived entirely from booking status, not a separate table (mobile never
  * built a real notifications backend either; see 19april2026_note_process.txt).
  */
 export const notificationApi = {
-  getNotifications: async (userId: string): Promise<Notification[]> => {
+  getNotifications: async (userId: string, isBrand = false): Promise<Notification[]> => {
     if (!userId) return [];
 
-    const [learnerBookings, mentorBookings] = await Promise.all([
+    if (isBrand) {
+      const brandNotifications = await brandCollabHubNotifications(userId);
+      return brandNotifications.sort(
+        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+      );
+    }
+
+    const [learnerBookings, mentorBookings, collabHub] = await Promise.all([
       bookingApi.getBookingsByLearner(userId).catch(() => []),
       bookingApi.getBookingsByMentor(userId).catch(() => []),
+      collabHubNotifications(userId),
     ]);
 
-    const notifications: Notification[] = [];
+    const notifications: Notification[] = [...collabHub];
     learnerBookings.forEach((b) => {
       const n = bookingToNotification(b, "learner");
       if (n) notifications.push(n);

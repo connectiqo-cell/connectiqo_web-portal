@@ -56,3 +56,8 @@ backup/
 # Caddy data (generated)
 caddy_data/
 caddy_config/
+
+# Docker Desktop's own WSL2 virtual disk — should never live inside a
+# project folder at all (see Docker Desktop -> Settings -> Resources ->
+# Advanced -> Disk image location), but ignored here too as a safety net.
+DockerDesktopWSL/

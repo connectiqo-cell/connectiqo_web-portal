@@ -21,7 +21,7 @@ export interface Profile {
   id: string;
   email: string;
   name: string;
-  role: "mentor" | "learner" | "both";
+  role: "mentor" | "learner" | "both" | "brand";
   username: string;
   avatar_url?: string | null;
   is_frozen?: boolean;

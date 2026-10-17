@@ -1,6 +1,6 @@
 "use client";
 
-import { Film, LayoutGrid, Users } from "lucide-react";
+import { Film, LayoutGrid, Megaphone, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: ROUTES.admin, label: "Categories", icon: LayoutGrid },
   { href: ROUTES.adminUsers, label: "Users", icon: Users },
   { href: ROUTES.adminVideos, label: "Videos", icon: Film },
+  { href: ROUTES.adminCampaigns, label: "Campaigns", icon: Megaphone },
 ];
 
 export default function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
