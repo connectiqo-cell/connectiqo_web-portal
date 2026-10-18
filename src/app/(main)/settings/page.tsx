@@ -64,13 +64,14 @@ export default function SettingsHubPage() {
   const [supportCopied, setSupportCopied] = useState(false);
   const [subsExpanded, setSubsExpanded] = useState(false);
   const isMentor = profile?.role === "mentor" || profile?.role === "both";
+  const isBrandAccount = profile?.role === "brand";
 
   useEffect(() => {
     if (!loading && !user) router.replace(ROUTES.login);
   }, [loading, user, router]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || isBrandAccount) return;
     let cancelled = false;
     videoLibraryApi
       .getLearnerActiveSubscriptions(user.id)
@@ -86,10 +87,10 @@ export default function SettingsHubPage() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, isBrandAccount]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || isBrandAccount) return;
     let cancelled = false;
     paymentApi
       .getWallet(user.id)
@@ -105,7 +106,7 @@ export default function SettingsHubPage() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, isBrandAccount]);
 
   const memberSince = profile?.created_at
     ? new Date(profile.created_at).toLocaleDateString("en-IN", { month: "short", year: "numeric" })
@@ -188,22 +189,26 @@ export default function SettingsHubPage() {
           </div>
 
           <div className="flex items-center border-t border-border-light pt-3.5">
-            <div className="flex flex-1 flex-col items-center gap-0.5">
-              <span className="text-sm font-bold text-text-primary">
-                {subsLoading ? "…" : subscriptions.length}
-              </span>
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-text-muted">
-                Subscriptions
-              </span>
-            </div>
-            <div className="h-8 w-px bg-border-light" />
-            <div className="flex flex-1 flex-col items-center gap-0.5">
-              <span className="text-sm font-bold text-text-primary">{walletLabel}</span>
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-text-muted">
-                Earnings
-              </span>
-            </div>
-            <div className="h-8 w-px bg-border-light" />
+            {isBrandAccount ? null : (
+              <>
+                <div className="flex flex-1 flex-col items-center gap-0.5">
+                  <span className="text-sm font-bold text-text-primary">
+                    {subsLoading ? "…" : subscriptions.length}
+                  </span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+                    Subscriptions
+                  </span>
+                </div>
+                <div className="h-8 w-px bg-border-light" />
+                <div className="flex flex-1 flex-col items-center gap-0.5">
+                  <span className="text-sm font-bold text-text-primary">{walletLabel}</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+                    Earnings
+                  </span>
+                </div>
+                <div className="h-8 w-px bg-border-light" />
+              </>
+            )}
             <div className="flex flex-1 flex-col items-center gap-0.5">
               <span className="text-sm font-bold text-text-primary">{memberSince}</span>
               <span className="text-[10px] font-semibold uppercase tracking-wide text-text-muted">
@@ -221,6 +226,7 @@ export default function SettingsHubPage() {
         </div>
 
         {/* Video subscriptions */}
+        {isBrandAccount ? null : (
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <SectionHeader
@@ -282,6 +288,7 @@ export default function SettingsHubPage() {
             </>
           )}
         </div>
+        )}
 
         {/* Preferences */}
         <div className="flex flex-col gap-3">
@@ -327,19 +334,21 @@ export default function SettingsHubPage() {
               </Link>
 
               {/* My Bookings */}
-              <Link
-                href={ROUTES.bookings}
-                className="flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <PlayCircle size={16} className="shrink-0 text-accent-link" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-text-primary">My Bookings</p>
-                    <p className="text-xs text-text-muted">Upcoming and past sessions</p>
+              {isBrandAccount ? null : (
+                <Link
+                  href={ROUTES.bookings}
+                  className="flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-chip"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <PlayCircle size={16} className="shrink-0 text-accent-link" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-text-primary">My Bookings</p>
+                      <p className="text-xs text-text-muted">Upcoming and past sessions</p>
+                    </div>
                   </div>
-                </div>
-                <ChevronRight size={16} className="text-text-muted shrink-0" />
-              </Link>
+                  <ChevronRight size={16} className="text-text-muted shrink-0" />
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -348,6 +357,7 @@ export default function SettingsHubPage() {
 
         {/* Right sidebar */}
         <aside className="flex flex-col gap-4">
+          {isBrandAccount ? null : (
           <div className="rounded-xl border border-border-light bg-surface-panel p-4">
             <SectionHeader title="Payments & Earnings" subtitle="Earnings, payouts, and transaction history" />
             <div className="mt-3 flex flex-col gap-0">
@@ -383,7 +393,9 @@ export default function SettingsHubPage() {
               </Link>
             </div>
           </div>
+          )}
 
+          {isBrandAccount ? null : (
           <div className="rounded-xl border border-border-light bg-surface-panel p-4">
             <SectionHeader title="Content & Library" subtitle="Your videos and recorded sessions" />
             <div className="mt-3 flex flex-col gap-0">
@@ -411,6 +423,7 @@ export default function SettingsHubPage() {
               ) : null}
             </div>
           </div>
+          )}
 
           <div className="rounded-xl border border-border-light bg-surface-panel p-4">
             <SectionHeader title="Support & Legal" subtitle="Help, policies, and sharing" />

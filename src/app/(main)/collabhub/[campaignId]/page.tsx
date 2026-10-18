@@ -112,7 +112,7 @@ const APPLICATION_STATUS: Record<
   { icon: typeof Clock; label: string; className: string }
 > = {
   pending: { icon: Clock, label: "Application pending review", className: "border-border-light bg-surface-chip text-text-secondary" },
-  shortlisted: { icon: Clock, label: "You've been shortlisted — waiting on the brand to confirm", className: "border-accent-link/25 bg-accent-link/5 text-accent-link" },
+  shortlisted: { icon: CheckCircle2, label: "You've been shortlisted — submit your video", className: "border-accent-success/25 bg-accent-success/10 text-accent-success" },
   accepted: { icon: CheckCircle2, label: "You're accepted — submit your video", className: "border-accent-success/25 bg-accent-success/10 text-accent-success" },
   rejected: { icon: XCircle, label: "Not selected this time", className: "border-accent-error/25 bg-accent-error/10 text-accent-error" },
 };
@@ -217,7 +217,7 @@ export default function CollabHubCampaignDetailPage() {
             </span>
             <p className="text-sm font-semibold">{statusInfo.label}</p>
           </div>
-          {application.status === "accepted" ? (
+          {application.status === "shortlisted" || application.status === "accepted" ? (
             <Link
               href={ROUTES.collabHubApplicationDetail(application.id)}
               className="flex h-10 items-center justify-center rounded-full bg-accent-success px-4 text-sm font-semibold text-white shadow-sm transition-transform hover:scale-[1.02]"

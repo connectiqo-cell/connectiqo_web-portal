@@ -252,7 +252,7 @@ export default function ApplicationSubmissionPage() {
     try {
       const app = await collabHubApi.getApplicationById(applicationId);
       setApplication(app);
-      if (app?.status === "accepted") {
+      if (app?.status === "shortlisted" || app?.status === "accepted") {
         const sub = await collabHubApi.getSubmissionForApplication(applicationId);
         setSubmission(sub);
         if (sub?.status === "approved") {
@@ -377,12 +377,12 @@ export default function ApplicationSubmissionPage() {
   if (!application) return <p className="py-16 text-center text-sm text-accent-error">Application not found.</p>;
   if (application.creator_id !== user?.id) return <p className="py-16 text-center text-sm text-accent-error">Not authorized.</p>;
 
-  // Only 'accepted' can submit — campaign_submissions' insert policy requires
-  // it, so offering an upload to a shortlisted creator just produced an RLS
-  // error. A 'processing' row re-offers the upload only when the worker
-  // recorded a failure; otherwise it is simply still in flight.
+  // Shortlist is the single stage that unlocks video upload — 'accepted' is
+  // kept around only for rows decided before this change. A 'processing' row
+  // re-offers the upload only when the worker recorded a failure; otherwise
+  // it is simply still in flight.
   const canSubmit =
-    application.status === "accepted" &&
+    (application.status === "shortlisted" || application.status === "accepted") &&
     (!submission
       || submission.status === "revision_requested"
       || (submission.status === "processing" && !!submission.watermark_error));

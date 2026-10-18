@@ -210,11 +210,11 @@ function ApplicantCard({
         <p className="text-sm leading-relaxed text-text-secondary">{app.pitch}</p>
       </div>
 
-      {app.status === "accepted" || app.status === "shortlisted" ? (
+      {app.status === "shortlisted" || app.status === "accepted" ? (
         !submission ? (
           <div className="flex items-center gap-2 rounded-lg border border-dashed border-border-light px-3 py-2.5">
             <Clock size={13} className="shrink-0 text-text-muted" />
-            <p className="text-xs text-text-muted">Waiting for the creator to submit a video.</p>
+            <p className="text-xs text-text-muted">Shortlisted — waiting for the creator to submit a video.</p>
           </div>
         ) : (
           (() => {
@@ -314,25 +314,15 @@ function ApplicantCard({
         )
       ) : null}
 
-      {app.status === "pending" || app.status === "shortlisted" ? (
+      {app.status === "pending" ? (
         <div className="flex gap-2">
-          {app.status === "pending" ? (
-            <button
-              type="button"
-              onClick={() => handleDecision(app.id, "shortlisted")}
-              disabled={busyId === app.id}
-              className="h-9 rounded-full border border-border-light px-4 text-xs font-semibold text-text-primary disabled:opacity-60"
-            >
-              Shortlist
-            </button>
-          ) : null}
           <button
             type="button"
-            onClick={() => handleDecision(app.id, "accepted")}
+            onClick={() => handleDecision(app.id, "shortlisted")}
             disabled={busyId === app.id}
             className="h-9 rounded-full bg-accent-success/10 px-4 text-xs font-semibold text-accent-success disabled:opacity-60"
           >
-            Accept
+            Shortlist
           </button>
           <button
             type="button"
@@ -554,13 +544,11 @@ export default function BrandCampaignDetailPage() {
   // "needs a shortlist/accept/reject decision" — it belongs alongside
   // accepted creators where the video itself gets reviewed, even though the
   // brand hasn't made a final accept/reject call yet.
-  const needsReview = applications.filter(
-    (a) => a.status === "pending" || (a.status === "shortlisted" && !submissions[a.id]),
-  );
+  const needsReview = applications.filter((a) => a.status === "pending");
   const inProduction = applications.filter(
-    (a) => a.status === "accepted" || a.status === "rejected" || (a.status === "shortlisted" && submissions[a.id]),
+    (a) => a.status === "shortlisted" || a.status === "accepted" || a.status === "rejected",
   );
-  const acceptedCount = applications.filter((a) => a.status === "accepted").length;
+  const shortlistedCount = applications.filter((a) => a.status === "shortlisted" || a.status === "accepted").length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -629,7 +617,7 @@ export default function BrandCampaignDetailPage() {
           <StatTile label="Per Winner" value={`₹${campaign.budget_per_winner}`} />
           <StatTile label="Winners Needed" value={campaign.winner_count} />
           <StatTile label="Applicants" value={applications.length} accent="text-accent-link" />
-          <StatTile label="Accepted" value={acceptedCount} accent="text-accent-success" />
+          <StatTile label="Shortlisted" value={shortlistedCount} accent="text-accent-success" />
         </div>
 
         <button
