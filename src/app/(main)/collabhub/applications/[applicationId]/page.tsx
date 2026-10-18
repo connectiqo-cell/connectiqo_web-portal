@@ -573,6 +573,26 @@ export default function ApplicationSubmissionPage() {
     </div>
   ) : null;
 
+  // A rejected submission is a dead end otherwise — every other end state on
+  // this page (application-rejected, paid) gives the creator a clear next
+  // step; this didn't.
+  const browseMoreCard =
+    submission?.status === "rejected" ? (
+      <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border-default bg-surface-panel px-6 py-8 text-center">
+        <p className="text-sm text-text-secondary">
+          This brand went with another creator — there are plenty more campaigns looking for someone like you.
+        </p>
+        <Link
+          href={ROUTES.collabHub}
+          className="flex h-10 items-center gap-2 rounded-full px-5 text-sm font-semibold text-text-on-accent shadow-sm"
+          style={{ backgroundImage: "var(--gradient-button-primary)" }}
+        >
+          Browse other campaigns
+          <ArrowRight size={15} />
+        </Link>
+      </div>
+    ) : null;
+
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
       <Link
@@ -692,6 +712,7 @@ export default function ApplicationSubmissionPage() {
             {feedbackCard}
             {paymentCard}
             {uploadCard}
+            {browseMoreCard}
           </div>
         </div>
       ) : (
@@ -699,6 +720,7 @@ export default function ApplicationSubmissionPage() {
           {statusCard}
           {feedbackCard}
           {uploadCard}
+          {browseMoreCard}
         </div>
       )}
     </main>
