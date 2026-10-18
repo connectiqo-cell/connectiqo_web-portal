@@ -1,8 +1,10 @@
 "use client";
 
-import { ArrowRight, Building2 } from "lucide-react";
+import { ArrowRight, Building2, ImagePlus, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+import OptimizedImage from "@/components/OptimizedImage";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { profileApi } from "@/lib/api/profileApi";
@@ -22,13 +24,40 @@ const INDUSTRIES = [
 /** Mandatory brand onboarding, gates campaign creation (see brand/(dashboard)/layout.tsx). */
 export default function BrandOnboardingPage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading, refreshProfile } = useAuth();
 
   const [website, setWebsite] = useState("");
   const [industry, setIndustry] = useState("");
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  // The logo is the account's profile picture (profiles.avatar_url) — that's
+  // what campaign cards and every other brand surface already render.
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const currentLogo = logoUrl ?? profile?.avatar_url ?? null;
+
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) {
+      setError("Please choose an image file for your logo.");
+      return;
+    }
+    setUploadingLogo(true);
+    setError("");
+    try {
+      const url = await profileApi.uploadAvatar({ userId: user.id, file });
+      setLogoUrl(url);
+      refreshProfile();
+    } catch (err) {
+      setError((err as Error)?.message || "Could not upload your logo");
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
 
   useEffect(() => {
     if (!authLoading && !user) router.replace(ROUTES.login);
@@ -46,6 +75,7 @@ export default function BrandOnboardingPage() {
       await profileApi.updateBrandProfile({
         userId: user.id,
         website: website.trim(),
+        ...(currentLogo ? { logoUrl: currentLogo } : {}),
         industry,
         description: description.trim(),
       });
@@ -85,6 +115,39 @@ export default function BrandOnboardingPage() {
           {error}
         </p>
       ) : null}
+
+      <div className="flex flex-col gap-1.5">
+        <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">Company logo</span>
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => logoInputRef.current?.click()}
+            disabled={uploadingLogo}
+            aria-label={currentLogo ? "Change logo" : "Upload logo"}
+            className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-border-default bg-surface-sheet text-text-muted transition-colors hover:border-accent-primary disabled:opacity-60"
+          >
+            {uploadingLogo ? (
+              <Loader2 size={20} className="animate-spin" />
+            ) : currentLogo ? (
+              <OptimizedImage src={currentLogo} alt="Company logo" width={80} height={80} className="h-full w-full object-cover" />
+            ) : (
+              <ImagePlus size={22} />
+            )}
+          </button>
+          <div className="flex flex-col gap-0.5">
+            <button
+              type="button"
+              onClick={() => logoInputRef.current?.click()}
+              disabled={uploadingLogo}
+              className="w-fit text-sm font-semibold text-accent-link hover:underline disabled:opacity-60"
+            >
+              {uploadingLogo ? "Uploading…" : currentLogo ? "Change logo" : "Upload logo"}
+            </button>
+            <p className="text-xs text-text-muted">Square image works best. Shown on every campaign card.</p>
+          </div>
+          <input ref={logoInputRef} type="file" accept="image/*" onChange={handleLogoChange} className="hidden" />
+        </div>
+      </div>
 
       <label className="flex flex-col gap-1.5">
         <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">Industry</span>
@@ -127,7 +190,7 @@ export default function BrandOnboardingPage() {
       <button
         type="button"
         onClick={handleContinue}
-        disabled={saving}
+        disabled={saving || uploadingLogo}
         className="flex h-11 items-center justify-center gap-2 self-start rounded-full px-6 text-sm font-semibold text-text-on-accent disabled:opacity-60"
         style={{ backgroundImage: "var(--gradient-button-primary)" }}
       >
