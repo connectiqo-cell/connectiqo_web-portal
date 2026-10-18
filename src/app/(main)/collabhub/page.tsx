@@ -25,7 +25,7 @@ import { ROUTES } from "@/lib/routes";
 
 const HOW_IT_WORKS: { icon: LucideIcon; title: string; text: string }[] = [
   { icon: Send, title: "Apply", text: "Pitch yourself to the brand" },
-  { icon: UserCheck, title: "Get accepted", text: "The brand picks its creators" },
+  { icon: UserCheck, title: "Get shortlisted", text: "The brand picks its creators" },
   { icon: Clapperboard, title: "Create video", text: "Submit your content" },
   { icon: BadgeCheck, title: "Get selected", text: "Brand approves the winner" },
   { icon: Wallet, title: "Get paid", text: "Straight to your wallet" },

@@ -12,7 +12,7 @@ import { createClient } from "@/lib/supabase/client";
 
 const STATUS_META: Record<CampaignApplication["status"], { icon: typeof Clock; className: string }> = {
   pending: { icon: Clock, className: "bg-surface-chip text-text-muted" },
-  shortlisted: { icon: Clock, className: "bg-accent-link/10 text-accent-link" },
+  shortlisted: { icon: CheckCircle2, className: "bg-accent-success/10 text-accent-success" },
   accepted: { icon: CheckCircle2, className: "bg-accent-success/10 text-accent-success" },
   rejected: { icon: XCircle, className: "bg-accent-error/10 text-accent-error" },
 };
