@@ -84,18 +84,19 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
             </div>
           )}
         </div>
-        {campaign.category ? (
-          <span className="absolute left-2 top-2 flex max-w-[calc(100%-1rem)] items-center gap-1 truncate rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
-            <CategoryIcon size={10} className="shrink-0" />
-            <span className="truncate">{campaign.category}</span>
-          </span>
-        ) : null}
-        <div className="absolute -bottom-4 left-3">
-          <BrandAvatar campaign={campaign} size={32} />
-        </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-2 p-3 pt-6">
+      <div className="relative flex flex-1 flex-col gap-2 p-3 pt-0">
+        {/* Brand logo overhangs the image edge; category sits on the same line, right-aligned. */}
+        <div className="-mt-4 flex items-end justify-between gap-2">
+          <BrandAvatar campaign={campaign} size={32} />
+          {campaign.category ? (
+            <span className="flex min-w-0 items-center gap-1 rounded-full bg-surface-chip px-2 py-0.5 text-[10px] font-semibold text-text-secondary">
+              <CategoryIcon size={10} className="shrink-0" />
+              <span className="truncate">{campaign.category}</span>
+            </span>
+          ) : null}
+        </div>
         <div className="flex flex-col gap-1">
           <p className="truncate text-[10px] font-semibold uppercase tracking-wide text-accent-link">
             {campaign.brand?.name || "Brand"}

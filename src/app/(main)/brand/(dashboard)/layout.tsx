@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -78,6 +78,27 @@ export default function BrandDashboardLayout({ children }: { children: React.Rea
           </Link>
         ) : null}
       </div>
+      {(pathname === ROUTES.brandCampaignNew || isEdit) && !profile?.avatar_url ? (
+        <div className="flex flex-col gap-3 rounded-2xl border border-accent-primary/25 bg-accent-soft p-4 sm:flex-row sm:items-center">
+          {/* What creators see today: the first-letter fallback. */}
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-panel text-sm font-bold text-text-primary ring-2 ring-surface-panel">
+            {(profile?.name || "B").charAt(0).toUpperCase()}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-text-primary">Add your company logo</p>
+            <p className="text-xs text-text-secondary">
+              Your campaigns show your logo to creators — right now they see just a letter.
+            </p>
+          </div>
+          <Link
+            href={ROUTES.editProfile}
+            className="flex h-9 w-fit shrink-0 items-center gap-1.5 rounded-full bg-surface-panel px-4 text-sm font-semibold text-accent-link transition-colors hover:bg-surface-chip"
+          >
+            Add in Profile
+            <ArrowRight size={14} />
+          </Link>
+        </div>
+      ) : null}
       {children}
     </main>
   );
