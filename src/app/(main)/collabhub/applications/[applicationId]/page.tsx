@@ -40,7 +40,7 @@ const STATUS_META: Record<
   processing: {
     icon: Loader2,
     title: "Processing…",
-    body: "We're watermarking your video — this can take a minute.",
+    body: "We're watermarking your video — this page updates itself when it's done.",
     className: "border-border-light bg-surface-chip text-text-secondary",
   },
   submitted: {
@@ -90,7 +90,7 @@ export default function ApplicationSubmissionPage() {
     try {
       const app = await collabHubApi.getApplicationById(applicationId);
       setApplication(app);
-      if (app?.status === "accepted" || app?.status === "shortlisted") {
+      if (app?.status === "accepted") {
         const sub = await collabHubApi.getSubmissionForApplication(applicationId);
         setSubmission(sub);
         if (sub?.status === "approved") {
@@ -179,10 +179,8 @@ export default function ApplicationSubmissionPage() {
       setFile(null);
     } catch (err) {
       setError((err as Error)?.message || "Could not submit video");
-      // The upload + DB row creation may have already succeeded even though
-      // watermarking failed — re-fetch so the UI reflects the real (stuck)
-      // state instead of staying on stale data, and so canSubmit below
-      // correctly re-offers a retry.
+      // The upload may have landed even though the row write failed — re-fetch
+      // so the UI shows the real state rather than stale data.
       const sub = await collabHubApi.getSubmissionForApplication(applicationId).catch(() => null);
       setSubmission(sub);
     } finally {
@@ -200,12 +198,15 @@ export default function ApplicationSubmissionPage() {
   if (!application) return <p className="py-16 text-center text-sm text-accent-error">Application not found.</p>;
   if (application.creator_id !== user?.id) return <p className="py-16 text-center text-sm text-accent-error">Not authorized.</p>;
 
-  // "processing" is included here too: a prior attempt whose watermark step
-  // failed leaves the row stuck there (see handleUpload's catch above), and
-  // without this a creator would have no way to retry.
+  // Only 'accepted' can submit — campaign_submissions' insert policy requires
+  // it, so offering an upload to a shortlisted creator just produced an RLS
+  // error. A 'processing' row re-offers the upload only when the worker
+  // recorded a failure; otherwise it is simply still in flight.
   const canSubmit =
-    (application.status === "accepted" || application.status === "shortlisted") &&
-    (!submission || submission.status === "revision_requested" || submission.status === "processing");
+    application.status === "accepted" &&
+    (!submission
+      || submission.status === "revision_requested"
+      || (submission.status === "processing" && !!submission.watermark_error));
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">
@@ -250,6 +251,12 @@ export default function ApplicationSubmissionPage() {
                   {submission.feedback ? (
                     <p className="rounded-lg bg-surface-panel px-3 py-2 text-sm text-text-secondary">
                       &ldquo;{submission.feedback}&rdquo;
+                    </p>
+                  ) : null}
+                  {submission.watermark_error ? (
+                    <p className="rounded-lg bg-accent-error/10 px-3 py-2 text-xs text-accent-error">
+                      Watermarking failed: {submission.watermark_error} — it retries on its own,
+                      or upload again below.
                     </p>
                   ) : null}
                   {submission.watermarked_video_url && submission.status !== "processing" ? (

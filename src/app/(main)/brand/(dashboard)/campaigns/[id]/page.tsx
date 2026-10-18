@@ -157,23 +157,12 @@ function ApplicantCard({
         <ExternalLink size={12} />
       </Link>
       {creatorProfile &&
-      (creatorProfile.follower_count ||
-        creatorProfile.primary_platform ||
-        creatorProfile.location ||
+      (creatorProfile.location ||
         creatorProfile.bio ||
         creatorProfile.portfolio_links?.length ||
         (creatorProfile.social_links && Object.keys(creatorProfile.social_links).length)) ? (
         <div className="flex flex-col gap-2 rounded-lg bg-surface-sheet p-3">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-secondary">
-            {creatorProfile.follower_count ? (
-              <span className="flex items-center gap-1 font-semibold text-text-primary">
-                <Users size={12} />
-                {formatFollowerCount(creatorProfile.follower_count)}
-                {creatorProfile.primary_platform ? ` on ${creatorProfile.primary_platform}` : " followers"}
-              </span>
-            ) : creatorProfile.primary_platform ? (
-              <span>{creatorProfile.primary_platform}</span>
-            ) : null}
             {creatorProfile.location ? (
               <span className="flex items-center gap-1">
                 <MapPin size={12} />

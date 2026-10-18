@@ -61,14 +61,10 @@ export default function EditProfilePage() {
   const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState("");
 
-  // CollabHub creator-profile fields — every non-brand account has one
-  // (auto-created at signup, see authApi/signup page), shown here rather
-  // than a separate settings page to keep one profile editor, same as
-  // mentor/learner fields above.
   const isBrandAccount = profile?.role === "brand";
-  // CollabHub's creator_profiles only needs bio/location/website/social —
-  // all already collected by the mentor fields above — so nothing here adds
-  // new inputs of its own.
+  // CollabHub shows brands the bio/location/links collected by the mentor
+  // fields above, read straight from mentor_profiles — there is no separate
+  // creator profile to keep in sync.
 
   // Brand company-profile fields — editable here now (previously only
   // settable once, at /onboarding/brand, with no way back in).
@@ -355,20 +351,6 @@ export default function EditProfilePage() {
             website: brandWebsite.trim(),
             industry: brandIndustry,
             description: brandDescription.trim(),
-          }),
-        );
-      }
-      if (!isBrandAccount) {
-        tasks.push(
-          profileApi.updateCreatorProfile({
-            userId: user.id,
-            bio: bio.trim(),
-            portfolioLinks: website.trim() ? [website.trim()] : [],
-            socialLinks: {
-              ...(instagramUrl.trim() ? { instagram: instagramUrl.trim() } : {}),
-              ...(youtubeUrl.trim() ? { youtube: youtubeUrl.trim() } : {}),
-            },
-            location: location.trim(),
           }),
         );
       }

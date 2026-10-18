@@ -89,7 +89,6 @@ export default function SignupPage() {
     await Promise.all([
       profileApi.createMentorProfile(userId),
       profileApi.createLearnerProfile(userId),
-      profileApi.createCreatorProfile(userId),
     ]);
     router.push(ROUTES.interestsOnboarding);
   };

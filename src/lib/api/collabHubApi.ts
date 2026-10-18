@@ -63,12 +63,16 @@ export interface CampaignApplication {
   creator?: { id: string; name: string | null; avatar_url: string | null } | null;
 }
 
+/**
+ * What a brand sees about an applicant. Read from the account's own profile
+ * (mentor_profiles), not a CollabHub-specific copy: bio, location and links
+ * are already filled in there via Edit Profile, and a second copy only drifts
+ * from the one the creator actually maintains.
+ */
 export interface CreatorProfile {
   id: string;
   portfolio_links: string[] | null;
   social_links: Record<string, string> | null;
-  follower_count: number | null;
-  primary_platform: string | null;
   location: string | null;
   bio: string | null;
 }
@@ -83,6 +87,8 @@ export interface CampaignSubmission {
   thumbnail_url: string | null;
   status: "processing" | "submitted" | "revision_requested" | "approved" | "rejected";
   feedback: string | null;
+  /** Set by the transcoder when a watermark pass fails; status stays 'processing'. */
+  watermark_error: string | null;
   submitted_at: string;
   reviewed_at: string | null;
   updated_at: string;
@@ -415,21 +421,41 @@ export const collabHubApi = {
   },
 
   /** Batch-fetch for the brand's applicant review screen — creator_id has
-   * no direct FK to creator_profiles (only to profiles), so this is a
-   * separate query rather than a nested embed, same reasoning as the
-   * brand/profiles join above. Keyed by creator id for easy lookup. */
+   * no direct FK to mentor_profiles (only to profiles), so this is a separate
+   * query rather than a nested embed, same reasoning as the brand/profiles
+   * join above. Keyed by creator id for easy lookup. */
   getCreatorProfiles: async (creatorIds: string[]): Promise<Record<string, CreatorProfile>> => {
     if (creatorIds.length === 0) return {};
     const supabase = createClient();
     try {
       const { data, error } = await supabase
-        .from("creator_profiles")
-        .select("id, portfolio_links, social_links, follower_count, primary_platform, location, bio")
+        .from("mentor_profiles")
+        .select("id, bio, location, website, instagram_url, youtube_url, linkedin_url, x_url, twitter_url")
         .in("id", creatorIds);
       if (error) throw error;
+
       const byId: Record<string, CreatorProfile> = {};
-      for (const row of (data as unknown as CreatorProfile[]) || []) {
-        byId[row.id] = row;
+      for (const row of (data as unknown as Record<string, string | null>[]) || []) {
+        // The profile stores one column per network; the card wants a map of
+        // whichever ones are set.
+        const social: Record<string, string> = {};
+        for (const [key, column] of [
+          ["instagram", "instagram_url"],
+          ["youtube", "youtube_url"],
+          ["linkedin", "linkedin_url"],
+          ["x", "x_url"],
+          ["twitter", "twitter_url"],
+        ] as const) {
+          const url = row[column];
+          if (url) social[key] = url;
+        }
+        byId[row.id as string] = {
+          id: row.id as string,
+          bio: row.bio ?? null,
+          location: row.location ?? null,
+          portfolio_links: row.website ? [row.website] : [],
+          social_links: social,
+        };
       }
       return byId;
     } catch (error) {
@@ -508,9 +534,11 @@ export const collabHubApi = {
   },
 
   /** Creator uploads/resubmits their video for an accepted application.
-   * Stores the clean original in the private campaign-submissions bucket,
-   * then kicks off server-side watermarking — the row's status flips
-   * processing -> submitted once /api/campaigns/process-submission finishes. */
+   * Stores the clean original in the private campaign-submissions bucket and
+   * writes the row — that insert/update is what fires the database webhook to
+   * the transcoder, which watermarks it and flips the row to 'submitted'.
+   * Nothing is awaited here: the realtime subscription on the application page
+   * shows the flip, so a closed tab can no longer lose the job. */
   submitVideo: async ({
     applicationId,
     creatorId,
@@ -531,32 +559,21 @@ export const collabHubApi = {
       const { data, error } = await supabase
         .from("campaign_submissions")
         .upsert(
-          { application_id: applicationId, creator_id: creatorId, original_storage_path: storagePath, status: "processing" },
+          {
+            application_id: applicationId,
+            creator_id: creatorId,
+            original_storage_path: storagePath,
+            status: "processing",
+            // Clears a previous failure so the worker treats this as fresh work.
+            watermark_error: null,
+          },
           { onConflict: "application_id" },
         )
         .select()
         .single();
       if (error) throw error;
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      // Awaited rather than fire-and-forget: a silently-swallowed failure
-      // here used to leave the row stuck on "processing" forever with no
-      // error shown and no way to retry. Now a failed watermark pass
-      // surfaces as a real error the caller can display.
-      const response = await fetch("/api/campaigns/process-submission", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token || ""}` },
-        body: JSON.stringify({ submissionId: data.id }),
-      });
-      if (!response.ok) {
-        const body = await response.json().catch(() => ({}) as { error?: string });
-        throw new Error(body?.error || "Could not process the submitted video");
-      }
-      const { watermarkedVideoUrl } = (await response.json()) as { watermarkedVideoUrl: string };
-
-      return { ...data, status: "submitted", watermarked_video_url: watermarkedVideoUrl } as unknown as CampaignSubmission;
+      return data as unknown as CampaignSubmission;
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
     }
