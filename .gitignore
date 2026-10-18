@@ -61,3 +61,6 @@ caddy_config/
 # project folder at all (see Docker Desktop -> Settings -> Resources ->
 # Advanced -> Disk image location), but ignored here too as a safety net.
 DockerDesktopWSL/
+
+# personal documents
+Internship_Report_Connectiqo.docx

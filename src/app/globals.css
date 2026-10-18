@@ -1,95 +1,102 @@
 @import "tailwindcss";
 
 /*
- * Cosmic theme tokens, ported from connectfront/src/theme/colorSchemes.js.
- * Dark is the brand default; light is the "Light Cosmic" variant.
+ * Light (cream / ink / purple, matching the landing page) is the default;
+ * dark (warm ink) is the opt-in variant.
  * Screen/component-specific tokens (meeting chrome, tab bar gradients) are
  * added when those UI areas are built rather than ported wholesale here.
  */
 :root {
-  --color-void: #000008;
-  --color-dark: #02010c;
-  --color-light: #050514;
-  --color-nebula: #0a0518;
+  /* Warm dark ("ink") variant of the cream / ink / purple brand palette. */
+  --color-void: #151311;
+  --color-dark: #1c1916;
+  --color-light: #2e2a26;
+  --color-nebula: #1c1916;
 
-  --color-accent-primary: #f0d875;
-  --color-accent-secondary: #5eead4;
+  --color-accent-primary: #a63cba;
+  --color-accent-secondary: #c757d9;
   --color-accent-success: #34d399;
   --color-accent-warning: #fbbf24;
   --color-accent-error: #f87171;
-  --color-accent-info: #38bdf8;
-  /** "Nebula" link/CTA accent — ported from buttons.nebulaGradient[0] in colorSchemes.js. */
-  --color-accent-link: #a78bfa;
+  --color-accent-info: #c757d9;
+  --color-accent-link: #c757d9;
+  --color-accent-soft: rgb(199 87 217 / 0.14);
 
-  --color-text-primary: #f0f0fc;
-  --color-text-secondary: #b8b8d4;
-  --color-text-muted: #8888a8;
-  --color-text-disabled: #545470;
-  --color-text-on-accent: #060412;
+  --color-text-primary: #f7f3ee;
+  --color-text-secondary: #e4dacd;
+  --color-text-muted: #a39b91;
+  --color-text-disabled: #6b645c;
+  --color-text-on-accent: #ffffff;
 
-  --color-surface-panel: #161432;
-  --color-surface-sheet: #0f0e2a;
-  --color-surface-chip: rgba(255, 255, 255, 0.05);
-  --color-surface-chip-strong: rgba(255, 255, 255, 0.06);
+  --color-surface-panel: #2e2a26;
+  --color-surface-sheet: #24211e;
+  --color-surface-chip: rgb(247 243 238 / 0.06);
+  --color-surface-chip-strong: rgb(247 243 238 / 0.1);
 
-  --color-border-light: rgba(167, 139, 250, 0.22);
-  --color-border-default: rgba(94, 234, 212, 0.28);
-  --color-border-strong: rgba(240, 216, 117, 0.45);
-  --color-border-accent: #5eead4;
+  --color-border-light: rgb(247 243 238 / 0.12);
+  --color-border-default: rgb(247 243 238 / 0.24);
+  --color-border-strong: #c757d9;
+  --color-border-accent: #a63cba;
 
   --color-status-pending: #fbbf24;
   --color-status-approved: #34d399;
   --color-status-rejected: #f87171;
   --color-status-active: #34d399;
-  --color-status-inactive: #6b7280;
+  --color-status-inactive: #a39b91;
   --color-status-available: #34d399;
   --color-status-unavailable: #f87171;
 
-  --gradient-button-primary: linear-gradient(135deg, #f0d875, #5eead4);
+  --gradient-button-primary: linear-gradient(135deg, #a63cba, #8e2ba1);
 
   /** Video tile / camera-off canvas — always dark, even in light theme. */
   --color-meeting-canvas: #02010c;
 }
 
 :root[data-theme="light"] {
-  --color-void: #f8f9ff;
-  --color-dark: #eeecff;
+  /*
+   * Cream / ink / purple palette, shared with the landing page and the
+   * auth pages (.auth-landing-theme below). Keep the two blocks in sync.
+   */
+  --color-void: #f7f3ee;
+  --color-dark: #efe8df;
   --color-light: #ffffff;
-  --color-nebula: #f0eeff;
+  --color-nebula: #efe8df;
 
-  --color-accent-primary: #6d4aff;
-  --color-accent-secondary: #7c3aed;
-  --color-accent-success: #10b981;
-  --color-accent-warning: #f59e0b;
-  --color-accent-error: #ef4444;
-  --color-accent-info: #6366f1;
-  --color-accent-link: #6d4aff;
+  --color-accent-primary: #a63cba;
+  --color-accent-secondary: #8e2ba1;
+  --color-accent-success: #047857;
+  --color-accent-warning: #b45309;
+  --color-accent-error: #dc2626;
+  --color-accent-info: #8e2ba1;
+  --color-accent-link: #8e2ba1;
+  --color-accent-soft: #f4e4f6;
 
-  --color-text-primary: #12102a;
-  --color-text-secondary: #4f4c6b;
-  --color-text-muted: #6f6c8a;
-  --color-text-disabled: #a8a5bc;
+  --color-text-primary: #151311;
+  --color-text-secondary: #2e2a26;
+  --color-text-muted: #6b645c;
+  --color-text-disabled: #b3aca4;
   --color-text-on-accent: #ffffff;
 
   --color-surface-panel: #ffffff;
-  --color-surface-sheet: #f3f0ff;
-  --color-surface-chip: #f0eeff;
-  --color-surface-chip-strong: #eeecff;
+  --color-surface-sheet: #ffffff;
+  --color-surface-chip: #efe8df;
+  --color-surface-chip-strong: #e4dacd;
 
-  --color-border-light: rgba(109, 74, 255, 0.1);
-  --color-border-default: rgba(109, 74, 255, 0.22);
-  --color-border-strong: rgba(109, 74, 255, 0.4);
-  --color-border-accent: #6d4aff;
+  --color-border-light: rgb(21 19 17 / 0.12);
+  --color-border-default: rgb(21 19 17 / 0.24);
+  --color-border-strong: #c757d9;
+  --color-border-accent: #a63cba;
 
-  --color-status-pending: #d97706;
-  --color-status-approved: #10b981;
-  --color-status-rejected: #ef4444;
-  --color-status-active: #10b981;
-  --color-status-inactive: #9b98b3;
-  --color-status-available: #10b981;
-  --color-status-unavailable: #ef4444;
+  --color-status-pending: #b45309;
+  --color-status-approved: #047857;
+  --color-status-rejected: #dc2626;
+  --color-status-active: #047857;
+  --color-status-inactive: #6b645c;
+  --color-status-available: #047857;
+  --color-status-unavailable: #dc2626;
 
-  --gradient-button-primary: linear-gradient(135deg, #6d4aff, #8b5cf6);
+  /* Both stops keep white button text above WCAG AA. */
+  --gradient-button-primary: linear-gradient(135deg, #a63cba, #8e2ba1);
 
   /*
    * Mentor social-link pills (MentorSocialLinks.tsx) tint themselves with
@@ -110,42 +117,43 @@
  * site visitors arrive from, regardless of the app's dark/light theme.
  */
 .auth-landing-theme {
-  --color-void: #f7f4ef;
-  --color-dark: #efe9e1;
+  --color-void: #f7f3ee;
+  --color-dark: #efe8df;
   --color-light: #ffffff;
-  --color-nebula: #efe9e1;
+  --color-nebula: #efe8df;
 
-  --color-accent-primary: #a63fc9;
-  --color-accent-secondary: #7c3aed;
-  --color-accent-success: #059669;
-  --color-accent-warning: #d97706;
+  --color-accent-primary: #a63cba;
+  --color-accent-secondary: #8e2ba1;
+  --color-accent-success: #047857;
+  --color-accent-warning: #b45309;
   --color-accent-error: #dc2626;
-  --color-accent-info: #7c3aed;
-  --color-accent-link: #a63fc9;
+  --color-accent-info: #8e2ba1;
+  --color-accent-link: #8e2ba1;
+  --color-accent-soft: #f4e4f6;
 
-  --color-text-primary: #161412;
-  --color-text-secondary: #57514b;
-  --color-text-muted: #7a736c;
+  --color-text-primary: #151311;
+  --color-text-secondary: #2e2a26;
+  --color-text-muted: #6b645c;
   --color-text-disabled: #b3aca4;
   --color-text-on-accent: #ffffff;
 
   --color-surface-panel: #ffffff;
   --color-surface-sheet: #ffffff;
-  --color-surface-chip: #efe9e1;
-  --color-surface-chip-strong: #e8e1d8;
+  --color-surface-chip: #efe8df;
+  --color-surface-chip-strong: #e4dacd;
 
-  --color-border-light: rgba(22, 20, 18, 0.14);
-  --color-border-default: rgba(22, 20, 18, 0.22);
-  --color-border-strong: rgba(166, 63, 201, 0.5);
-  --color-border-accent: #a63fc9;
+  --color-border-light: rgb(21 19 17 / 0.12);
+  --color-border-default: rgb(21 19 17 / 0.24);
+  --color-border-strong: #c757d9;
+  --color-border-accent: #a63cba;
 
-  --gradient-button-primary: linear-gradient(135deg, #a63fc9, #7c3aed);
+  --gradient-button-primary: linear-gradient(135deg, #a63cba, #8e2ba1);
 
   /** Dark ink panel with the landing page's purple glow (AuthVisualPanel). */
   --auth-panel-bg:
-    radial-gradient(60% 55% at 70% 25%, rgba(124, 58, 237, 0.45), transparent 70%),
-    linear-gradient(#0d0b14, #0d0b14);
-  --auth-panel-accent: #c084fc;
+    radial-gradient(60% 55% at 70% 25%, rgba(199, 87, 217, 0.4), transparent 70%),
+    linear-gradient(#151311, #151311);
+  --auth-panel-accent: #c757d9;
 }
 
 @theme inline {
@@ -161,6 +169,7 @@
   --color-accent-error: var(--color-accent-error);
   --color-accent-info: var(--color-accent-info);
   --color-accent-link: var(--color-accent-link);
+  --color-accent-soft: var(--color-accent-soft);
 
   --color-text-primary: var(--color-text-primary);
   --color-text-secondary: var(--color-text-secondary);

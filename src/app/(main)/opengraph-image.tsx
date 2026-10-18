@@ -24,9 +24,9 @@ export default async function Image() {
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: "#000008",
+          backgroundColor: "#151311",
           backgroundImage:
-            "radial-gradient(circle at 88% 12%, rgba(94,234,212,0.20), transparent 55%), radial-gradient(circle at 6% 92%, rgba(240,216,117,0.16), transparent 50%)",
+            "radial-gradient(circle at 88% 12%, rgba(199,87,217,0.24), transparent 55%), radial-gradient(circle at 6% 92%, rgba(166,60,186,0.16), transparent 50%)",
           position: "relative",
         }}
       >
@@ -38,7 +38,7 @@ export default async function Image() {
             width: "100%",
             height: 12,
             display: "flex",
-            backgroundImage: "linear-gradient(90deg, #f0d875, #5eead4)",
+            backgroundImage: "linear-gradient(90deg, #c757d9, #8e2ba1)",
           }}
         />
 

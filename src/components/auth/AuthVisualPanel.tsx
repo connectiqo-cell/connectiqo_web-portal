@@ -11,7 +11,7 @@ export function AuthVisualPanel({ imageSrc }: Props) {
   if (imageSrc) {
     return (
       // Square artwork: the panel is as wide as the viewport is tall, so the image fills it edge to edge uncropped.
-      <div className="hidden shrink-0 bg-[#0d0b14] lg:block lg:w-[min(60%,100dvh)]">
+      <div className="hidden shrink-0 bg-[#151311] lg:block lg:w-[min(60%,100dvh)]">
         <div className="sticky top-0 h-dvh overflow-hidden">
           {/* Blurred copy covers the bars left when the 60% cap kicks in on narrow screens. */}
           <Image

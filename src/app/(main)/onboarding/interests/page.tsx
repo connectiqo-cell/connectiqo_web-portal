@@ -132,10 +132,10 @@ export default function InterestsOnboardingPage() {
 
   return (
     <main className="flex flex-1 flex-col lg:flex-row">
-      <aside className="hidden w-full max-w-xs shrink-0 flex-col justify-between overflow-hidden bg-[#0d0a24] px-8 py-10 text-white lg:flex">
+      <aside className="hidden w-full max-w-xs shrink-0 flex-col justify-between overflow-hidden bg-[#151311] px-8 py-10 text-white lg:flex">
         <div className="flex flex-col gap-6">
           <span className="text-xl font-extrabold">
-            Connect<span className="text-accent-link">iqo</span>
+            Connect<span className="text-[#c757d9]">iqo</span>
           </span>
           <div className="flex flex-col gap-2">
             <h2 className="text-2xl font-extrabold leading-tight">

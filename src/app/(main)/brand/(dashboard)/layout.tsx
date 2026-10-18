@@ -1,5 +1,7 @@
 "use client";
 
+import { Plus } from "lucide-react";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -60,9 +62,21 @@ export default function BrandDashboardLayout({ children }: { children: React.Rea
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
-      <div>
-        <h1 className="text-2xl font-bold text-text-primary">{title}</h1>
-        <p className="mt-1 text-sm text-text-secondary">{subtitle}</p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-text-primary">{title}</h1>
+          <p className="mt-1 text-sm text-text-secondary">{subtitle}</p>
+        </div>
+        {pathname === ROUTES.brandCampaigns ? (
+          <Link
+            href={ROUTES.brandCampaignNew}
+            className="flex h-11 shrink-0 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold text-text-on-accent shadow-sm transition-transform hover:scale-[1.02]"
+            style={{ backgroundImage: "var(--gradient-button-primary)" }}
+          >
+            <Plus size={16} />
+            New Campaign
+          </Link>
+        ) : null}
       </div>
       {children}
     </main>
