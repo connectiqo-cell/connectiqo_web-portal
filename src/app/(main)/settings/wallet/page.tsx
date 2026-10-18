@@ -247,9 +247,9 @@ export default function WalletPage() {
             </div>
             <svg width="100" height="80" viewBox="0 0 100 80" fill="none" className="hidden shrink-0 sm:block" style={{ opacity: 0.3 }}>
               {/* Wallet body */}
-              <rect x="20" y="25" width="50" height="45" rx="8" fill="#8b5fbf" />
+              <rect x="20" y="25" width="50" height="45" rx="8" fill="#a63cba" />
               {/* Wallet shine */}
-              <ellipse cx="45" cy="35" rx="20" ry="8" fill="#a68edd" />
+              <ellipse cx="45" cy="35" rx="20" ry="8" fill="#c757d9" />
               {/* Coin 1 - top right */}
               <circle cx="75" cy="10" r="12" fill="#ffd700" />
               <circle cx="75" cy="10" r="10" fill="#ffed4e" />

@@ -11,7 +11,7 @@ export function ThemeToggleSwitch() {
       onClick={toggleTheme}
       suppressHydrationWarning
       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-        mode === "dark" ? "bg-accent-primary" : "bg-gray-300 dark:bg-gray-600"
+        mode === "dark" ? "bg-accent-primary" : "bg-surface-chip-strong"
       }`}
       aria-label={`Switch to ${mode === "dark" ? "light" : "dark"} mode`}
     >

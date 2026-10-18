@@ -133,7 +133,7 @@ function SidebarNavContent({
                 collapsed ? "justify-center px-0" : ""
               } ${
                 active
-                  ? "text-accent-link"
+                  ? "bg-accent-soft font-semibold text-accent-link"
                   : "text-text-secondary hover:bg-surface-chip hover:text-text-primary"
               }`}
             >
@@ -172,7 +172,7 @@ function SidebarNavContent({
                 collapsed ? "justify-center px-0" : ""
               } ${
                 active
-                  ? "text-accent-link"
+                  ? "bg-accent-soft font-semibold text-accent-link"
                   : "text-text-secondary hover:bg-surface-chip hover:text-text-primary"
               }`}
             >
@@ -281,7 +281,7 @@ export function DashboardSidebar({
     <>
       {/* Desktop rail — hidden below lg, mobile nav uses the drawer instead. */}
       <aside
-        className={`sticky top-16 hidden h-[calc(100vh-4rem)] shrink-0 flex-col justify-between border-r border-border-light bg-surface-panel py-6 transition-[width] duration-200 lg:flex ${
+        className={`sticky top-16 hidden h-[calc(100vh-4rem)] shrink-0 flex-col justify-between border-r border-border-light bg-void py-6 transition-[width] duration-200 lg:flex ${
           collapsed ? "w-[72px] px-2" : "w-60 px-4"
         }`}
       >
