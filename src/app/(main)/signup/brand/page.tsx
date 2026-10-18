@@ -185,7 +185,7 @@ export default function BrandSignupPage() {
 
   if (step === "otp") {
     return (
-      <div className="flex flex-1">
+      <div className="auth-landing-theme flex flex-1 bg-void text-text-primary">
         <AuthVisualPanel />
 
         <main className="flex w-full flex-1 items-center justify-center px-6 py-6 lg:w-[40%]">
@@ -263,7 +263,7 @@ export default function BrandSignupPage() {
   }
 
   return (
-    <div className="flex flex-1">
+    <div className="auth-landing-theme flex flex-1 bg-void text-text-primary">
       <AuthVisualPanel />
 
       <main className="flex w-full flex-1 items-center justify-center px-6 py-6 lg:w-[40%]">

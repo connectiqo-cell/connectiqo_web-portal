@@ -59,7 +59,10 @@ export interface CampaignApplication {
   status: "pending" | "shortlisted" | "accepted" | "rejected";
   applied_at: string;
   decided_at: string | null;
-  campaign?: Pick<Campaign, "id" | "title" | "status" | "budget_per_winner"> | null;
+  campaign?:
+    | (Pick<Campaign, "id" | "title" | "status" | "budget_per_winner"> &
+        Partial<Pick<Campaign, "winner_count" | "category" | "cover_image_url" | "brand">>)
+    | null;
   creator?: { id: string; name: string | null; avatar_url: string | null } | null;
 }
 
@@ -329,7 +332,9 @@ export const collabHubApi = {
     try {
       const { data, error } = await supabase
         .from("campaign_applications")
-        .select("*, campaign:campaign_id ( id, title, status, budget_per_winner )")
+        .select(
+          "*, campaign:campaign_id ( id, title, status, budget_per_winner, winner_count, category, cover_image_url, brand:brand_id ( name, avatar_url ) )",
+        )
         .eq("id", applicationId)
         .maybeSingle();
       if (error) throw error;

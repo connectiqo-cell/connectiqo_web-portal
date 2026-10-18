@@ -47,7 +47,10 @@ function readStoredPreference(): ThemePreference {
   ) {
     return stored;
   }
-  return THEME_MODES.SYSTEM;
+  // No saved choice yet: default to the cream (light) brand theme rather than
+  // following the OS, so first-time visitors see the same palette as the
+  // landing page.
+  return THEME_MODES.LIGHT;
 }
 
 function writeStoredPreference(next: ThemePreference) {
@@ -65,7 +68,7 @@ function subscribePreference(listener: Listener) {
 }
 
 function getPreferenceServerSnapshot(): ThemePreference {
-  return THEME_MODES.SYSTEM;
+  return THEME_MODES.LIGHT;
 }
 
 function subscribePrefersDark(listener: Listener) {

@@ -53,9 +53,9 @@ const NO_FLASH_THEME_SCRIPT = `
   try {
     var stored = window.localStorage.getItem("@connectiqo/theme_mode");
     var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    var mode = stored === "light" || stored === "dark"
-      ? stored
-      : (prefersDark ? "dark" : "light");
+    var mode = stored === "dark" || (stored === "system" && prefersDark)
+      ? "dark"
+      : "light";
     document.documentElement.dataset.theme = mode;
   } catch (e) {}
 })();
