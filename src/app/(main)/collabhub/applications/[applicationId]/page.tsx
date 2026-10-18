@@ -55,7 +55,7 @@ const STATUS_META: Record<
   processing: {
     icon: Loader2,
     title: "Processing…",
-    body: "We're watermarking your video — this can take a minute.",
+    body: "We're watermarking your video — this page updates itself when it's done.",
     className: "border-border-light bg-surface-panel",
     iconClassName: "bg-surface-chip text-text-secondary",
   },
@@ -409,6 +409,12 @@ export default function ApplicationSubmissionPage() {
             <div className="min-w-0">
               <p className="text-base font-bold text-text-primary">{meta.title}</p>
               <p className="text-sm text-text-secondary">{meta.body}</p>
+              {submission.watermark_error ? (
+                <p className="mt-2 rounded-lg bg-accent-error/10 px-3 py-2 text-xs text-accent-error">
+                  Watermarking failed: {submission.watermark_error} — it retries on its own, or
+                  upload again below.
+                </p>
+              ) : null}
             </div>
           </div>
         );

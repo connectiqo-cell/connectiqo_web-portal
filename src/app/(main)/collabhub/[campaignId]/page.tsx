@@ -217,7 +217,7 @@ export default function CollabHubCampaignDetailPage() {
             </span>
             <p className="text-sm font-semibold">{statusInfo.label}</p>
           </div>
-          {application.status === "accepted" || application.status === "shortlisted" ? (
+          {application.status === "accepted" ? (
             <Link
               href={ROUTES.collabHubApplicationDetail(application.id)}
               className="flex h-10 items-center justify-center rounded-full bg-accent-success px-4 text-sm font-semibold text-white shadow-sm transition-transform hover:scale-[1.02]"
