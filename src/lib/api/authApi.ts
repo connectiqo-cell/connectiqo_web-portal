@@ -38,6 +38,15 @@ export const authApi = {
       });
       if (authError) throw authError;
 
+      // Supabase deliberately returns no error for an already-registered
+      // email (to avoid leaking which emails exist) — it comes back with a
+      // user object but an empty `identities` array instead. Without this
+      // check the caller proceeds to the OTP step for a code that never
+      // gets sent, leaving the user stuck.
+      if (authData.user && authData.user.identities?.length === 0) {
+        throw new Error("An account with this email already exists. Please log in instead.");
+      }
+
       return {
         user: authData.user,
         session: authData.session,
