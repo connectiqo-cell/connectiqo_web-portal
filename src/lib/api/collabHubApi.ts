@@ -284,6 +284,24 @@ export const collabHubApi = {
     }
   },
 
+  /**
+   * Permanently deletes a campaign. Only safe to expose for campaigns with
+   * zero applications — campaigns, applications, submissions and unlocks
+   * cascade-delete together in the DB, so deleting a campaign that already
+   * has applicants would also erase its application/submission/payment
+   * history. (Callers should gate this in the UI; "Close Campaign" is the
+   * right action once there's real history to preserve.)
+   */
+  deleteCampaign: async (campaignId: string): Promise<void> => {
+    const supabase = createClient();
+    try {
+      const { error } = await supabase.from("campaigns").delete().eq("id", campaignId);
+      if (error) throw error;
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
   /** Creator applying to a campaign. UNIQUE(campaign_id, creator_id) blocks duplicate applications. */
   applyToCampaign: async ({
     campaignId,

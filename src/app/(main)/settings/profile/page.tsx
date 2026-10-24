@@ -67,6 +67,7 @@ export default function ProfileChannelPage() {
   const router = useRouter();
   const { user, profile, loading: authLoading } = useAuth();
   const isMentor = profile?.role === "mentor" || profile?.role === "both";
+  const isBrandAccount = profile?.role === "brand";
 
   const [loading, setLoading] = useState(true);
   const [mentor, setMentor] = useState<MentorProfileRow | null>(null);
@@ -74,6 +75,7 @@ export default function ProfileChannelPage() {
   const [videos, setVideos] = useState<MentorVideo[]>([]);
   const [reviews, setReviews] = useState<ReviewRow[]>([]);
   const [learnerBio, setLearnerBio] = useState<{ bio: string | null; interests: string[] } | null>(null);
+  const [brand, setBrand] = useState<{ website: string | null; industry: string | null; description: string | null } | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace(ROUTES.login);
@@ -97,6 +99,10 @@ export default function ProfileChannelPage() {
           setSubscriberCount(subs);
           setVideos(vids);
           setReviews(revs);
+        } else if (isBrandAccount) {
+          const brandProfile = await profileApi.getBrandProfile(user.id).catch(() => null);
+          if (cancelled) return;
+          setBrand(brandProfile);
         } else {
           const learnerProfile = await profileApi.getLearnerProfile(user.id).catch(() => null);
           if (cancelled) return;
@@ -109,7 +115,7 @@ export default function ProfileChannelPage() {
     return () => {
       cancelled = true;
     };
-  }, [user, profile, isMentor]);
+  }, [user, profile, isMentor, isBrandAccount]);
 
   const ratingBreakdown = useMemo(() => {
     const counts = [0, 0, 0, 0, 0]; // index 0 => 1 star ... index 4 => 5 star
@@ -139,11 +145,18 @@ export default function ProfileChannelPage() {
           done: !!(mentor?.linkedin_url || mentor?.x_url || mentor?.instagram_url || mentor?.youtube_url),
         },
       ]
-    : [
-        { label: "Add profile picture", done: !!profile?.avatar_url },
-        { label: "Add about you", done: !!learnerBio?.bio?.trim() },
-        { label: "Pick your interests", done: (learnerBio?.interests?.length ?? 0) > 0 },
-      ];
+    : isBrandAccount
+      ? [
+          { label: "Add company logo", done: !!profile?.avatar_url },
+          { label: "Add industry", done: !!brand?.industry?.trim() },
+          { label: "Add website", done: !!brand?.website?.trim() },
+          { label: "Add about your brand", done: !!brand?.description?.trim() },
+        ]
+      : [
+          { label: "Add profile picture", done: !!profile?.avatar_url },
+          { label: "Add about you", done: !!learnerBio?.bio?.trim() },
+          { label: "Pick your interests", done: (learnerBio?.interests?.length ?? 0) > 0 },
+        ];
   const completionPct = Math.round(
     (completionItems.filter((i) => i.done).length / completionItems.length) * 100,
   );
@@ -207,7 +220,9 @@ export default function ProfileChannelPage() {
           <div className="flex flex-col gap-1 pb-1">
             <h1 className="text-xl font-extrabold text-text-primary sm:text-2xl">{profile?.name}</h1>
             {profile?.username ? <p className="text-sm text-accent-link">@{profile.username}</p> : null}
-            <p className="text-sm text-text-secondary">{mentor?.specialization || (isMentor ? "Mentor" : "Member")}</p>
+            <p className="text-sm text-text-secondary">
+              {mentor?.specialization || (isMentor ? "Mentor" : isBrandAccount ? "Brand" : "Member")}
+            </p>
             {isMentor ? <MentorSocialLinks mentor={mentor} className="mt-1" /> : null}
           </div>
         </div>
@@ -335,7 +350,7 @@ export default function ProfileChannelPage() {
 
         <aside className="flex flex-col gap-4">
           <section className="flex flex-col gap-3 rounded-2xl border border-border-light bg-surface-panel p-4">
-            <h2 className="text-sm font-bold text-text-primary">About Me</h2>
+            <h2 className="text-sm font-bold text-text-primary">{isBrandAccount ? "About the Brand" : "About Me"}</h2>
             {isMentor ? (
               mentor?.bio?.trim() ? (
                 <p className="whitespace-pre-line text-sm leading-relaxed text-text-secondary">{mentor.bio}</p>
@@ -343,6 +358,17 @@ export default function ProfileChannelPage() {
                 <p className="text-sm text-text-muted">
                   You haven&apos;t added a bio yet.{" "}
                   <Link href={ROUTES.mentorProfileDashboard} className="font-semibold text-accent-link">
+                    Add one
+                  </Link>
+                </p>
+              )
+            ) : isBrandAccount ? (
+              brand?.description?.trim() ? (
+                <p className="whitespace-pre-line text-sm leading-relaxed text-text-secondary">{brand.description}</p>
+              ) : (
+                <p className="text-sm text-text-muted">
+                  You haven&apos;t described your brand yet.{" "}
+                  <Link href={ROUTES.editProfileForm} className="font-semibold text-accent-link">
                     Add one
                   </Link>
                 </p>
@@ -395,6 +421,17 @@ export default function ProfileChannelPage() {
                   {mentor.website}
                 </a>
               ) : null}
+              {isBrandAccount && brand?.website ? (
+                <a
+                  href={/^https?:\/\//.test(brand.website) ? brand.website : `https://${brand.website}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 hover:text-accent-link"
+                >
+                  <Globe size={13} className="shrink-0 text-text-muted" />
+                  {brand.website}
+                </a>
+              ) : null}
               {profile?.created_at ? (
                 <span className="flex items-center gap-2">
                   <Calendar size={13} className="shrink-0 text-text-muted" />
@@ -420,7 +457,9 @@ export default function ProfileChannelPage() {
                 ? "Your profile is complete."
                 : completionPct >= 80
                   ? "Great job! Your profile is almost complete."
-                  : "Complete your profile to help learners find and trust you."}
+                  : isBrandAccount
+                    ? "Complete your profile to help creators find and trust your brand."
+                    : "Complete your profile to help learners find and trust you."}
             </p>
             <ul className="flex flex-col gap-2">
               {completionItems.map((item) => (
@@ -445,7 +484,7 @@ export default function ProfileChannelPage() {
             ) : null}
           </div>
 
-          {!isMentor ? (
+          {!isMentor && !isBrandAccount ? (
             <Link
               href={ROUTES.mentorProfileDashboard}
               className="flex flex-col gap-2 rounded-2xl p-4 text-white"

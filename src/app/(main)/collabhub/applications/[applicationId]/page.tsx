@@ -325,6 +325,19 @@ export default function ApplicationSubmissionPage() {
     };
   }, [applicationId, instanceId]);
 
+  // Uploading large video over a slow connection can take a while — warn
+  // before an accidental tab close/refresh throws away the in-progress
+  // upload (the component's progress state doesn't survive a reload).
+  useEffect(() => {
+    if (!uploading) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [uploading]);
+
   // Shared by the file picker and drag-and-drop.
   const pickFile = (picked: File | null) => {
     if (picked && !picked.type.startsWith("video/")) {

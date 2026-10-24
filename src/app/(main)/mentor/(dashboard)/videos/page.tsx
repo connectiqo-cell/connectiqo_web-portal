@@ -206,6 +206,19 @@ export default function MentorVideosPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  // Uploading large video over a slow connection can take a while — warn
+  // before an accidental tab close/refresh throws away the in-progress
+  // upload (the component's progress state doesn't survive a reload).
+  useEffect(() => {
+    if (!uploading) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [uploading]);
+
   const handlePriceChange = async (price: number) => {
     if (!user) return;
     setUnlockPriceState(price);

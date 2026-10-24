@@ -17,13 +17,14 @@ import {
   ShieldCheck,
   Tag,
   Target,
+  Trash2,
   User,
   Users,
   Video,
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 
 import { SubmissionVideoPlayer } from "@/components/collabhub/SubmissionVideoPlayer";
@@ -341,7 +342,9 @@ function ApplicantCard({
 export default function BrandCampaignDetailPage() {
   const params = useParams<{ id: string }>();
   const campaignId = params.id;
+  const router = useRouter();
   const { user, profile } = useAuth();
+  const [deleting, setDeleting] = useState(false);
 
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [applications, setApplications] = useState<CampaignApplication[]>([]);
@@ -529,6 +532,24 @@ export default function BrandCampaignDetailPage() {
     }
   };
 
+  // Only offered for campaigns with zero applications — campaigns cascade-
+  // delete their applications, submissions and unlocks, so this is safe only
+  // when there's no history to lose. A campaign with applicants should be
+  // closed instead (see handleClose).
+  const handleDelete = async () => {
+    if (!campaign) return;
+    if (!window.confirm(`Permanently delete "${campaign.title}"? This can't be undone.`)) return;
+    setDeleting(true);
+    setError("");
+    try {
+      await collabHubApi.deleteCampaign(campaign.id);
+      router.push(ROUTES.brandCampaigns);
+    } catch (err) {
+      setError((err as Error)?.message || "Could not delete campaign");
+      setDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col gap-4">
@@ -582,6 +603,18 @@ export default function BrandCampaignDetailPage() {
             >
               <Pencil size={14} />
             </Link>
+            {applications.length === 0 ? (
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                aria-label="Delete campaign"
+                title="Delete campaign"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-border-light text-accent-error hover:bg-accent-error/10 disabled:opacity-60"
+              >
+                <Trash2 size={14} />
+              </button>
+            ) : null}
             {campaign.status === "draft" ? (
               <button
                 type="button"
@@ -602,6 +635,20 @@ export default function BrandCampaignDetailPage() {
                   className="h-9 rounded-full border border-border-light px-4 text-xs font-semibold text-text-secondary hover:bg-surface-chip"
                 >
                   Close Campaign
+                </button>
+              </>
+            ) : campaign.status === "closed" ? (
+              <>
+                <span className="rounded-full bg-surface-chip px-2.5 py-1 text-xs font-semibold capitalize text-text-muted">
+                  {campaign.status}
+                </span>
+                <button
+                  type="button"
+                  onClick={handlePublish}
+                  className="h-9 rounded-full px-4 text-xs font-semibold text-text-on-accent"
+                  style={{ backgroundImage: "var(--gradient-button-primary)" }}
+                >
+                  Relaunch Campaign
                 </button>
               </>
             ) : (
