@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useInterestsStatus } from "@/contexts/InterestsStatusContext";
 import { fetchActiveCategories } from "@/lib/api/contentApi";
 import { profileApi } from "@/lib/api/profileApi";
+import { BRAND_CATEGORIES } from "@/lib/constants/brandCategories";
 import { ROUTES } from "@/lib/routes";
 import { toggleMentorCategory } from "@/lib/utils/mentorCategories";
 import { sanitizeUsernameInput, usernameFormatError } from "@/lib/utils/username";
@@ -520,18 +521,20 @@ export default function EditProfilePage() {
         </label>
       </div>
 
-      <label className="flex flex-col gap-1.5">
-        <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
-          About You
-        </span>
-        <textarea
-          value={bio}
-          onChange={(e) => setBio(e.target.value)}
-          rows={3}
-          placeholder="Tell people a bit about yourself."
-          className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
-        />
-      </label>
+      {!isBrandAccount ? (
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+            About You
+          </span>
+          <textarea
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            rows={3}
+            placeholder="Tell people a bit about yourself."
+            className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
+          />
+        </label>
+      ) : null}
 
       {isMentor && !mentorLoading ? (
         <div className="flex flex-col gap-4 border-t border-border-light pt-6">
@@ -733,16 +736,7 @@ export default function EditProfilePage() {
                 className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary focus:outline-none"
               >
                 <option value="">Select an industry</option>
-                {[
-                  "Fashion & Apparel",
-                  "Beauty & Cosmetics",
-                  "Food & Beverage",
-                  "Tech & Apps",
-                  "Fitness & Wellness",
-                  "Travel & Hospitality",
-                  "Finance",
-                  "Other",
-                ].map((i) => (
+                {BRAND_CATEGORIES.map((i) => (
                   <option key={i} value={i}>
                     {i}
                   </option>

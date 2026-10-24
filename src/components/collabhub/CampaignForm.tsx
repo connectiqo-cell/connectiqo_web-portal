@@ -6,21 +6,10 @@ import { useRef, useState } from "react";
 
 import OptimizedImage from "@/components/OptimizedImage";
 import { collabHubApi, type Campaign, type CampaignInput } from "@/lib/api/collabHubApi";
+import { BRAND_CATEGORIES } from "@/lib/constants/brandCategories";
 import { ROUTES } from "@/lib/routes";
 
-// Reuses the same taxonomy as a brand's own industry (set at onboarding) —
-// a campaign's category is conceptually the same classification, just
-// scoped per-campaign instead of per-brand.
-const CATEGORY_OPTIONS = [
-  "Fashion & Apparel",
-  "Beauty & Cosmetics",
-  "Food & Beverage",
-  "Tech & Apps",
-  "Fitness & Wellness",
-  "Travel & Hospitality",
-  "Finance",
-  "Other",
-];
+const CATEGORY_OPTIONS = BRAND_CATEGORIES;
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -206,7 +195,7 @@ export function CampaignForm({
         </Field>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Category">
+          <Field label="Your Category">
             <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass}>
               <option value="">Select a category</option>
               {CATEGORY_OPTIONS.map((c) => (

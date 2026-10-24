@@ -8,18 +8,10 @@ import OptimizedImage from "@/components/OptimizedImage";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { profileApi } from "@/lib/api/profileApi";
+import { BRAND_CATEGORIES } from "@/lib/constants/brandCategories";
 import { ROUTES } from "@/lib/routes";
 
-const INDUSTRIES = [
-  "Fashion & Apparel",
-  "Beauty & Cosmetics",
-  "Food & Beverage",
-  "Tech & Apps",
-  "Fitness & Wellness",
-  "Travel & Hospitality",
-  "Finance",
-  "Other",
-];
+const INDUSTRIES = BRAND_CATEGORIES;
 
 /** Mandatory brand onboarding, gates campaign creation (see brand/(dashboard)/layout.tsx). */
 export default function BrandOnboardingPage() {
