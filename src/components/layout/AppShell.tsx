@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { DashboardSidebar } from "@/components/home/DashboardSidebar";
 import { InterestsPromptBar } from "@/components/InterestsPromptBar";
@@ -34,6 +34,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const showSidebar =
     !loading && !!user && !NO_SIDEBAR_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+
+  // A drag that strays even slightly outside a drop-zone's own onDrop (easy
+  // to do with a large video file) hits the browser's native default: it
+  // navigates the whole tab to open the dropped file, which looks exactly
+  // like an unexplained page refresh. Every upload surface in the app
+  // (CollabHub submission, mentor video upload, avatar/cover photo, campaign
+  // cover image) has its own onDrop for the zone itself, but nothing
+  // guarded the rest of the page — so this blocks the browser default
+  // app-wide; specific drop zones' own onDrop handlers still run normally.
+  useEffect(() => {
+    const prevent = (e: DragEvent) => e.preventDefault();
+    window.addEventListener("dragover", prevent);
+    window.addEventListener("drop", prevent);
+    return () => {
+      window.removeEventListener("dragover", prevent);
+      window.removeEventListener("drop", prevent);
+    };
+  }, []);
 
   if (!showSidebar) return <>{children}</>;
 
