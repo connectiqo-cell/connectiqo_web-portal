@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/client";
 import { getSupabaseErrorMessage } from "@/lib/supabase/errorHandler";
 
+/** Used until payout_settings is readable (and as its seeded value). */
+export const DEFAULT_MIN_WITHDRAWAL = 5000;
+
 async function invokeFunction<T>(name: string, body: Record<string, unknown>): Promise<T> {
   const supabase = createClient();
   const { data, error } = await supabase.functions.invoke(name, { body });
@@ -121,6 +124,27 @@ export const paymentApi = {
       return data || { balance: 0, total_earned: 0, total_withdrawn: 0 };
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  /**
+   * Minimum withdrawal amount (₹), set by admins in payout_settings.
+   * Falls back to DEFAULT_MIN_WITHDRAWAL if the setting can't be read — the
+   * server (deduct_wallet_for_withdrawal) enforces the real value either way.
+   */
+  getMinWithdrawal: async (): Promise<number> => {
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase
+        .from("payout_settings")
+        .select("min_withdrawal_amount")
+        .eq("id", true)
+        .maybeSingle();
+      if (error) throw error;
+      const value = Number(data?.min_withdrawal_amount);
+      return Number.isFinite(value) && value > 0 ? value : DEFAULT_MIN_WITHDRAWAL;
+    } catch {
+      return DEFAULT_MIN_WITHDRAWAL;
     }
   },
 

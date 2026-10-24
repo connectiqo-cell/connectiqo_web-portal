@@ -16,13 +16,12 @@ import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { earningsApi, type EarningRow } from "@/lib/api/earningsApi";
-import { paymentApi, type WithdrawalRequestRow } from "@/lib/api/paymentApi";
+import { DEFAULT_MIN_WITHDRAWAL, paymentApi, type WithdrawalRequestRow } from "@/lib/api/paymentApi";
 import { payoutApi, type AccountStatusResponse } from "@/lib/api/payoutApi";
 import { useWithdrawalRequestsRealtime } from "@/lib/hooks/useWithdrawalRequestsRealtime";
 import { ROUTES } from "@/lib/routes";
 
 const SUPPORT_EMAIL = "contact@connectiqo.com";
-const MIN_WITHDRAWAL = 5000;
 
 const WITHDRAWAL_STATUS_STYLE: Record<string, string> = {
   pending: "bg-accent-warning/15 text-accent-warning",
@@ -62,6 +61,8 @@ type ActivityRow = {
 export default function WalletPage() {
   const { user } = useAuth();
   const [wallet, setWallet] = useState({ balance: 0, total_earned: 0, total_withdrawn: 0 });
+  // Admin-configurable (payout_settings); the server enforces the same value.
+  const [minWithdrawal, setMinWithdrawal] = useState(DEFAULT_MIN_WITHDRAWAL);
   const [payoutStatus, setPayoutStatus] = useState<AccountStatusResponse | null>(null);
   const [earnings, setEarnings] = useState<EarningRow[]>([]);
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequestRow[]>([]);
@@ -76,13 +77,15 @@ export default function WalletPage() {
   const [success, setSuccess] = useState("");
 
   const loadWallet = async (userId: string) => {
-    const [w, status, earningsData, withdrawalData] = await Promise.all([
+    const [w, status, earningsData, withdrawalData, minimum] = await Promise.all([
       paymentApi.getWallet(userId),
       payoutApi.getAccountStatus(userId).catch(() => null),
       earningsApi.getEarningsByMentor(userId),
       paymentApi.getWithdrawalRequests(userId).catch(() => []),
+      paymentApi.getMinWithdrawal(),
     ]);
     setWallet(w);
+    setMinWithdrawal(minimum);
     setPayoutStatus(status);
     setEarnings(earningsData);
     setWithdrawals(withdrawalData);
@@ -140,7 +143,7 @@ export default function WalletPage() {
   const hasUpi = Boolean(payoutStatus?.upiId);
   const hasBankDetails = Boolean(payoutStatus?.bankAccount && payoutStatus?.ifsc);
   const hasPayoutMethod = hasUpi || hasBankDetails;
-  const canWithdraw = wallet.balance >= MIN_WITHDRAWAL && hasPayoutMethod;
+  const canWithdraw = wallet.balance >= minWithdrawal && hasPayoutMethod;
   const pending = withdrawals.filter((w) => w.status === "pending" || w.status === "processing");
   const pendingTotal = pending.reduce((sum, w) => sum + w.amount, 0);
 
@@ -193,8 +196,8 @@ export default function WalletPage() {
       setError("Amount exceeds your available balance");
       return;
     }
-    if (value < MIN_WITHDRAWAL) {
-      setError(`Minimum withdrawal is ${fmtCompact(MIN_WITHDRAWAL)}`);
+    if (value < minWithdrawal) {
+      setError(`Minimum withdrawal is ${fmtCompact(minWithdrawal)}`);
       return;
     }
     const destination =
@@ -429,7 +432,7 @@ export default function WalletPage() {
             )}
             {!canWithdraw && hasPayoutMethod ? (
               <p className="mt-2 text-[11px] text-text-muted">
-                Minimum {fmtCompact(MIN_WITHDRAWAL)} balance required to withdraw.
+                Minimum {fmtCompact(minWithdrawal)} balance required to withdraw.
               </p>
             ) : null}
 
@@ -440,14 +443,14 @@ export default function WalletPage() {
                   type="number"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  placeholder={`Min ${fmtCompact(MIN_WITHDRAWAL)}`}
+                  placeholder={`Min ${fmtCompact(minWithdrawal)}`}
                   disabled={submitting}
                   className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none disabled:opacity-50"
                 />
                 <div className="flex gap-2">
                   {[
-                    { label: "Min", value: MIN_WITHDRAWAL },
-                    { label: "50%", value: Math.max(MIN_WITHDRAWAL, wallet.balance * 0.5) },
+                    { label: "Min", value: minWithdrawal },
+                    { label: "50%", value: Math.max(minWithdrawal, wallet.balance * 0.5) },
                     { label: "Max", value: wallet.balance },
                   ].map((preset) => (
                     <button
