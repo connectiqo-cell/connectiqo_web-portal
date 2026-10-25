@@ -132,6 +132,11 @@ export const videoLibraryApi = {
         }
       }
 
+      // Excludes video_url/hls_url from the RETURNING select — those columns
+      // have no direct SELECT grant for authenticated/anon (see migration
+      // revoke_direct_video_url_column_access) so an unscoped select() on
+      // the insert would fail outright. We already have the URL locally
+      // from the upload above, so there's nothing to re-fetch anyway.
       const { data, error } = await supabase
         .from("mentor_videos")
         .insert({
@@ -143,10 +148,12 @@ export const videoLibraryApi = {
           is_free: isFree,
           thumbnail_url: thumbnailUrl,
         })
-        .select()
+        .select(
+          "id, mentor_id, title, description, thumbnail_url, is_free, position, is_promoted, promoted_at, storage_path, created_at",
+        )
         .single();
       if (error) throw error;
-      return data as unknown as MentorVideo;
+      return { ...data, video_url: publicUrlData.publicUrl } as unknown as MentorVideo;
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
     }
@@ -196,11 +203,16 @@ export const videoLibraryApi = {
       if (description !== undefined) updates.description = description;
       if (isFree !== undefined) updates.is_free = isFree;
 
+      // Scoped select — video_url/hls_url have no direct SELECT grant for
+      // authenticated/anon (see migration revoke_direct_video_url_column_access),
+      // so an unscoped select() on the update would fail outright.
       const { data, error } = await supabase
         .from("mentor_videos")
         .update(updates)
         .eq("id", id)
-        .select()
+        .select(
+          "id, mentor_id, title, description, thumbnail_url, is_free, position, is_promoted, promoted_at, storage_path, created_at",
+        )
         .single();
       if (error) throw error;
       return data;
