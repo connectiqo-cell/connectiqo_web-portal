@@ -170,14 +170,7 @@ export const videoLibraryApi = {
         return [];
       }
 
-      const { data, error } = await supabase
-        .from("mentor_videos")
-        .select(
-          "id, mentor_id, title, description, video_url, hls_url, thumbnail_url, is_free, position, is_promoted, promoted_at, storage_path, created_at",
-        )
-        .eq("mentor_id", mentorId)
-        .order("position", { ascending: true })
-        .order("created_at", { ascending: true });
+      const { data, error } = await supabase.rpc("get_mentor_videos_for_viewer", { p_mentor_id: mentorId });
       if (error) throw error;
       return (data as unknown as MentorVideo[]) || [];
     } catch (error) {
@@ -267,22 +260,20 @@ export const videoLibraryApi = {
   }: { page?: number; pageSize?: number } = {}): Promise<PublicVideo[]> => {
     const supabase = createClient();
     try {
-      const from = page * pageSize;
-      const to = from + pageSize - 1;
-
-      const { data: videos, error } = await supabase
-        .from("mentor_videos")
-        .select(
-          "id, mentor_id, title, description, video_url, hls_url, thumbnail_url, is_free, position, is_promoted, promoted_at, created_at, profiles:mentor_id (id, name, avatar_url)",
-        )
-        .order("is_promoted", { ascending: false })
-        .order("promoted_at", { ascending: false, nullsFirst: false })
-        .order("created_at", { ascending: false })
-        .range(from, to);
+      const { data: rpcVideos, error } = await supabase.rpc("get_public_videos_for_viewer", {
+        p_limit: pageSize,
+        p_offset: page * pageSize,
+      });
       if (error) throw error;
-      if (!videos?.length) return [];
+      const videos = (rpcVideos as unknown as MentorVideo[]) || [];
+      if (!videos.length) return [];
 
       const mentorIds = [...new Set(videos.map((v) => v.mentor_id))];
+      const { data: mentorNames } = await supabase
+        .from("profiles")
+        .select("id, name, avatar_url")
+        .in("id", mentorIds);
+      const nameMap = new Map((mentorNames || []).map((p) => [p.id, p]));
       const { data: mentorProfiles } = await supabase
         .from("mentor_profiles")
         .select("id, specialization, unlock_price, category, mentor_frozen, mentor_frozen_until")
@@ -298,7 +289,7 @@ export const videoLibraryApi = {
         .filter((v) => profileMap.has(v.mentor_id))
         .map((v) => ({
           ...v,
-          profiles: v.profiles ?? null,
+          profiles: nameMap.get(v.mentor_id) ?? null,
           mentor_profiles: profileMap.get(v.mentor_id) || {
             specialization: "",
             unlock_price: null,
@@ -315,22 +306,21 @@ export const videoLibraryApi = {
     const supabase = createClient();
     try {
       const { data: video, error } = await supabase
-        .from("mentor_videos")
-        .select(
-          "id, mentor_id, title, description, video_url, hls_url, thumbnail_url, is_free, position, is_promoted, promoted_at, created_at, profiles:mentor_id (id, name, avatar_url)",
-        )
-        .eq("id", videoId)
+        .rpc("get_public_video_by_id", { p_video_id: videoId })
         .maybeSingle();
       if (error) throw error;
       if (!video) return null;
 
       const typedVideo = video as unknown as MentorVideo;
 
-      const { data: mentorProfile } = await supabase
-        .from("mentor_profiles")
-        .select("id, specialization, unlock_price, category, mentor_frozen, mentor_frozen_until")
-        .eq("id", typedVideo.mentor_id)
-        .maybeSingle();
+      const [{ data: mentorProfile }, { data: mentorName }] = await Promise.all([
+        supabase
+          .from("mentor_profiles")
+          .select("id, specialization, unlock_price, category, mentor_frozen, mentor_frozen_until")
+          .eq("id", typedVideo.mentor_id)
+          .maybeSingle(),
+        supabase.from("profiles").select("id, name, avatar_url").eq("id", typedVideo.mentor_id).maybeSingle(),
+      ]);
 
       if (!mentorProfile || isMentorFreezeActive(mentorProfile)) {
         const {
@@ -343,7 +333,7 @@ export const videoLibraryApi = {
 
       return {
         ...typedVideo,
-        profiles: typedVideo.profiles ?? null,
+        profiles: mentorName ?? null,
         mentor_profiles: mentorProfile || { specialization: "", unlock_price: null, category: null },
       } as PublicVideo;
     } catch (error) {
