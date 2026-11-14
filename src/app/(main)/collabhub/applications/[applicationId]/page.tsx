@@ -24,7 +24,7 @@ import { useEffect, useId, useRef, useState } from "react";
 
 import OptimizedImage from "@/components/OptimizedImage";
 import { SubmissionVideoPlayer } from "@/components/collabhub/SubmissionVideoPlayer";
-import { getCategoryStyle } from "@/components/collabhub/campaignDisplay";
+import { getCategoryStyle, isDeadlinePassed } from "@/components/collabhub/campaignDisplay";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   collabHubApi,
@@ -394,8 +394,11 @@ export default function ApplicationSubmissionPage() {
   // kept around only for rows decided before this change. A 'processing' row
   // re-offers the upload only when the worker recorded a failure; otherwise
   // it is simply still in flight.
+  const submissionClosed = isDeadlinePassed(application.campaign?.submission_deadline ?? null);
+
   const canSubmit =
     (application.status === "shortlisted" || application.status === "accepted") &&
+    !submissionClosed &&
     (!submission
       || submission.status === "revision_requested"
       || (submission.status === "processing" && !!submission.watermark_error));
@@ -593,6 +596,23 @@ export default function ApplicationSubmissionPage() {
     </div>
   ) : null;
 
+  const submissionClosedCard =
+    submissionClosed &&
+    (application.status === "shortlisted" || application.status === "accepted") &&
+    (!submission || submission.status === "revision_requested" || submission.status === "processing") ? (
+      <div className="flex items-start gap-3 rounded-2xl border border-dashed border-border-default bg-surface-panel p-4">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-chip text-text-muted">
+          <Clock size={18} />
+        </span>
+        <div>
+          <p className="text-base font-bold text-text-primary">Submission window closed</p>
+          <p className="text-sm text-text-secondary">
+            The deadline to submit a video for this campaign has passed, so uploads are no longer accepted.
+          </p>
+        </div>
+      </div>
+    ) : null;
+
   // A rejected submission is a dead end otherwise — every other end state on
   // this page (application-rejected, paid) gives the creator a clear next
   // step; this didn't.
@@ -732,6 +752,7 @@ export default function ApplicationSubmissionPage() {
             {feedbackCard}
             {paymentCard}
             {uploadCard}
+            {submissionClosedCard}
             {browseMoreCard}
           </div>
         </div>
@@ -740,6 +761,7 @@ export default function ApplicationSubmissionPage() {
           {statusCard}
           {feedbackCard}
           {uploadCard}
+          {submissionClosedCard}
           {browseMoreCard}
         </div>
       )}

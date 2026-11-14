@@ -60,10 +60,15 @@ export function deadlineLabel(deadline: string | null): { text: string; urgent: 
   return { text: `Apply by ${formatShortDate(deadline)}`, urgent: false };
 }
 
+/** Past the end of a deadline's calendar day (IST), if one is set. */
+export function isDeadlinePassed(deadline: string | null) {
+  return !!deadline && deadlineEndsAt(deadline) < Date.now();
+}
+
 /** Closed for new applications: unpublished, or past the end of its application-deadline day. */
 export function isCampaignClosed(campaign: Campaign) {
   if (campaign.status !== "published") return true;
-  return !!campaign.application_deadline && deadlineEndsAt(campaign.application_deadline) < Date.now();
+  return isDeadlinePassed(campaign.application_deadline);
 }
 
 /** Brand-entered text, split into its non-blank lines (brands often paste points separated by blank lines). */
