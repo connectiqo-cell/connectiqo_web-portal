@@ -8,6 +8,13 @@ import { fetchActiveCategories, type MentorCategoryRow } from "@/lib/api/content
 import { getCategoryIcon } from "@/lib/utils/categoryIcons";
 import { useHorizontalScroll } from "@/lib/hooks/useHorizontalScroll";
 
+/**
+ * Fixed card box, shared by the skeleton and the real cards. Heights fit
+ * icon + gap + up to 3 lines of name (names are clamped to 3 lines):
+ * mobile ≈ 110px → h-28 (112px), sm+ ≈ 138px → h-36 (144px).
+ */
+const CARD_SIZE = "w-20 sm:w-28 h-28 sm:h-36";
+
 export function TopCategories({
   selectedCategory,
   onSelectCategory,
@@ -30,16 +37,33 @@ export function TopCategories({
     })();
   }, []);
 
+  // The heading doesn't depend on fetched data, so it renders identically in
+  // the loading and loaded states — no height change when categories arrive.
+  const header = (
+    <div className="flex items-center justify-between mb-3">
+      <h2 className="text-lg font-semibold text-text-primary">Top Categories</h2>
+      <Link
+        href={ROUTES.discover}
+        className="flex items-center gap-0.5 text-sm font-medium text-accent-link hover:text-accent-link-hover"
+      >
+        View all
+        <ChevronRight className="w-4 h-4" />
+      </Link>
+    </div>
+  );
+
   if (loading) {
+    // Skeleton cards share CARD_SIZE with the real cards so swapping one for
+    // the other doesn't push the sections below down (CLS).
     return (
       <section className="w-full py-3">
-        <div className="mb-3 h-6 w-32 animate-pulse rounded-lg bg-surface-chip" />
+        {header}
         <div className="flex items-center gap-2">
-          <div className="flex gap-1.5">
+          <div className="flex min-w-0 flex-1 gap-1.5 overflow-hidden px-1">
             {[...Array(8)].map((_, i) => (
               <div
                 key={i}
-                className="h-24 w-22 shrink-0 animate-pulse rounded-2xl bg-surface-chip"
+                className={`${CARD_SIZE} shrink-0 animate-pulse rounded-2xl border-2 border-border-light bg-surface-chip`}
               />
             ))}
           </div>
@@ -50,16 +74,7 @@ export function TopCategories({
 
   return (
     <section className="w-full py-3">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-semibold text-text-primary">Top Categories</h2>
-        <Link
-          href={ROUTES.discover}
-          className="flex items-center gap-0.5 text-sm font-medium text-accent-link hover:text-accent-link-hover"
-        >
-          View all
-          <ChevronRight className="w-4 h-4" />
-        </Link>
-      </div>
+      {header}
 
       <div className="flex items-center gap-2">
         {canScrollLeft ? (
@@ -85,7 +100,7 @@ export function TopCategories({
                 key={id}
                 data-category-card
                 onClick={() => onSelectCategory(isSelected ? "" : name)}
-                className={`flex w-20 sm:w-28 shrink-0 flex-col items-center justify-center gap-2 sm:gap-3 rounded-2xl border-2 transition-all px-2 sm:px-3 py-3 sm:py-4 text-center hover:shadow-md ${
+                className={`flex ${CARD_SIZE} shrink-0 flex-col items-center justify-center gap-2 sm:gap-3 rounded-2xl border-2 transition-all px-2 sm:px-3 py-3 sm:py-4 text-center hover:shadow-md ${
                   isSelected
                     ? "border-accent-link bg-accent-link/10"
                     : "border-border-light bg-surface-panel"
@@ -96,7 +111,7 @@ export function TopCategories({
                   strokeWidth={1.5}
                 />
                 <span
-                  className={`text-xs sm:text-sm font-semibold leading-snug ${isSelected ? "text-accent-link" : "text-text-primary"}`}
+                  className={`line-clamp-3 text-xs sm:text-sm font-semibold leading-snug ${isSelected ? "text-accent-link" : "text-text-primary"}`}
                 >
                   {name}
                 </span>
