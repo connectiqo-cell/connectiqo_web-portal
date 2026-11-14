@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { mentorId } = await params;
   const supabase = createPublicClient();
   const mentor = await mentorApi.getMentorWithProfile(supabase, mentorId).catch(() => null);
-  const name = mentor?.profiles?.name || "Mentor";
+  const name = mentor?.profiles?.name || "Creator";
   return { title: `Book a session with ${name} — Connectiqo` };
 }
 
@@ -34,7 +34,7 @@ export default async function BookingPage({ params }: PageProps) {
           className="flex w-fit items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary"
         >
           <ArrowLeft size={16} />
-          {mentor.profiles?.name || "Mentor"}&apos;s profile
+          {mentor.profiles?.name || "Creator"}&apos;s profile
         </Link>
         <h1 className="text-2xl font-bold text-text-primary">
           Book a session with {mentor.profiles?.name || "your mentor"}

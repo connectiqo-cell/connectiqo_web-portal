@@ -49,7 +49,7 @@ export function AuthHeaderLinks() {
         href={ROUTES.mentorProfileDashboard}
         className="font-medium text-text-secondary hover:text-text-primary"
       >
-        Mentor Dashboard
+        Creator Dashboard
       </Link>
       <Link href={ROUTES.settings} className="font-medium text-text-secondary hover:text-text-primary">
         Settings

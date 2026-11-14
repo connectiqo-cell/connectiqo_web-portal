@@ -94,7 +94,7 @@ export function CategoryCarousel({
           onTouchEnd={handleTouchEnd}
         >
           {mentors.map((mentor) => {
-            const name = mentor.profiles?.name || "Mentor";
+            const name = mentor.profiles?.name || "Creator";
             const avatarUrl = mentor.profiles?.avatar_url;
             const reviewCount = mentor.total_sessions || 0;
 
@@ -118,7 +118,7 @@ export function CategoryCarousel({
                   <div>
                     <p className="truncate text-xs sm:text-sm font-bold text-text-primary">{name}</p>
                     <p className="truncate text-xs text-text-muted">
-                      {mentor.specialization || "Mentor"}
+                      {mentor.specialization || "Creator"}
                     </p>
                   </div>
 

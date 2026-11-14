@@ -187,7 +187,7 @@ export default function MessageThreadPage() {
           </span>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-text-primary">{party?.name || "User"}</p>
-            <p className="text-xs text-text-muted">{isMentor ? "Learner" : "Mentor"}</p>
+            <p className="text-xs text-text-muted">Creator</p>
           </div>
         </div>
 

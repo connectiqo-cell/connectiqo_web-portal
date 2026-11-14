@@ -8,7 +8,7 @@ import { ROUTES } from "@/lib/routes";
 import { StarRating } from "./StarRating";
 
 export function MentorCard({ mentor }: { mentor: MentorProfileRow }) {
-  const name = mentor.profiles?.name || "Mentor";
+  const name = mentor.profiles?.name || "Creator";
   const avatarUrl = mentor.profiles?.avatar_url;
 
   return (
@@ -27,7 +27,7 @@ export function MentorCard({ mentor }: { mentor: MentorProfileRow }) {
 
       <div className="flex flex-col gap-0.5">
         <p className="truncate text-sm font-bold text-text-primary">{name}</p>
-        <p className="truncate text-xs text-text-muted">{mentor.specialization || "Mentor"}</p>
+        <p className="truncate text-xs text-text-muted">{mentor.specialization || "Creator"}</p>
       </div>
 
       <div className="flex items-center justify-between">

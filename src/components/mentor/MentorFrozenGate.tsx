@@ -18,11 +18,11 @@ export function MentorFrozenGate({
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-500/15 text-amber-600">
           <Snowflake size={28} />
         </div>
-        <h2 className="text-xl font-bold text-text-primary">Mentor account frozen</h2>
+        <h2 className="text-xl font-bold text-text-primary">Creator account frozen</h2>
         <p className="mt-3 text-sm leading-relaxed text-text-secondary">
-          Your mentor profile and videos are hidden from others until{" "}
+          Your creator profile and videos are hidden from others until{" "}
           <span className="font-semibold text-text-primary">{formatMentorFreezeUntil(until)}</span>.
-          You can still use learner features.
+          You can still browse and book sessions.
         </p>
         {reason ? (
           <p className="mt-3 text-xs text-text-muted">Reason: {reason}</p>

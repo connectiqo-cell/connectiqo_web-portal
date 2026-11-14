@@ -127,7 +127,7 @@ export function BookingListItem({
   const isMentorView = variant === "mentor";
   const canReview = !isMentorView && label === "Completed" && reviewed === false;
   const otherParty = isMentorView ? booking.learner_profile : booking.profiles;
-  const otherName = otherParty?.name || (isMentorView ? "Learner" : "Mentor");
+  const otherName = otherParty?.name || "Creator";
   const otherPartyId = isMentorView ? booking.learner_id : booking.mentor_id;
   const [showPlayer, setShowPlayer] = useState(false);
   const playbackSrc = normalizeRecordingUrl(recordingUrl);

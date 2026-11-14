@@ -422,16 +422,16 @@ export function BookingFlow({
       <div className="flex items-center gap-3">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
           {mentor.profiles?.avatar_url ? (
-            <OptimizedImage src={mentor.profiles.avatar_url} alt={mentor.profiles.name || "Mentor"} width={44} height={44} className="h-full w-full object-cover" />
+            <OptimizedImage src={mentor.profiles.avatar_url} alt={mentor.profiles.name || "Creator"} width={44} height={44} className="h-full w-full object-cover" />
           ) : (
             <User size={18} className="text-text-muted" />
           )}
         </span>
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-text-primary">
-            {mentor.profiles?.name || "Mentor"}
+            {mentor.profiles?.name || "Creator"}
           </p>
-          <p className="truncate text-xs text-text-muted">{mentor.specialization || "Mentor"}</p>
+          <p className="truncate text-xs text-text-muted">{mentor.specialization || "Creator"}</p>
         </div>
       </div>
 

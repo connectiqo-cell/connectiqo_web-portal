@@ -77,7 +77,7 @@ export default function TransactionsPage() {
           {transactions.slice(0, visibleCount).map((txn) => {
             const asLearner = txn.learner_id === user.id;
             const otherId = asLearner ? txn.mentor_id : txn.learner_id;
-            const otherName = profiles[otherId]?.name || (asLearner ? "Mentor" : "Learner");
+            const otherName = profiles[otherId]?.name || "Creator";
             const amount = asLearner
               ? txn.amount_total_paise / 100
               : txn.mentor_earning_paise / 100;

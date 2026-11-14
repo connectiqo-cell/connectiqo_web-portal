@@ -27,11 +27,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { mentorId } = await params;
   const supabase = createPublicClient();
   const mentor = await mentorApi.getMentorWithProfile(supabase, mentorId).catch(() => null);
-  if (!mentor) return { title: "Mentor — Connectiqo" };
+  if (!mentor) return { title: "Creator — Connectiqo" };
 
-  const name = mentor.profiles?.name || "Mentor";
+  const name = mentor.profiles?.name || "Creator";
   return {
-    title: `${name} — ${mentor.specialization || "Mentor"} | Connectiqo`,
+    title: `${name} — ${mentor.specialization || "Creator"} | Connectiqo`,
     description: mentor.bio?.trim() || `Book a live 1-on-1 session with ${name} on Connectiqo.`,
   };
 }
@@ -54,7 +54,7 @@ export default async function MentorProfilePage({ params }: PageProps) {
     videoLibraryApi.getMentorVideos(mentorId).catch(() => []),
   ]);
   const categories = parseMentorCategories(mentor.category);
-  const name = mentor.profiles?.name || "Mentor";
+  const name = mentor.profiles?.name || "Creator";
   const avatarUrl = mentor.profiles?.avatar_url;
   const username = mentor.profiles?.username;
   const hasSocialLinks = Boolean(
@@ -99,7 +99,7 @@ export default async function MentorProfilePage({ params }: PageProps) {
             </div>
           </div>
           {username ? <p className="text-sm text-accent-link">@{username}</p> : null}
-          <p className="text-text-secondary">{mentor.specialization || "Mentor"}</p>
+          <p className="text-text-secondary">{mentor.specialization || "Creator"}</p>
           <div className="flex flex-wrap gap-1.5">
             {categories.map((c) => (
               <Link

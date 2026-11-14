@@ -97,8 +97,8 @@ export default function RecordedSessionsPage() {
           {sessions.slice(0, visibleCount).map((session) => {
             const asLearner = session.learner_id === user.id;
             const otherName = asLearner
-              ? session.profiles?.name || "Mentor"
-              : session.learner_profile?.name || "Learner";
+              ? session.profiles?.name || "Creator"
+              : session.learner_profile?.name || "Creator";
             const isPlaying = playingId === session.id;
             const src = normalizeRecordingUrl(session.recording_playback_url);
 

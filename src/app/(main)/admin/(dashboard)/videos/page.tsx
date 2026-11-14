@@ -92,7 +92,7 @@ export default function AdminVideosPage() {
   return (
     <div className="flex flex-col gap-6">
       <p className="text-sm text-text-secondary">
-        Mentor library videos (app / web Videos feed). Promote pins a video to the top.
+        Creator library videos (app / web Videos feed). Promote pins a video to the top.
       </p>
 
       <form

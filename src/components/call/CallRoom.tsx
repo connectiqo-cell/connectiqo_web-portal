@@ -601,7 +601,7 @@ export function CallRoom({
           isFullscreen={isFullscreen}
           onToggleFullscreen={toggleFullscreen}
           reportUserId={isHost ? String(learnerId) : String(mentorId)}
-          reportUserName={otherUserName || (isHost ? "Learner" : "Mentor")}
+          reportUserName={otherUserName || "Creator"}
           bookingId={String(bookingId)}
         />
         <CallSessionTimer slot={slot} />

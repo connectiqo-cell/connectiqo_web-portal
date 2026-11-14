@@ -114,14 +114,7 @@ export default function SettingsHubPage() {
   const walletLabel = walletLoading
     ? "…"
     : `₹${(walletBalance ?? 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
-  const roleLabel =
-    profile?.role === "brand"
-      ? "Brand"
-      : profile?.role === "mentor"
-        ? "Mentor"
-        : profile?.role === "learner"
-          ? "Learner"
-          : "Mentor & Learner";
+  const roleLabel = profile?.role === "brand" ? "Brand" : "Creator";
 
   const handleShare = async () => {
     const url = window.location.origin;
@@ -231,7 +224,7 @@ export default function SettingsHubPage() {
           <div className="flex items-center justify-between">
             <SectionHeader
               title="Video subscriptions"
-              subtitle="Mentors whose video libraries you can access"
+              subtitle="Creators whose video libraries you can access"
             />
             <Link
               href={ROUTES.videos}
@@ -265,13 +258,13 @@ export default function SettingsHubPage() {
                 >
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip">
                     {sub.profiles?.avatar_url ? (
-                      <OptimizedImage src={sub.profiles.avatar_url} alt={sub.profiles.name || "Mentor"} width={36} height={36} className="h-full w-full object-cover" />
+                      <OptimizedImage src={sub.profiles.avatar_url} alt={sub.profiles.name || "Creator"} width={36} height={36} className="h-full w-full object-cover" />
                     ) : (
                       <User size={16} className="text-text-muted" />
                     )}
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-text-primary">{sub.profiles?.name || "Mentor"}</p>
+                    <p className="text-sm font-semibold text-text-primary">{sub.profiles?.name || "Creator"}</p>
                     <p className="text-xs text-text-muted">{formatExpiry(sub.expires_at)}</p>
                   </div>
                 </Link>

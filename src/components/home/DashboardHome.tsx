@@ -229,7 +229,7 @@ export function DashboardHome({
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-xs font-semibold text-text-primary">
-                          {booking.profiles?.name || "Mentor"}
+                          {booking.profiles?.name || "Creator"}
                         </p>
                         <p className="flex items-center gap-1 text-[11px] text-text-muted">
                           <Calendar size={10} />

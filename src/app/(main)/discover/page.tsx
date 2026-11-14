@@ -5,8 +5,8 @@ import { mentorApi } from "@/lib/api/mentorApi";
 import { createPublicClient } from "@/lib/supabase/publicClient";
 
 export const metadata: Metadata = {
-  title: "Discover Mentors — Connectiqo",
-  description: "Browse expert mentors across technology, business, design, and more on Connectiqo.",
+  title: "Discover Creators — Connectiqo",
+  description: "Browse expert creators across technology, business, design, and more on Connectiqo.",
 };
 
 export const revalidate = 300;
@@ -23,7 +23,7 @@ export default async function DiscoverPage({ searchParams }: DiscoverPageProps) 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">
       <div>
-        <h1 className="text-2xl font-bold text-text-primary sm:text-3xl">Discover Mentors</h1>
+        <h1 className="text-2xl font-bold text-text-primary sm:text-3xl">Discover Creators</h1>
         <p className="mt-1 text-sm text-text-secondary sm:text-base">
           Find an expert for a live 1-on-1 session, browsed by category.
         </p>

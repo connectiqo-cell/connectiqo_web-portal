@@ -221,7 +221,7 @@ export default function ProfileChannelPage() {
             <h1 className="text-xl font-extrabold text-text-primary sm:text-2xl">{profile?.name}</h1>
             {profile?.username ? <p className="text-sm text-accent-link">@{profile.username}</p> : null}
             <p className="text-sm text-text-secondary">
-              {mentor?.specialization || (isMentor ? "Mentor" : isBrandAccount ? "Brand" : "Member")}
+              {mentor?.specialization || (isMentor ? "Creator" : isBrandAccount ? "Brand" : "Member")}
             </p>
             {isMentor ? <MentorSocialLinks mentor={mentor} className="mt-1" /> : null}
           </div>
@@ -237,7 +237,7 @@ export default function ProfileChannelPage() {
           {isMentor && user ? (
             <ShareProfileModal
               mentorId={user.id}
-              name={profile?.name || "Mentor"}
+              name={profile?.name || "Creator"}
               username={profile?.username}
               specialization={mentor?.specialization}
             />

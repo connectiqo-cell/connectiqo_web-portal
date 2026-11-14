@@ -69,23 +69,23 @@ export default function AdminUsersPage() {
     setError("");
     try {
       await adminApi.freezeMentor({ mentorId: profile.id, until, reason });
-      window.alert("Mentor side frozen (learner access stays open).");
+      window.alert("Creator side frozen.");
     } catch (err) {
-      setError((err as Error)?.message || "Mentor freeze failed — run mentor_side_freeze migration");
+      setError((err as Error)?.message || "Creator freeze failed — run mentor_side_freeze migration");
     } finally {
       setBusyId(null);
     }
   };
 
   const handleMentorUnfreeze = async (profile: AdminProfileRow) => {
-    if (!window.confirm(`Unfreeze mentor side for ${profile.name || profile.email}?`)) return;
+    if (!window.confirm(`Unfreeze creator side for ${profile.name || profile.email}?`)) return;
     setBusyId(profile.id);
     setError("");
     try {
       await adminApi.unfreezeMentor(profile.id);
-      window.alert("Mentor side restored.");
+      window.alert("Creator side restored.");
     } catch (err) {
-      setError((err as Error)?.message || "Mentor unfreeze failed");
+      setError((err as Error)?.message || "Creator unfreeze failed");
     } finally {
       setBusyId(null);
     }
@@ -150,7 +150,7 @@ export default function AdminUsersPage() {
                   className="flex items-center gap-1.5 rounded-full bg-amber-500/15 px-3 py-1.5 text-xs font-semibold text-amber-700 disabled:opacity-50"
                 >
                   <Snowflake size={13} />
-                  Freeze mentor
+                  Freeze creator
                 </button>
                 <button
                   type="button"
@@ -159,7 +159,7 @@ export default function AdminUsersPage() {
                   className="flex items-center gap-1.5 rounded-full bg-accent-success/15 px-3 py-1.5 text-xs font-semibold text-accent-success disabled:opacity-50"
                 >
                   <Sun size={13} />
-                  Unfreeze mentor
+                  Unfreeze creator
                 </button>
                 <button
                   type="button"

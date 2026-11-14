@@ -93,8 +93,8 @@ export default function CallPage({ params }: PageProps) {
   }
 
   const otherUserName = isHost
-    ? booking?.learner_profile?.name || "Learner"
-    : booking?.profiles?.name || "Mentor";
+    ? booking?.learner_profile?.name || "Creator"
+    : booking?.profiles?.name || "Creator";
 
   if (!meetingId || !token) {
     return (
