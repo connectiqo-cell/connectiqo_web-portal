@@ -151,7 +151,7 @@ export default function WalletPage() {
     const earningRows: ActivityRow[] = earnings.map((e) => ({
       id: `e-${e.id}`,
       date: e.created_at,
-      description: `Session with ${e.bookings?.profiles?.name || "Learner"}`,
+      description: `Session with ${e.bookings?.profiles?.name || "Creator"}`,
       type: "Earning",
       amount: parseFloat(String(e.amount)) || 0,
       status: e.status === "completed" ? "Completed" : "Pending",

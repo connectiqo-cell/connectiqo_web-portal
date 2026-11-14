@@ -329,7 +329,7 @@ export function MentorVideoLibrary({
             {priceBreakdown ? (
               <div className="pointer-events-none absolute right-0 top-full z-10 mt-2 w-56 rounded-xl border border-border-light bg-surface-panel p-3 text-xs text-text-secondary opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
                 <div className="flex justify-between gap-3">
-                  <span>Mentor&apos;s price</span>
+                  <span>Creator&apos;s price</span>
                   <span className="text-text-primary">₹{priceBreakdown.mentorAmount}</span>
                 </div>
                 <div className="mt-1 flex justify-between gap-3">

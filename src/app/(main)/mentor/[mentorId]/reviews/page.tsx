@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { mentorId } = await params;
   const supabase = createPublicClient();
   const mentor = await mentorApi.getMentorWithProfile(supabase, mentorId).catch(() => null);
-  const name = mentor?.profiles?.name || "Mentor";
+  const name = mentor?.profiles?.name || "Creator";
   return { title: `Reviews for ${name} — Connectiqo` };
 }
 
@@ -31,7 +31,7 @@ export default async function MentorReviewsPage({ params }: PageProps) {
   if (!mentor) notFound();
 
   const reviews = await reviewsApi.getReviewsForMentor(supabase, mentor.id).catch(() => []);
-  const name = mentor.profiles?.name || "Mentor";
+  const name = mentor.profiles?.name || "Creator";
 
   const total = reviews.length;
   const avg = total ? reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / total : 0;

@@ -17,8 +17,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { category } = await params;
   const name = decodeURIComponent(category);
   return {
-    title: `${name} Mentors — Connectiqo`,
-    description: `Browse ${name} mentors available for live 1-on-1 sessions on Connectiqo.`,
+    title: `${name} Creators — Connectiqo`,
+    description: `Browse ${name} creators available for live 1-on-1 sessions on Connectiqo.`,
   };
 }
 

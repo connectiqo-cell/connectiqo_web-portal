@@ -81,7 +81,7 @@ export default function RecommendedPage() {
           <Sparkles size={16} />
           Recommended for you
         </span>
-        <h1 className="text-3xl font-bold text-text-primary">Mentors picked for your interests</h1>
+        <h1 className="text-3xl font-bold text-text-primary">Creators picked for your interests</h1>
       </div>
 
       {loading ? (

@@ -191,7 +191,7 @@ export function rescheduleReasonLabel(
   viewer: "mentor" | "learner",
 ): string {
   if (reason === "mentor_noshow") {
-    return viewer === "mentor" ? "You didn't join the session" : "Mentor didn't join the session";
+    return viewer === "mentor" ? "You didn't join the session" : "Creator didn't join the session";
   }
   if (reason === "technical") {
     return "Session ended too early (technical issue)";

@@ -83,7 +83,7 @@ export function PopularCreatorsCarousel({
                       />
                     </div>
                     <p className="text-xs text-text-muted truncate">
-                      {creator.specialization || "Mentor"}
+                      {creator.specialization || "Creator"}
                     </p>
                   </div>
 

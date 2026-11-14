@@ -539,9 +539,9 @@ export default function EditProfilePage() {
       {isMentor && !mentorLoading ? (
         <div className="flex flex-col gap-4 border-t border-border-light pt-6">
           <div>
-            <h2 className="text-lg font-bold text-text-primary">Mentor Profile</h2>
+            <h2 className="text-lg font-bold text-text-primary">Creator Profile</h2>
             <p className="mt-0.5 text-xs text-text-muted">
-              Manage your mentor profile and pricing
+              Manage your creator profile and pricing
             </p>
           </div>
 

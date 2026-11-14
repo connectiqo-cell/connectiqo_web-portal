@@ -39,7 +39,7 @@ export function VideoFeedSlide({
   const [showPlayPauseIcon, setShowPlayPauseIcon] = useState(false);
   const [isPaused, setIsPaused] = useState(true);
   const { user } = useAuth();
-  const mentorName = video.profiles?.name || "Mentor";
+  const mentorName = video.profiles?.name || "Creator";
   const isOwnVideo =
     Boolean(user?.id) &&
     Boolean(video.mentor_id) &&

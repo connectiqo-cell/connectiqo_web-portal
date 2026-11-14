@@ -272,7 +272,7 @@ export default function SignupPage() {
                 <span>
                   <span className="block text-sm font-semibold text-text-primary">I&apos;m a Creator</span>
                   <span className="block text-xs text-text-muted">
-                    Mentor, learn, and apply to brand campaigns on CollabHub
+                    Teach, learn, and apply to brand campaigns on CollabHub
                   </span>
                 </span>
               </button>

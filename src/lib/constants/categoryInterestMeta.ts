@@ -49,7 +49,7 @@ export const CATEGORY_INTEREST_META: Record<
   other: { icon: "sparkle", description: "Something else entirely" },
 };
 
-const DEFAULT_META = { icon: "shapes", description: "Mentors in this space" };
+const DEFAULT_META = { icon: "shapes", description: "Creators in this space" };
 
 export function getCategoryInterestMeta(categoryName = "") {
   const lower = String(categoryName || "").trim().toLowerCase();

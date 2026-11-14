@@ -89,7 +89,7 @@ export function PopularCreators({
                 <div className="flex-1 min-w-0">
                   <p className="truncate text-sm font-bold text-gray-900">{creator.profiles?.name}</p>
                   <p className="truncate text-xs text-gray-600">
-                    {creator.specialization || "Mentor"}
+                    {creator.specialization || "Creator"}
                   </p>
 
                   <div className="flex items-center gap-1 mt-1">

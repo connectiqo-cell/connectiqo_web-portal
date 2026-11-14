@@ -29,7 +29,7 @@ export function RescheduleBanner({
 }) {
   const isMentorView = variant === "mentor";
   const otherParty = isMentorView ? booking.learner_profile : booking.profiles;
-  const otherName = otherParty?.name || (isMentorView ? "Learner" : "Mentor");
+  const otherName = otherParty?.name || "Creator";
   const reasonLabel = rescheduleReasonLabel(booking.reschedule_reason, variant);
   const isUnresolved = booking.status === "reschedule_unresolved";
   const isProposed = booking.status === "reschedule_proposed";

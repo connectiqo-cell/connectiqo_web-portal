@@ -6,7 +6,7 @@ import type { ReviewRow } from "@/lib/api/reviewsApi";
 import { StarRating } from "./StarRating";
 
 export function ReviewCard({ review }: { review: ReviewRow }) {
-  const name = review.profiles?.name || "Learner";
+  const name = review.profiles?.name || "Creator";
   const avatarUrl = review.profiles?.avatar_url;
 
   return (
