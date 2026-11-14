@@ -80,7 +80,7 @@ export function CategoryCarousel({
             href={viewAllLink}
             className="flex items-center gap-1 text-xs sm:text-sm font-semibold text-accent-link hover:text-accent-link-hover w-fit"
           >
-            View all ({mentors.length})
+            View all
             <ChevronRight size={14} className="sm:size-4" />
           </Link>
         )}
