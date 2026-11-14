@@ -11,12 +11,18 @@ const AUTO_ADVANCE_MS = 5000;
 export function HeroBanner() {
   const [slides, setSlides] = useState<HeroSlideRow[]>([]);
   const [active, setActive] = useState(0);
+  // Until the fetch settles we render an empty box at the banner's final
+  // size, so the sections below don't get pushed down when it arrives (CLS).
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const rows = await fetchActiveHeroSlides();
-      if (!cancelled) setSlides(rows);
+      if (!cancelled) {
+        setSlides(rows);
+        setLoaded(true);
+      }
     })();
     return () => {
       cancelled = true;
@@ -31,7 +37,7 @@ export function HeroBanner() {
     return () => clearInterval(id);
   }, [slides.length]);
 
-  if (slides.length === 0) return null;
+  if (loaded && slides.length === 0) return null;
 
   return (
     <section className="w-full">
@@ -45,7 +51,11 @@ export function HeroBanner() {
         shorter than 16:9 would. The cap is kept as a safety net for very
         wide containers, though at this ratio it rarely engages.
       */}
-      <div className="relative aspect-[21/9] max-h-[420px] w-full overflow-hidden rounded-2xl bg-surface-chip">
+      <div
+        className={`relative aspect-[21/9] max-h-[420px] w-full overflow-hidden rounded-2xl bg-surface-chip ${
+          loaded ? "" : "animate-pulse"
+        }`}
+      >
         {slides.map((slide, i) => (
           <OptimizedImage
             key={slide.id}
@@ -53,6 +63,8 @@ export function HeroBanner() {
             alt=""
             width={1600}
             height={686}
+            sizes="(max-width: 768px) 100vw, 1000px"
+            priority={i === 0}
             className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-500 ${
               i === active ? "opacity-100" : "opacity-0"
             }`}
