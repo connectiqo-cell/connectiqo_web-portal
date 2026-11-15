@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -75,6 +76,7 @@ export default function WalletPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [confirmAmount, setConfirmAmount] = useState<number | null>(null);
 
   const loadWallet = async (userId: string) => {
     const [w, status, earningsData, withdrawalData, minimum] = await Promise.all([
@@ -183,7 +185,11 @@ export default function WalletPage() {
       .reduce((sum, e) => sum + (parseFloat(String(e.amount)) || 0), 0);
   }, [earnings]);
 
-  const handleWithdraw = async () => {
+  const destination =
+    payoutStatus?.upiId ||
+    (payoutStatus?.bankAccount ? `${payoutStatus.bankAccount} (${payoutStatus.ifsc})` : "your saved payout details");
+
+  const openConfirm = () => {
     if (!user) return;
     const value = parseFloat(amount);
     setError("");
@@ -200,22 +206,22 @@ export default function WalletPage() {
       setError(`Minimum withdrawal is ${fmtCompact(minWithdrawal)}`);
       return;
     }
-    const destination =
-      payoutStatus?.upiId ||
-      (payoutStatus?.bankAccount ? `${payoutStatus.bankAccount} (${payoutStatus.ifsc})` : "your saved payout details");
-    const confirmed = window.confirm(
-      `Send ${fmtCompact(value)} to ${destination}?\n\nProcessed within 1–2 business days.`,
-    );
-    if (!confirmed) return;
+    setConfirmAmount(value);
+  };
 
+  const handleWithdraw = async () => {
+    if (!user || confirmAmount == null) return;
+    const value = confirmAmount;
     setSubmitting(true);
     try {
       await paymentApi.requestWithdrawal({ mentorId: user.id, amount: value });
+      setConfirmAmount(null);
       setSuccess("Withdrawal requested — you'll be notified once it's processed.");
       setAmount("");
       setShowWithdraw(false);
       await loadWallet(user.id);
     } catch (err) {
+      setConfirmAmount(null);
       setError((err as Error)?.message || "Withdrawal failed");
     } finally {
       setSubmitting(false);
@@ -466,7 +472,7 @@ export default function WalletPage() {
                 </div>
                 <button
                   type="button"
-                  onClick={handleWithdraw}
+                  onClick={openConfirm}
                   disabled={submitting}
                   className="flex h-9 items-center justify-center rounded-full text-xs font-semibold text-text-on-accent disabled:opacity-60"
                   style={{ backgroundImage: "var(--gradient-button-primary)" }}
@@ -579,6 +585,54 @@ export default function WalletPage() {
           </div>
         </aside>
       </div>
+
+      {confirmAmount != null && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-200 flex items-center justify-center bg-black/50 px-6"
+              onClick={() => !submitting && setConfirmAmount(null)}
+              role="presentation"
+            >
+              <div
+                className="w-full max-w-sm rounded-2xl border border-border-light bg-surface-panel p-5 shadow-xl"
+                onClick={(e) => e.stopPropagation()}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="withdraw-confirm-title"
+              >
+                <h2 id="withdraw-confirm-title" className="text-sm font-bold text-text-primary">
+                  Confirm withdrawal
+                </h2>
+                <p className="mt-2 text-sm text-text-secondary">
+                  Send <span className="font-semibold text-text-primary">{fmtCompact(confirmAmount)}</span> to{" "}
+                  <span className="font-semibold text-text-primary">{destination}</span>?
+                </p>
+                <p className="mt-1 text-xs text-text-muted">Processed within 1–2 business days.</p>
+
+                <div className="mt-4 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmAmount(null)}
+                    disabled={submitting}
+                    className="flex h-9 flex-1 items-center justify-center rounded-full border border-border-light text-xs font-semibold text-text-secondary hover:text-text-primary disabled:opacity-60"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleWithdraw}
+                    disabled={submitting}
+                    className="flex h-9 flex-1 items-center justify-center rounded-full text-xs font-semibold text-text-on-accent disabled:opacity-60"
+                    style={{ backgroundImage: "var(--gradient-button-primary)" }}
+                  >
+                    {submitting ? "Sending…" : "Confirm"}
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </main>
   );
 }
