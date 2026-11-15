@@ -230,6 +230,16 @@ function ApplicantCard({
                   <StatusIcon size={12} className={submission.status === "processing" ? "animate-spin" : ""} />
                   {meta.label}
                 </span>
+                {submission.agreement_accepted_at ? (
+                  <p className="flex items-center gap-1 text-[11px] text-text-muted">
+                    <CheckCircle2 size={11} className="text-accent-success" />
+                    Usage agreement accepted {new Date(submission.agreement_accepted_at).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </p>
+                ) : null}
                 {submission.watermarked_video_url && submission.status !== "processing" ? (
                   <SubmissionVideoPlayer src={submission.watermarked_video_url} />
                 ) : null}
