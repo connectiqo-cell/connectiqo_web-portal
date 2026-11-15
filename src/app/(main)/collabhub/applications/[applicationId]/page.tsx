@@ -24,7 +24,7 @@ import { useEffect, useId, useRef, useState } from "react";
 
 import OptimizedImage from "@/components/OptimizedImage";
 import { SubmissionVideoPlayer } from "@/components/collabhub/SubmissionVideoPlayer";
-import { getCategoryStyle, isDeadlinePassed } from "@/components/collabhub/campaignDisplay";
+import { getCategoryStyle, isDeadlinePassed, usageAgreementPoints } from "@/components/collabhub/campaignDisplay";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   collabHubApi,
@@ -36,16 +36,6 @@ import { ROUTES } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/client";
 
 const MAX_VIDEO_MB = 200;
-
-function usageAgreementPoints(brandName: string) {
-  return [
-    "This is your own original work, and you hold the rights to all music, footage, and other elements used in it.",
-    `If ${brandName} approves and pays to unlock this video, you grant them the right to use, edit, and publish it across their own marketing channels (social media, website, and paid advertising) for this campaign and its ongoing promotion.`,
-    "You may continue using this video on your own channels/portfolio, unless this campaign's brief says otherwise.",
-    `The campaign payout is full and final compensation — no further payment is owed for ${brandName}'s use of this video.`,
-    "You've read this campaign's specific usage terms above (if the brand provided any) and agree to them.",
-  ];
-}
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;

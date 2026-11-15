@@ -27,7 +27,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 
-import { calcUnlockTotal } from "@/components/collabhub/campaignDisplay";
+import { calcUnlockTotal, usageAgreementPoints } from "@/components/collabhub/campaignDisplay";
 import { SubmissionVideoPlayer } from "@/components/collabhub/SubmissionVideoPlayer";
 import OptimizedImage from "@/components/OptimizedImage";
 import { useAuth } from "@/contexts/AuthContext";
@@ -105,6 +105,7 @@ function ApplicantCard({
   unlock,
   budgetPerWinner,
   feeRule,
+  brandName,
   creatorProfile,
   busyId,
   feedbackDrafts,
@@ -119,6 +120,7 @@ function ApplicantCard({
   unlock?: CampaignUnlock;
   budgetPerWinner: number;
   feeRule: { platform_fee_percent: number; gst_percent: number } | null;
+  brandName: string;
   creatorProfile?: CreatorProfile;
   busyId: string | null;
   feedbackDrafts: Record<string, string>;
@@ -128,6 +130,7 @@ function ApplicantCard({
   handleUnlockPayment: (applicationId: string) => void;
   handleDownloadClean: (applicationId: string) => void;
 }) {
+  const [showAgreement, setShowAgreement] = useState(false);
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-border-light bg-surface-panel p-4">
       <div className="flex items-center gap-3">
@@ -231,14 +234,34 @@ function ApplicantCard({
                   {meta.label}
                 </span>
                 {submission.agreement_accepted_at ? (
-                  <p className="flex items-center gap-1 text-[11px] text-text-muted">
-                    <CheckCircle2 size={11} className="text-accent-success" />
-                    Usage agreement accepted {new Date(submission.agreement_accepted_at).toLocaleDateString("en-IN", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </p>
+                  <div className="flex flex-col gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setShowAgreement((v) => !v)}
+                      className="flex w-fit items-center gap-1 text-[11px] text-text-muted hover:text-text-secondary"
+                    >
+                      <CheckCircle2 size={11} className="text-accent-success" />
+                      Usage agreement accepted{" "}
+                      {new Date(submission.agreement_accepted_at).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                      <span className="font-semibold text-accent-link">
+                        {showAgreement ? "· hide" : "· view"}
+                      </span>
+                    </button>
+                    {showAgreement ? (
+                      <ul className="flex flex-col gap-1 rounded-lg border border-border-light bg-surface-panel p-2.5 text-[11px] leading-relaxed text-text-secondary">
+                        {usageAgreementPoints(brandName).map((point, i) => (
+                          <li key={i} className="flex gap-1.5">
+                            <span className="shrink-0 text-text-muted">{i + 1}.</span>
+                            <span className="text-justify">{point}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </div>
                 ) : null}
                 {submission.watermarked_video_url && submission.status !== "processing" ? (
                   <SubmissionVideoPlayer src={submission.watermarked_video_url} />
@@ -738,6 +761,7 @@ export default function BrandCampaignDetailPage() {
                 unlock={unlocks[app.id]}
                 budgetPerWinner={campaign.budget_per_winner}
                 feeRule={feeRule}
+                brandName={campaign.brand?.name || "the brand"}
                 creatorProfile={creatorProfiles[app.creator_id]}
                 busyId={busyId}
                 feedbackDrafts={feedbackDrafts}
@@ -776,6 +800,7 @@ export default function BrandCampaignDetailPage() {
                 unlock={unlocks[app.id]}
                 budgetPerWinner={campaign.budget_per_winner}
                 feeRule={feeRule}
+                brandName={campaign.brand?.name || "the brand"}
                 creatorProfile={creatorProfiles[app.creator_id]}
                 busyId={busyId}
                 feedbackDrafts={feedbackDrafts}

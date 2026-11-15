@@ -89,6 +89,19 @@ export function calcUnlockTotal(
   return { convenienceFee, totalAmount: Math.round(budgetPerWinner + platformBaseFee + gstOnFee) };
 }
 
+/** What a creator agrees to before their first submission on an application
+ * — shown on the upload screen, and reused on the brand's side so they can
+ * see exactly what was agreed to, not just that it was. */
+export function usageAgreementPoints(brandName: string) {
+  return [
+    "This is your own original work, and you hold the rights to all music, footage, and other elements used in it.",
+    `If ${brandName} approves and pays to unlock this video, you grant them the right to use, edit, and publish it across their own marketing channels (social media, website, and paid advertising) for this campaign and its ongoing promotion.`,
+    "You may continue using this video on your own channels/portfolio, unless this campaign's brief says otherwise.",
+    `The campaign payout is full and final compensation — no further payment is owed for ${brandName}'s use of this video.`,
+    "You've read this campaign's specific usage terms above (if the brand provided any) and agree to them.",
+  ];
+}
+
 /** Brand-entered text, split into its non-blank lines (brands often paste points separated by blank lines). */
 export function textLines(text: string) {
   return text
