@@ -599,11 +599,11 @@ export default function ApplicationSubmissionPage() {
       {needsAgreement ? (
         <div className="flex flex-col gap-2 rounded-xl border border-border-light bg-surface-sheet p-3">
           <p className="text-xs font-semibold text-text-primary">Video usage agreement</p>
-          <ul className="flex flex-col gap-1 text-[11px] leading-relaxed text-text-secondary">
+          <ul className="flex flex-col gap-1.5 text-[11px] leading-relaxed text-text-secondary">
             {usageAgreementPoints(brandName).map((point, i) => (
               <li key={i} className="flex gap-1.5">
-                <span className="text-text-muted">{i + 1}.</span>
-                {point}
+                <span className="shrink-0 text-text-muted">{i + 1}.</span>
+                <span className="text-justify">{point}</span>
               </li>
             ))}
           </ul>
@@ -699,15 +699,18 @@ export default function ApplicationSubmissionPage() {
               <CategoryIcon size={64} className="text-white/25" strokeWidth={1.25} />
             </div>
           )}
-          <span className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
+          <span className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
         </div>
 
         <div className="flex flex-col gap-4 px-5 pb-5 sm:flex-row sm:items-end sm:justify-between sm:px-6 sm:pb-6">
           <div className="flex min-w-0 flex-col gap-3">
+            {/* No negative margin onto the banner — a brand's cover image
+                can contain anything (text, illustrations) right up to its
+                bottom edge, so overlapping it here was never reliable. */}
             <BrandAvatar
               name={brandName}
               avatarUrl={campaign?.brand?.avatar_url}
-              className="-mt-8 h-16 w-16 text-xl ring-4 ring-surface-panel"
+              className="h-16 w-16 text-xl ring-4 ring-surface-panel"
             />
             <div className="min-w-0">
               <p className="text-sm font-medium text-text-secondary">{brandName}</p>
