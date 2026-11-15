@@ -37,6 +37,16 @@ import { createClient } from "@/lib/supabase/client";
 
 const MAX_VIDEO_MB = 200;
 
+function usageAgreementPoints(brandName: string) {
+  return [
+    "This is your own original work, and you hold the rights to all music, footage, and other elements used in it.",
+    `If ${brandName} approves and pays to unlock this video, you grant them the right to use, edit, and publish it across their own marketing channels (social media, website, and paid advertising) for this campaign and its ongoing promotion.`,
+    "You may continue using this video on your own channels/portfolio, unless this campaign's brief says otherwise.",
+    `The campaign payout is full and final compensation — no further payment is owed for ${brandName}'s use of this video.`,
+    "You've read this campaign's specific usage terms above (if the brand provided any) and agree to them.",
+  ];
+}
+
 function formatFileSize(bytes: number): string {
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -243,6 +253,7 @@ export default function ApplicationSubmissionPage() {
   const [file, setFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [agreementChecked, setAgreementChecked] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState("");
@@ -356,6 +367,8 @@ export default function ApplicationSubmissionPage() {
 
   const handleUpload = async () => {
     if (!file || !user) return;
+    const needsAgreement = !submission?.agreement_accepted_at;
+    if (needsAgreement && !agreementChecked) return;
     setUploading(true);
     setUploadProgress(0);
     setError("");
@@ -365,9 +378,11 @@ export default function ApplicationSubmissionPage() {
         creatorId: user.id,
         file,
         onProgress: setUploadProgress,
+        agreementAccepted: needsAgreement,
       });
       setSubmission(sub);
       setFile(null);
+      setAgreementChecked(false);
     } catch (err) {
       setError((err as Error)?.message || "Could not submit video");
       // The upload may have landed even though the row write failed — re-fetch
@@ -510,6 +525,8 @@ export default function ApplicationSubmissionPage() {
       )
     ) : null;
 
+  const needsAgreement = canSubmit && !submission?.agreement_accepted_at;
+
   const uploadCard = canSubmit ? (
     <div className="flex flex-col gap-4 rounded-2xl border border-border-light bg-surface-panel p-5">
       <div>
@@ -579,10 +596,34 @@ export default function ApplicationSubmissionPage() {
         </div>
       ) : null}
 
+      {needsAgreement ? (
+        <div className="flex flex-col gap-2 rounded-xl border border-border-light bg-surface-sheet p-3">
+          <p className="text-xs font-semibold text-text-primary">Video usage agreement</p>
+          <ul className="flex flex-col gap-1 text-[11px] leading-relaxed text-text-secondary">
+            {usageAgreementPoints(brandName).map((point, i) => (
+              <li key={i} className="flex gap-1.5">
+                <span className="text-text-muted">{i + 1}.</span>
+                {point}
+              </li>
+            ))}
+          </ul>
+          <label className="mt-1 flex items-start gap-2 text-xs text-text-secondary">
+            <input
+              type="checkbox"
+              checked={agreementChecked}
+              onChange={(e) => setAgreementChecked(e.target.checked)}
+              disabled={uploading}
+              className="mt-0.5"
+            />
+            I&apos;ve read and agree to the usage terms above.
+          </label>
+        </div>
+      ) : null}
+
       <button
         type="button"
         onClick={handleUpload}
-        disabled={!file || uploading}
+        disabled={!file || uploading || (needsAgreement && !agreementChecked)}
         className="flex h-11 w-full items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold text-text-on-accent shadow-sm disabled:opacity-60 sm:w-fit"
         style={{ backgroundImage: "var(--gradient-button-primary)" }}
       >

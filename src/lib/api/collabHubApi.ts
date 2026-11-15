@@ -95,6 +95,10 @@ export interface CampaignSubmission {
   submitted_at: string;
   reviewed_at: string | null;
   updated_at: string;
+  /** When the creator ticked the usage-rights agreement — asked once per
+   * application, on the first submission only, then carried forward across
+   * any later revision resubmissions. */
+  agreement_accepted_at: string | null;
 }
 
 /** CollabHub Phase 3: a paid unlock of the clean (non-watermarked) video —
@@ -567,11 +571,16 @@ export const collabHubApi = {
     creatorId,
     file,
     onProgress,
+    agreementAccepted,
   }: {
     applicationId: string;
     creatorId: string;
     file: File;
     onProgress?: (pct: number) => void;
+    /** Only required (and only sent) on the first submission — the RLS
+     * insert policy requires it then; omitted on later revision
+     * resubmissions so the original timestamp is left untouched. */
+    agreementAccepted?: boolean;
   }): Promise<CampaignSubmission> => {
     const supabase = createClient();
     try {
@@ -589,6 +598,7 @@ export const collabHubApi = {
             status: "processing",
             // Clears a previous failure so the worker treats this as fresh work.
             watermark_error: null,
+            ...(agreementAccepted ? { agreement_accepted_at: new Date().toISOString() } : {}),
           },
           { onConflict: "application_id" },
         )
