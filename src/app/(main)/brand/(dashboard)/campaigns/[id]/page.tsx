@@ -277,7 +277,9 @@ function ApplicantCard({
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold text-accent-success">Unlocked</p>
-                        <p className="text-xs text-text-muted">₹{unlock.amount_paid} paid — now in the creator&apos;s wallet</p>
+                        <p className="text-xs text-text-muted">
+                          ₹{unlock.amount_paid} paid — ₹{budgetPerWinner} credited to the creator&apos;s wallet
+                        </p>
                       </div>
                       <button
                         type="button"

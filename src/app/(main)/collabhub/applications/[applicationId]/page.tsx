@@ -467,7 +467,7 @@ export default function ApplicationSubmissionPage() {
           <div>
             <p className="flex items-center text-4xl font-bold tracking-tight text-text-primary">
               <IndianRupee size={30} strokeWidth={2.5} />
-              {unlock.amount_paid.toLocaleString("en-IN")}
+              {(campaign?.budget_per_winner ?? unlock.amount_paid).toLocaleString("en-IN")}
             </p>
             <p className="mt-1 text-sm text-text-secondary">
               Added to your wallet{formatEventDate(unlock.unlocked_at) ? ` on ${formatEventDate(unlock.unlocked_at)}` : ""}.
