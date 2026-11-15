@@ -641,6 +641,24 @@ export const collabHubApi = {
     }
   },
 
+  /** The active platform fee rule, so the UI can show a brand the real
+   * unlock total (budget + fee + GST) before they ever reach checkout —
+   * create-campaign-order applies the same row server-side. */
+  getActiveFeeRule: async (): Promise<{ platform_fee_percent: number; gst_percent: number } | null> => {
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase
+        .from("platform_fee_rules")
+        .select("platform_fee_percent, gst_percent")
+        .eq("is_active", true)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
   /** Phase 3 step 1: brand pays to unlock the clean video — only possible
    * once the submission is 'approved' (enforced server-side). */
   createCampaignOrder: async ({

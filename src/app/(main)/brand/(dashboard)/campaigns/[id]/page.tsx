@@ -27,6 +27,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 
+import { calcUnlockTotal } from "@/components/collabhub/campaignDisplay";
 import { SubmissionVideoPlayer } from "@/components/collabhub/SubmissionVideoPlayer";
 import OptimizedImage from "@/components/OptimizedImage";
 import { useAuth } from "@/contexts/AuthContext";
@@ -103,6 +104,7 @@ function ApplicantCard({
   submission,
   unlock,
   budgetPerWinner,
+  feeRule,
   creatorProfile,
   busyId,
   feedbackDrafts,
@@ -116,6 +118,7 @@ function ApplicantCard({
   submission?: CampaignSubmission;
   unlock?: CampaignUnlock;
   budgetPerWinner: number;
+  feeRule: { platform_fee_percent: number; gst_percent: number } | null;
   creatorProfile?: CreatorProfile;
   busyId: string | null;
   feedbackDrafts: Record<string, string>;
@@ -286,26 +289,31 @@ function ApplicantCard({
                         {busyId === app.id ? "Loading…" : "Download"}
                       </button>
                     </div>
-                  ) : (
-                    <div className="flex items-center gap-3 rounded-xl border border-dashed border-accent-link/30 bg-accent-link/5 p-3">
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-link/10 text-accent-link">
-                        <Lock size={15} />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-text-primary">Clean video locked</p>
-                        <p className="text-xs text-text-muted">Pay to unlock — becomes the creator&apos;s earnings</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleUnlockPayment(app.id)}
-                        disabled={busyId === app.id}
-                        className="flex h-9 shrink-0 items-center justify-center rounded-full px-4 text-xs font-semibold text-text-on-accent disabled:opacity-60"
-                        style={{ backgroundImage: "var(--gradient-button-primary)" }}
-                      >
-                        {busyId === app.id ? "Processing…" : `Pay ₹${budgetPerWinner}`}
-                      </button>
-                    </div>
-                  )
+                  ) : (() => {
+                      const { convenienceFee, totalAmount } = calcUnlockTotal(budgetPerWinner, feeRule);
+                      return (
+                        <div className="flex items-center gap-3 rounded-xl border border-dashed border-accent-link/30 bg-accent-link/5 p-3">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-link/10 text-accent-link">
+                            <Lock size={15} />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-text-primary">Clean video locked</p>
+                            <p className="text-xs text-text-muted">
+                              ₹{budgetPerWinner} to creator + ₹{convenienceFee} platform fee (incl. GST)
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleUnlockPayment(app.id)}
+                            disabled={busyId === app.id}
+                            className="flex h-9 shrink-0 items-center justify-center rounded-full px-4 text-xs font-semibold text-text-on-accent disabled:opacity-60"
+                            style={{ backgroundImage: "var(--gradient-button-primary)" }}
+                          >
+                            {busyId === app.id ? "Processing…" : `Pay ₹${totalAmount}`}
+                          </button>
+                        </div>
+                      );
+                    })()
                 ) : submission.feedback ? (
                   <p className="text-xs text-text-muted">Your feedback: &ldquo;{submission.feedback}&rdquo;</p>
                 ) : null}
@@ -351,6 +359,7 @@ export default function BrandCampaignDetailPage() {
   const [submissions, setSubmissions] = useState<Record<string, CampaignSubmission>>({});
   const [unlocks, setUnlocks] = useState<Record<string, CampaignUnlock>>({});
   const [creatorProfiles, setCreatorProfiles] = useState<Record<string, CreatorProfile>>({});
+  const [feeRule, setFeeRule] = useState<{ platform_fee_percent: number; gst_percent: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -361,16 +370,18 @@ export default function BrandCampaignDetailPage() {
 
   const load = async () => {
     try {
-      const [c, apps, subs, unlockRows] = await Promise.all([
+      const [c, apps, subs, unlockRows, rule] = await Promise.all([
         collabHubApi.getCampaign(campaignId),
         collabHubApi.getApplicationsForCampaign(campaignId),
         collabHubApi.getSubmissionsForCampaign(campaignId),
         collabHubApi.getUnlocksForCampaign(campaignId),
+        collabHubApi.getActiveFeeRule().catch(() => null),
       ]);
       setCampaign(c);
       setApplications(apps);
       setSubmissions(subs);
       setUnlocks(unlockRows);
+      setFeeRule(rule);
       const creatorIds = [...new Set(apps.map((a) => a.creator_id))];
       setCreatorProfiles(await collabHubApi.getCreatorProfiles(creatorIds));
     } catch (err) {
@@ -714,6 +725,7 @@ export default function BrandCampaignDetailPage() {
                 submission={submissions[app.id]}
                 unlock={unlocks[app.id]}
                 budgetPerWinner={campaign.budget_per_winner}
+                feeRule={feeRule}
                 creatorProfile={creatorProfiles[app.creator_id]}
                 busyId={busyId}
                 feedbackDrafts={feedbackDrafts}
@@ -751,6 +763,7 @@ export default function BrandCampaignDetailPage() {
                 submission={submissions[app.id]}
                 unlock={unlocks[app.id]}
                 budgetPerWinner={campaign.budget_per_winner}
+                feeRule={feeRule}
                 creatorProfile={creatorProfiles[app.creator_id]}
                 busyId={busyId}
                 feedbackDrafts={feedbackDrafts}

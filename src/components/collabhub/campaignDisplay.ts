@@ -71,6 +71,24 @@ export function isCampaignClosed(campaign: Campaign) {
   return isDeadlinePassed(campaign.application_deadline);
 }
 
+/**
+ * What a brand actually pays to unlock a winner's clean video: the creator's
+ * payout plus a platform convenience fee (+ GST on that fee), on top —
+ * mirrors create-campaign-order's server-side math exactly, so the UI never
+ * promises a number the Razorpay checkout then overrides.
+ */
+export function calcUnlockTotal(
+  budgetPerWinner: number,
+  feeRule: { platform_fee_percent: number; gst_percent: number } | null,
+) {
+  const platformFeePercent = feeRule?.platform_fee_percent ?? 5;
+  const gstPercent = feeRule?.gst_percent ?? 18;
+  const platformBaseFee = (budgetPerWinner * platformFeePercent) / 100;
+  const gstOnFee = (platformBaseFee * gstPercent) / 100;
+  const convenienceFee = Math.round(platformBaseFee + gstOnFee);
+  return { convenienceFee, totalAmount: Math.round(budgetPerWinner + platformBaseFee + gstOnFee) };
+}
+
 /** Brand-entered text, split into its non-blank lines (brands often paste points separated by blank lines). */
 export function textLines(text: string) {
   return text
