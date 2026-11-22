@@ -106,6 +106,7 @@ function ApplicantCard({
   budgetPerWinner,
   feeRule,
   brandName,
+  campaignTitle,
   creatorProfile,
   busyId,
   feedbackDrafts,
@@ -121,6 +122,7 @@ function ApplicantCard({
   budgetPerWinner: number;
   feeRule: { platform_fee_percent: number; gst_percent: number } | null;
   brandName: string;
+  campaignTitle: string;
   creatorProfile?: CreatorProfile;
   busyId: string | null;
   feedbackDrafts: Record<string, string>;
@@ -135,39 +137,79 @@ function ApplicantCard({
   const handleDownloadReceipt = () => {
     if (!unlock) return;
     const creatorName = app.creator?.name || "the creator";
-    const unlockDate = new Date(unlock.unlocked_at).toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-    const agreementDate = submission?.agreement_accepted_at
-      ? new Date(submission.agreement_accepted_at).toLocaleDateString("en-IN", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        })
-      : "an unknown date";
-    const lines = [
-      "OWNERSHIP TRANSFER RECEIPT",
-      "",
-      `Brand: ${brandName}`,
-      `Creator: ${creatorName}`,
-      `Amount paid: ₹${unlock.amount_paid}`,
-      `Ownership transferred on: ${unlockDate}`,
-      `Creator agreed to the usage terms on: ${agreementDate}`,
-      "",
-      "This video's ownership was transferred under the following terms, which the",
-      `creator agreed to before submission (see Section 1: Full ownership transfer):`,
-      "",
-      ...usageAgreementPoints(brandName).map((point, i) => `${i + 1}. ${point}`),
-    ];
-    const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `ownership-receipt-${app.id}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const receiptNo = `CIQ-OWN-${String(unlock.receipt_number).padStart(6, "0")}`;
+    const fmtDate = (iso: string) =>
+      new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+    const unlockDate = fmtDate(unlock.unlocked_at);
+    const agreementDate = submission?.agreement_accepted_at ? fmtDate(submission.agreement_accepted_at) : "an unknown date";
+    const esc = (s: string) =>
+      s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+    const html = `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Ownership Transfer Receipt — ${esc(receiptNo)}</title>
+<style>
+  body { font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: #1a1a1a; max-width: 720px; margin: 0 auto; padding: 48px 32px; }
+  .brand { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+  header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #1a1a1a; padding-bottom: 20px; margin-bottom: 24px; }
+  header h1 { font-size: 16px; margin: 0 0 6px; text-align: right; }
+  header p { margin: 2px 0; font-size: 13px; color: #555; text-align: right; }
+  .parties { display: flex; gap: 32px; margin-bottom: 24px; }
+  .parties div { flex: 1; }
+  .parties span { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin-bottom: 4px; }
+  .parties strong { font-size: 15px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 28px; }
+  table td { padding: 8px 0; font-size: 14px; border-bottom: 1px solid #eee; }
+  table td:first-child { color: #666; }
+  table td:last-child { text-align: right; font-weight: 600; }
+  table tr.total td { border-top: 2px solid #1a1a1a; border-bottom: none; font-size: 16px; padding-top: 12px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: #555; margin: 0 0 12px; }
+  ol { padding-left: 18px; font-size: 12.5px; line-height: 1.6; color: #333; }
+  ol li { margin-bottom: 8px; text-align: justify; }
+  footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #eee; font-size: 11px; color: #888; line-height: 1.6; }
+  .print-btn { position: fixed; top: 20px; right: 20px; background: #7c3aed; color: #fff; border: none; border-radius: 999px; padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  @media print { .print-btn { display: none; } body { padding: 0; } }
+</style>
+</head>
+<body>
+  <button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
+  <header>
+    <div class="brand">Connectiqo</div>
+    <div>
+      <h1>Ownership Transfer Receipt</h1>
+      <p>No. ${esc(receiptNo)}</p>
+      <p>Date: ${unlockDate}</p>
+    </div>
+  </header>
+  <div class="parties">
+    <div><span>Brand</span><strong>${esc(brandName)}</strong></div>
+    <div><span>Creator</span><strong>${esc(creatorName)}</strong></div>
+  </div>
+  <h2>Transaction Details</h2>
+  <table>
+    <tr><td>Campaign</td><td>${esc(campaignTitle)}</td></tr>
+    <tr><td>Amount to creator</td><td>₹${budgetPerWinner}</td></tr>
+    <tr><td>Platform fee (incl. GST)</td><td>₹${unlock.amount_paid - budgetPerWinner}</td></tr>
+    <tr class="total"><td>Total paid</td><td>₹${unlock.amount_paid}</td></tr>
+    <tr><td>Creator agreed to usage terms</td><td>${agreementDate}</td></tr>
+    <tr><td>Ownership transferred</td><td>${unlockDate}</td></tr>
+  </table>
+  <h2>Full Terms</h2>
+  <ol>
+    ${usageAgreementPoints(brandName).map((point) => `<li>${esc(point)}</li>`).join("\n    ")}
+  </ol>
+  <footer>
+    This is an informational record generated from Connectiqo's records at the time of transfer, not a notarized legal certificate. For any dispute or verification, reference receipt number ${esc(receiptNo)}.
+  </footer>
+</body>
+</html>`;
+
+    const win = window.open("", "_blank");
+    if (!win) return;
+    win.document.write(html);
+    win.document.close();
   };
 
   return (
@@ -809,6 +851,7 @@ export default function BrandCampaignDetailPage() {
                 budgetPerWinner={campaign.budget_per_winner}
                 feeRule={feeRule}
                 brandName={campaign.brand?.name || "the brand"}
+                campaignTitle={campaign.title}
                 creatorProfile={creatorProfiles[app.creator_id]}
                 busyId={busyId}
                 feedbackDrafts={feedbackDrafts}
@@ -848,6 +891,7 @@ export default function BrandCampaignDetailPage() {
                 budgetPerWinner={campaign.budget_per_winner}
                 feeRule={feeRule}
                 brandName={campaign.brand?.name || "the brand"}
+                campaignTitle={campaign.title}
                 creatorProfile={creatorProfiles[app.creator_id]}
                 busyId={busyId}
                 feedbackDrafts={feedbackDrafts}

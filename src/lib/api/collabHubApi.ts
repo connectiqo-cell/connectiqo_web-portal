@@ -111,6 +111,10 @@ export interface CampaignUnlock {
   creator_id: string;
   amount_paid: number;
   unlocked_at: string;
+  /** Stable reference number for the ownership-transfer receipt — assigned
+   * once at transfer time, so the same transaction always shows the same
+   * number no matter how many times the receipt is downloaded. */
+  receipt_number: number;
 }
 
 export interface CreateCampaignOrderResponse {
