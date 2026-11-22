@@ -110,6 +110,13 @@ export function usageAgreementPoints(brandName: string) {
   ];
 }
 
+/** Fills the "{{brand}}" placeholder in clauses fetched from
+ * legal_agreements (the shared source both web and mobile read) — the DB
+ * copy can't bake in a brand name server-side since it varies per campaign. */
+export function fillAgreementPlaceholders(clauses: string[], brandName: string) {
+  return clauses.map((c) => c.replaceAll("{{brand}}", brandName));
+}
+
 /** Brand-entered text, split into its non-blank lines (brands often paste points separated by blank lines). */
 export function textLines(text: string) {
   return text

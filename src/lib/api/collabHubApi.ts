@@ -677,6 +677,26 @@ export const collabHubApi = {
     }
   },
 
+  /** The creator video-usage agreement's clauses, with "{{brand}}" still a
+   * literal placeholder — the one shared source both web and a future
+   * mobile implementation should read, instead of each hand-copying the
+   * wording into their own codebase (where it can silently drift). Returns
+   * null on any failure so callers can fall back to a hardcoded copy. */
+  getVideoUsageAgreement: async (): Promise<string[] | null> => {
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase
+        .from("legal_agreements")
+        .select("clauses")
+        .eq("id", "creator_video_usage")
+        .maybeSingle();
+      if (error || !data) return null;
+      return data.clauses as string[];
+    } catch {
+      return null;
+    }
+  },
+
   /** Phase 3 step 1: brand pays to unlock the clean video — only possible
    * once the submission is 'approved' (enforced server-side). */
   createCampaignOrder: async ({

@@ -24,7 +24,7 @@ import { useEffect, useId, useRef, useState } from "react";
 
 import OptimizedImage from "@/components/OptimizedImage";
 import { SubmissionVideoPlayer } from "@/components/collabhub/SubmissionVideoPlayer";
-import { getCategoryStyle, isDeadlinePassed, usageAgreementPoints } from "@/components/collabhub/campaignDisplay";
+import { fillAgreementPlaceholders, getCategoryStyle, isDeadlinePassed, usageAgreementPoints } from "@/components/collabhub/campaignDisplay";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   collabHubApi,
@@ -244,6 +244,7 @@ export default function ApplicationSubmissionPage() {
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [agreementChecked, setAgreementChecked] = useState(false);
+  const [agreementTemplate, setAgreementTemplate] = useState<string[] | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState("");
@@ -293,6 +294,12 @@ export default function ApplicationSubmissionPage() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applicationId]);
+
+  // Shared source for the agreement wording (legal_agreements table) — falls
+  // back to the hardcoded copy below if the fetch fails for any reason.
+  useEffect(() => {
+    collabHubApi.getVideoUsageAgreement().then(setAgreementTemplate);
+  }, []);
 
   // Live updates so the creator sees a brand's decision — accepted,
   // approved, revision requested — the moment it happens, and sees the
@@ -590,7 +597,7 @@ export default function ApplicationSubmissionPage() {
         <div className="flex flex-col gap-2 rounded-xl border border-border-light bg-surface-sheet p-3">
           <p className="text-xs font-semibold text-text-primary">Video usage agreement</p>
           <ul className="flex max-h-56 flex-col gap-2 overflow-y-auto text-[11px] leading-relaxed text-text-secondary">
-            {usageAgreementPoints(brandName).map((point, i) => (
+            {(agreementTemplate ? fillAgreementPlaceholders(agreementTemplate, brandName) : usageAgreementPoints(brandName)).map((point, i) => (
               <li key={i} className="flex gap-1.5">
                 <span className="shrink-0 text-text-muted">{i + 1}.</span>
                 <span className="text-justify">{point}</span>

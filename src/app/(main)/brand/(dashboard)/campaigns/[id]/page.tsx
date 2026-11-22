@@ -27,7 +27,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 
-import { calcUnlockTotal, usageAgreementPoints } from "@/components/collabhub/campaignDisplay";
+import { calcUnlockTotal, fillAgreementPlaceholders, usageAgreementPoints } from "@/components/collabhub/campaignDisplay";
 import { SubmissionVideoPlayer } from "@/components/collabhub/SubmissionVideoPlayer";
 import OptimizedImage from "@/components/OptimizedImage";
 import { useAuth } from "@/contexts/AuthContext";
@@ -107,6 +107,7 @@ function ApplicantCard({
   feeRule,
   brandName,
   campaignTitle,
+  agreementTemplate,
   creatorProfile,
   busyId,
   feedbackDrafts,
@@ -123,6 +124,7 @@ function ApplicantCard({
   feeRule: { platform_fee_percent: number; gst_percent: number } | null;
   brandName: string;
   campaignTitle: string;
+  agreementTemplate: string[] | null;
   creatorProfile?: CreatorProfile;
   busyId: string | null;
   feedbackDrafts: Record<string, string>;
@@ -133,6 +135,9 @@ function ApplicantCard({
   handleDownloadClean: (applicationId: string) => void;
 }) {
   const [showAgreement, setShowAgreement] = useState(false);
+  const agreementPoints = agreementTemplate
+    ? fillAgreementPlaceholders(agreementTemplate, brandName)
+    : usageAgreementPoints(brandName);
 
   const handleDownloadReceipt = () => {
     if (!unlock) return;
@@ -202,7 +207,7 @@ function ApplicantCard({
   <p style="margin: -16px 0 24px;"><a href="${esc(submissionUrl)}" target="_blank" rel="noopener noreferrer" style="font-size: 13px; color: #7c3aed; font-weight: 600;">View this submission in Connectiqo →</a></p>
   <h2>Full Terms</h2>
   <ol>
-    ${usageAgreementPoints(brandName).map((point) => `<li>${esc(point)}</li>`).join("\n    ")}
+    ${agreementPoints.map((point) => `<li>${esc(point)}</li>`).join("\n    ")}
   </ol>
   <footer>
     This is an informational record generated from Connectiqo's records at the time of transfer, not a notarized legal certificate. For any dispute or verification, reference receipt number ${esc(receiptNo)} and the submission reference above.
@@ -338,7 +343,7 @@ function ApplicantCard({
                     </button>
                     {showAgreement ? (
                       <ul className="flex max-h-56 flex-col gap-2 overflow-y-auto rounded-lg border border-border-light bg-surface-panel p-2.5 text-[11px] leading-relaxed text-text-secondary">
-                        {usageAgreementPoints(brandName).map((point, i) => (
+                        {agreementPoints.map((point, i) => (
                           <li key={i} className="flex gap-1.5">
                             <span className="shrink-0 text-text-muted">{i + 1}.</span>
                             <span className="text-justify">{point}</span>
@@ -488,6 +493,7 @@ export default function BrandCampaignDetailPage() {
   const [unlocks, setUnlocks] = useState<Record<string, CampaignUnlock>>({});
   const [creatorProfiles, setCreatorProfiles] = useState<Record<string, CreatorProfile>>({});
   const [feeRule, setFeeRule] = useState<{ platform_fee_percent: number; gst_percent: number } | null>(null);
+  const [agreementTemplate, setAgreementTemplate] = useState<string[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -518,6 +524,12 @@ export default function BrandCampaignDetailPage() {
       setLoading(false);
     }
   };
+
+  // Shared source for the agreement wording (legal_agreements table) — falls
+  // back to the hardcoded copy in ApplicantCard if the fetch fails.
+  useEffect(() => {
+    collabHubApi.getVideoUsageAgreement().then(setAgreementTemplate);
+  }, []);
 
   useEffect(() => {
     if (!campaignId) return;
@@ -869,6 +881,7 @@ export default function BrandCampaignDetailPage() {
                 feeRule={feeRule}
                 brandName={campaign.brand?.name || "the brand"}
                 campaignTitle={campaign.title}
+                agreementTemplate={agreementTemplate}
                 creatorProfile={creatorProfiles[app.creator_id]}
                 busyId={busyId}
                 feedbackDrafts={feedbackDrafts}
@@ -909,6 +922,7 @@ export default function BrandCampaignDetailPage() {
                 feeRule={feeRule}
                 brandName={campaign.brand?.name || "the brand"}
                 campaignTitle={campaign.title}
+                agreementTemplate={agreementTemplate}
                 creatorProfile={creatorProfiles[app.creator_id]}
                 busyId={busyId}
                 feedbackDrafts={feedbackDrafts}
