@@ -142,6 +142,7 @@ function ApplicantCard({
       new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
     const unlockDate = fmtDate(unlock.unlocked_at);
     const agreementDate = submission?.agreement_accepted_at ? fmtDate(submission.agreement_accepted_at) : "an unknown date";
+    const submissionUrl = `${window.location.origin}${ROUTES.brandCampaign(app.campaign_id)}#app-${app.id}`;
     const esc = (s: string) =>
       s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -193,15 +194,18 @@ function ApplicantCard({
     <tr><td>Amount to creator</td><td>₹${budgetPerWinner}</td></tr>
     <tr><td>Platform fee (incl. GST)</td><td>₹${unlock.amount_paid - budgetPerWinner}</td></tr>
     <tr class="total"><td>Total paid</td><td>₹${unlock.amount_paid}</td></tr>
+    <tr><td>Transaction ID (Razorpay)</td><td>${esc(unlock.razorpay_payment_id)}</td></tr>
+    <tr><td>Submission reference</td><td>${esc(app.id)}</td></tr>
     <tr><td>Creator agreed to usage terms</td><td>${agreementDate}</td></tr>
     <tr><td>Ownership transferred</td><td>${unlockDate}</td></tr>
   </table>
+  <p style="margin: -16px 0 24px;"><a href="${esc(submissionUrl)}" style="font-size: 13px; color: #7c3aed; font-weight: 600;">View this submission in Connectiqo →</a></p>
   <h2>Full Terms</h2>
   <ol>
     ${usageAgreementPoints(brandName).map((point) => `<li>${esc(point)}</li>`).join("\n    ")}
   </ol>
   <footer>
-    This is an informational record generated from Connectiqo's records at the time of transfer, not a notarized legal certificate. For any dispute or verification, reference receipt number ${esc(receiptNo)}.
+    This is an informational record generated from Connectiqo's records at the time of transfer, not a notarized legal certificate. For any dispute or verification, reference receipt number ${esc(receiptNo)} and the submission reference above.
   </footer>
 </body>
 </html>`;
@@ -213,7 +217,7 @@ function ApplicantCard({
   };
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-border-light bg-surface-panel p-4">
+    <div id={`app-${app.id}`} className="flex flex-col gap-3 rounded-xl border border-border-light bg-surface-panel p-4">
       <div className="flex items-center gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip ring-2 ring-surface-panel">
           {app.creator?.avatar_url ? (

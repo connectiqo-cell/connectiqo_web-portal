@@ -115,6 +115,10 @@ export interface CampaignUnlock {
    * once at transfer time, so the same transaction always shows the same
    * number no matter how many times the receipt is downloaded. */
   receipt_number: number;
+  /** The actual Razorpay gateway transaction ID — externally verifiable in
+   * the Razorpay dashboard, unlike receipt_number which is only Connectiqo's
+   * own internal reference. */
+  razorpay_payment_id: string;
 }
 
 export interface CreateCampaignOrderResponse {
