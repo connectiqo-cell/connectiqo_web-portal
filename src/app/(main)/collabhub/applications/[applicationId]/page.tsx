@@ -589,7 +589,7 @@ export default function ApplicationSubmissionPage() {
       {needsAgreement ? (
         <div className="flex flex-col gap-2 rounded-xl border border-border-light bg-surface-sheet p-3">
           <p className="text-xs font-semibold text-text-primary">Video usage agreement</p>
-          <ul className="flex flex-col gap-1.5 text-[11px] leading-relaxed text-text-secondary">
+          <ul className="flex max-h-56 flex-col gap-2 overflow-y-auto text-[11px] leading-relaxed text-text-secondary">
             {usageAgreementPoints(brandName).map((point, i) => (
               <li key={i} className="flex gap-1.5">
                 <span className="shrink-0 text-text-muted">{i + 1}.</span>

@@ -131,6 +131,45 @@ function ApplicantCard({
   handleDownloadClean: (applicationId: string) => void;
 }) {
   const [showAgreement, setShowAgreement] = useState(false);
+
+  const handleDownloadReceipt = () => {
+    if (!unlock) return;
+    const creatorName = app.creator?.name || "the creator";
+    const unlockDate = new Date(unlock.unlocked_at).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+    const agreementDate = submission?.agreement_accepted_at
+      ? new Date(submission.agreement_accepted_at).toLocaleDateString("en-IN", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })
+      : "an unknown date";
+    const lines = [
+      "OWNERSHIP TRANSFER RECEIPT",
+      "",
+      `Brand: ${brandName}`,
+      `Creator: ${creatorName}`,
+      `Amount paid: ₹${unlock.amount_paid}`,
+      `Ownership transferred on: ${unlockDate}`,
+      `Creator agreed to the usage terms on: ${agreementDate}`,
+      "",
+      "This video's ownership was transferred under the following terms, which the",
+      `creator agreed to before submission (see Section 1: Full ownership transfer):`,
+      "",
+      ...usageAgreementPoints(brandName).map((point, i) => `${i + 1}. ${point}`),
+    ];
+    const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ownership-receipt-${app.id}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-border-light bg-surface-panel p-4">
       <div className="flex items-center gap-3">
@@ -252,7 +291,7 @@ function ApplicantCard({
                       </span>
                     </button>
                     {showAgreement ? (
-                      <ul className="flex flex-col gap-1 rounded-lg border border-border-light bg-surface-panel p-2.5 text-[11px] leading-relaxed text-text-secondary">
+                      <ul className="flex max-h-56 flex-col gap-2 overflow-y-auto rounded-lg border border-border-light bg-surface-panel p-2.5 text-[11px] leading-relaxed text-text-secondary">
                         {usageAgreementPoints(brandName).map((point, i) => (
                           <li key={i} className="flex gap-1.5">
                             <span className="shrink-0 text-text-muted">{i + 1}.</span>
@@ -309,11 +348,19 @@ function ApplicantCard({
                         <CheckCircle2 size={16} />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-accent-success">Unlocked</p>
+                        <p className="text-sm font-semibold text-accent-success">You own this video</p>
                         <p className="text-xs text-text-muted">
                           ₹{unlock.amount_paid} paid — ₹{budgetPerWinner} credited to the creator&apos;s wallet
                         </p>
                       </div>
+                      <button
+                        type="button"
+                        onClick={handleDownloadReceipt}
+                        className="flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-border-light bg-surface-panel px-4 text-xs font-semibold text-text-primary hover:bg-surface-chip"
+                      >
+                        <FileText size={13} />
+                        Receipt
+                      </button>
                       <button
                         type="button"
                         onClick={() => handleDownloadClean(app.id)}
@@ -332,7 +379,7 @@ function ApplicantCard({
                             <Lock size={15} />
                           </span>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold text-text-primary">Clean video locked</p>
+                            <p className="text-sm font-semibold text-text-primary">Buy full ownership of this video</p>
                             <p className="text-xs text-text-muted">
                               ₹{budgetPerWinner} to creator + ₹{convenienceFee} platform fee (incl. GST)
                             </p>
