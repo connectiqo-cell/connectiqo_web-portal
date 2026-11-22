@@ -199,7 +199,7 @@ function ApplicantCard({
     <tr><td>Creator agreed to usage terms</td><td>${agreementDate}</td></tr>
     <tr><td>Ownership transferred</td><td>${unlockDate}</td></tr>
   </table>
-  <p style="margin: -16px 0 24px;"><a href="${esc(submissionUrl)}" style="font-size: 13px; color: #7c3aed; font-weight: 600;">View this submission in Connectiqo →</a></p>
+  <p style="margin: -16px 0 24px;"><a href="${esc(submissionUrl)}" target="_blank" rel="noopener noreferrer" style="font-size: 13px; color: #7c3aed; font-weight: 600;">View this submission in Connectiqo →</a></p>
   <h2>Full Terms</h2>
   <ol>
     ${usageAgreementPoints(brandName).map((point) => `<li>${esc(point)}</li>`).join("\n    ")}
@@ -528,6 +528,19 @@ export default function BrandCampaignDetailPage() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [campaignId]);
+
+  // A receipt's "View this submission" link points at #app-<id>, but the
+  // applicant cards don't exist in the DOM until this fetch finishes — the
+  // browser's native on-load hash scroll has already fired (and found
+  // nothing) by then, so it has to be done manually once loading flips off.
+  useEffect(() => {
+    if (loading) return;
+    const hash = window.location.hash.slice(1);
+    if (!hash) return;
+    const el = document.getElementById(hash);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [loading]);
 
   // Keeps the applicant list's own ids current for the submissions realtime
   // filter below without re-subscribing every time applications changes.
