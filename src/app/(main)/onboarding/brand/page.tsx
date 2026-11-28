@@ -66,6 +66,11 @@ export default function BrandOnboardingPage() {
     try {
       await profileApi.updateBrandProfile({
         userId: user.id,
+        // company_name is NOT NULL — required so this upsert still succeeds
+        // as a fresh INSERT for any brand account that reaches onboarding
+        // without an existing brand_profiles row. profiles.name is already
+        // the company name for brand accounts (set at signup).
+        companyName: profile?.name || "",
         website: website.trim(),
         ...(currentLogo ? { logoUrl: currentLogo } : {}),
         industry,

@@ -111,6 +111,14 @@ export interface CampaignUnlock {
   creator_id: string;
   amount_paid: number;
   unlocked_at: string;
+  /** Stable reference number for the ownership-transfer receipt — assigned
+   * once at transfer time, so the same transaction always shows the same
+   * number no matter how many times the receipt is downloaded. */
+  receipt_number: number;
+  /** The actual Razorpay gateway transaction ID — externally verifiable in
+   * the Razorpay dashboard, unlike receipt_number which is only Connectiqo's
+   * own internal reference. */
+  razorpay_payment_id: string;
 }
 
 export interface CreateCampaignOrderResponse {
@@ -666,6 +674,26 @@ export const collabHubApi = {
       return data;
     } catch (error) {
       throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
+  /** The creator video-usage agreement's clauses, with "{{brand}}" still a
+   * literal placeholder — the one shared source both web and a future
+   * mobile implementation should read, instead of each hand-copying the
+   * wording into their own codebase (where it can silently drift). Returns
+   * null on any failure so callers can fall back to a hardcoded copy. */
+  getVideoUsageAgreement: async (): Promise<string[] | null> => {
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase
+        .from("legal_agreements")
+        .select("clauses")
+        .eq("id", "creator_video_usage")
+        .maybeSingle();
+      if (error || !data) return null;
+      return data.clauses as string[];
+    } catch {
+      return null;
     }
   },
 

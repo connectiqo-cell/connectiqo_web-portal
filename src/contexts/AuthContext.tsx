@@ -24,6 +24,7 @@ export interface Profile {
   role: "mentor" | "learner" | "both" | "brand";
   username: string;
   avatar_url?: string | null;
+  phone?: string | null;
   is_frozen?: boolean;
   is_admin?: boolean;
   created_at?: string;
@@ -140,12 +141,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const timeoutId = setTimeout(() => controller.abort(), 8000);
 
       try {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", userId)
-          .abortSignal(controller.signal)
-          .single();
+        const [{ data, error }, phoneRes] = await Promise.all([
+          supabase
+            .from("profiles")
+            // phone excluded — authenticated has no column-level SELECT
+            // grant on it (PII, protected from the blanket "read any
+            // profile" policies), fetched separately below via a
+            // security-definer function scoped to the caller's own row.
+            .select("id, role, name, email, avatar_url, created_at, is_frozen, fcm_token, username, deleted_at, app_build, app_platform")
+            .eq("id", userId)
+            .abortSignal(controller.signal)
+            .single(),
+          supabase.rpc("get_my_phone"),
+        ]);
+        const phone = phoneRes.error ? null : (phoneRes.data as string | null);
 
         clearTimeout(timeoutId);
 
@@ -183,7 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setLoading(false);
           return;
         } else {
-          setProfile(data as Profile);
+          setProfile({ ...data, phone } as Profile);
           void loadMentorFreeze(userId);
         }
         setLoading(false);

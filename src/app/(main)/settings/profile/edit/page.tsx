@@ -24,6 +24,7 @@ export default function EditProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [username, setUsername] = useState("");
   const [usernameCheck, setUsernameCheck] = useState<{ value: string; available: boolean } | null>(null);
   const [bio, setBio] = useState("");
@@ -105,6 +106,7 @@ export default function EditProfilePage() {
     // rather than setting state synchronously inside the effect body.
     void Promise.resolve().then(() => {
       setName(profile.name || "");
+      setPhone(profile.phone || "");
       setUsername(profile.username || "");
       setAvatarUrl(profile.avatar_url || null);
     });
@@ -319,7 +321,7 @@ export default function EditProfilePage() {
     setError("");
     setSaved(false);
     try {
-      const tasks: Promise<unknown>[] = [profileApi.updateProfile({ userId: user.id, name, username })];
+      const tasks: Promise<unknown>[] = [profileApi.updateProfile({ userId: user.id, name, username, phone })];
       if (isMentor) {
         tasks.push(
           profileApi.updateMentorProfile({
@@ -518,6 +520,19 @@ export default function EditProfilePage() {
               app.connectiqo.com/mentor/{username}
             </span>
           ) : null}
+        </label>
+
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+            Phone Number
+          </span>
+          <input
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="e.g. +91 98765 43210"
+            className="rounded-xl border border-border-light bg-surface-sheet px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
+          />
         </label>
       </div>
 

@@ -27,7 +27,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 
-import { calcUnlockTotal, usageAgreementPoints } from "@/components/collabhub/campaignDisplay";
+import { calcUnlockTotal, fillAgreementPlaceholders, usageAgreementPoints } from "@/components/collabhub/campaignDisplay";
 import { SubmissionVideoPlayer } from "@/components/collabhub/SubmissionVideoPlayer";
 import OptimizedImage from "@/components/OptimizedImage";
 import { useAuth } from "@/contexts/AuthContext";
@@ -106,6 +106,8 @@ function ApplicantCard({
   budgetPerWinner,
   feeRule,
   brandName,
+  campaignTitle,
+  agreementTemplate,
   creatorProfile,
   busyId,
   feedbackDrafts,
@@ -121,6 +123,8 @@ function ApplicantCard({
   budgetPerWinner: number;
   feeRule: { platform_fee_percent: number; gst_percent: number } | null;
   brandName: string;
+  campaignTitle: string;
+  agreementTemplate: string[] | null;
   creatorProfile?: CreatorProfile;
   busyId: string | null;
   feedbackDrafts: Record<string, string>;
@@ -131,8 +135,94 @@ function ApplicantCard({
   handleDownloadClean: (applicationId: string) => void;
 }) {
   const [showAgreement, setShowAgreement] = useState(false);
+  const agreementPoints = agreementTemplate
+    ? fillAgreementPlaceholders(agreementTemplate, brandName)
+    : usageAgreementPoints(brandName);
+
+  const handleDownloadReceipt = () => {
+    if (!unlock) return;
+    const creatorName = app.creator?.name || "the creator";
+    const receiptNo = `CIQ-OWN-${String(unlock.receipt_number).padStart(6, "0")}`;
+    const fmtDate = (iso: string) =>
+      new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+    const unlockDate = fmtDate(unlock.unlocked_at);
+    const agreementDate = submission?.agreement_accepted_at ? fmtDate(submission.agreement_accepted_at) : "an unknown date";
+    const submissionUrl = `${window.location.origin}${ROUTES.brandCampaign(app.campaign_id)}#app-${app.id}`;
+    const esc = (s: string) =>
+      s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+    const html = `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Ownership Transfer Receipt — ${esc(receiptNo)}</title>
+<style>
+  body { font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: #1a1a1a; max-width: 720px; margin: 0 auto; padding: 48px 32px; }
+  .brand { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+  header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #1a1a1a; padding-bottom: 20px; margin-bottom: 24px; }
+  header h1 { font-size: 16px; margin: 0 0 6px; text-align: right; }
+  header p { margin: 2px 0; font-size: 13px; color: #555; text-align: right; }
+  .parties { display: flex; gap: 32px; margin-bottom: 24px; }
+  .parties div { flex: 1; }
+  .parties span { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin-bottom: 4px; }
+  .parties strong { font-size: 15px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 28px; }
+  table td { padding: 8px 0; font-size: 14px; border-bottom: 1px solid #eee; }
+  table td:first-child { color: #666; }
+  table td:last-child { text-align: right; font-weight: 600; }
+  table tr.total td { border-top: 2px solid #1a1a1a; border-bottom: none; font-size: 16px; padding-top: 12px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: #555; margin: 0 0 12px; }
+  ol { padding-left: 18px; font-size: 12.5px; line-height: 1.6; color: #333; }
+  ol li { margin-bottom: 8px; text-align: justify; }
+  footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #eee; font-size: 11px; color: #888; line-height: 1.6; }
+  .print-btn { position: fixed; top: 20px; right: 20px; background: #7c3aed; color: #fff; border: none; border-radius: 999px; padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  @media print { .print-btn { display: none; } body { padding: 0; } }
+</style>
+</head>
+<body>
+  <button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
+  <header>
+    <div class="brand">Connectiqo</div>
+    <div>
+      <h1>Ownership Transfer Receipt</h1>
+      <p>No. ${esc(receiptNo)}</p>
+      <p>Date: ${unlockDate}</p>
+    </div>
+  </header>
+  <div class="parties">
+    <div><span>Brand</span><strong>${esc(brandName)}</strong></div>
+    <div><span>Creator</span><strong>${esc(creatorName)}</strong></div>
+  </div>
+  <h2>Transaction Details</h2>
+  <table>
+    <tr><td>Campaign</td><td>${esc(campaignTitle)}</td></tr>
+    <tr><td>Amount to creator</td><td>₹${budgetPerWinner}</td></tr>
+    <tr><td>Platform fee (incl. GST)</td><td>₹${unlock.amount_paid - budgetPerWinner}</td></tr>
+    <tr class="total"><td>Total paid</td><td>₹${unlock.amount_paid}</td></tr>
+    <tr><td>Transaction ID (Razorpay)</td><td>${esc(unlock.razorpay_payment_id)}</td></tr>
+    <tr><td>Submission reference</td><td>${esc(app.id)}</td></tr>
+    <tr><td>Creator agreed to usage terms</td><td>${agreementDate}</td></tr>
+    <tr><td>Ownership transferred</td><td>${unlockDate}</td></tr>
+  </table>
+  <p style="margin: -16px 0 24px;"><a href="${esc(submissionUrl)}" target="_blank" rel="noopener noreferrer" style="font-size: 13px; color: #7c3aed; font-weight: 600;">View this submission in Connectiqo →</a></p>
+  <h2>Full Terms</h2>
+  <ol>
+    ${agreementPoints.map((point) => `<li>${esc(point)}</li>`).join("\n    ")}
+  </ol>
+  <footer>
+    This is an informational record generated from Connectiqo's records at the time of transfer, not a notarized legal certificate. For any dispute or verification, reference receipt number ${esc(receiptNo)} and the submission reference above.
+  </footer>
+</body>
+</html>`;
+
+    const win = window.open("", "_blank");
+    if (!win) return;
+    win.document.write(html);
+    win.document.close();
+  };
+
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-border-light bg-surface-panel p-4">
+    <div id={`app-${app.id}`} className="flex flex-col gap-3 rounded-xl border border-border-light bg-surface-panel p-4">
       <div className="flex items-center gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-chip ring-2 ring-surface-panel">
           {app.creator?.avatar_url ? (
@@ -252,8 +342,8 @@ function ApplicantCard({
                       </span>
                     </button>
                     {showAgreement ? (
-                      <ul className="flex flex-col gap-1 rounded-lg border border-border-light bg-surface-panel p-2.5 text-[11px] leading-relaxed text-text-secondary">
-                        {usageAgreementPoints(brandName).map((point, i) => (
+                      <ul className="flex max-h-56 flex-col gap-2 overflow-y-auto rounded-lg border border-border-light bg-surface-panel p-2.5 text-[11px] leading-relaxed text-text-secondary">
+                        {agreementPoints.map((point, i) => (
                           <li key={i} className="flex gap-1.5">
                             <span className="shrink-0 text-text-muted">{i + 1}.</span>
                             <span className="text-justify">{point}</span>
@@ -309,11 +399,19 @@ function ApplicantCard({
                         <CheckCircle2 size={16} />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-accent-success">Unlocked</p>
+                        <p className="text-sm font-semibold text-accent-success">You own this video</p>
                         <p className="text-xs text-text-muted">
                           ₹{unlock.amount_paid} paid — ₹{budgetPerWinner} credited to the creator&apos;s wallet
                         </p>
                       </div>
+                      <button
+                        type="button"
+                        onClick={handleDownloadReceipt}
+                        className="flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-border-light bg-surface-panel px-4 text-xs font-semibold text-text-primary hover:bg-surface-chip"
+                      >
+                        <FileText size={13} />
+                        Receipt
+                      </button>
                       <button
                         type="button"
                         onClick={() => handleDownloadClean(app.id)}
@@ -332,7 +430,7 @@ function ApplicantCard({
                             <Lock size={15} />
                           </span>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold text-text-primary">Clean video locked</p>
+                            <p className="text-sm font-semibold text-text-primary">Buy full ownership of this video</p>
                             <p className="text-xs text-text-muted">
                               ₹{budgetPerWinner} to creator + ₹{convenienceFee} platform fee (incl. GST)
                             </p>
@@ -395,6 +493,7 @@ export default function BrandCampaignDetailPage() {
   const [unlocks, setUnlocks] = useState<Record<string, CampaignUnlock>>({});
   const [creatorProfiles, setCreatorProfiles] = useState<Record<string, CreatorProfile>>({});
   const [feeRule, setFeeRule] = useState<{ platform_fee_percent: number; gst_percent: number } | null>(null);
+  const [agreementTemplate, setAgreementTemplate] = useState<string[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -426,6 +525,12 @@ export default function BrandCampaignDetailPage() {
     }
   };
 
+  // Shared source for the agreement wording (legal_agreements table) — falls
+  // back to the hardcoded copy in ApplicantCard if the fetch fails.
+  useEffect(() => {
+    collabHubApi.getVideoUsageAgreement().then(setAgreementTemplate);
+  }, []);
+
   useEffect(() => {
     if (!campaignId) return;
     // Deferred by a microtask so load()'s setState calls aren't synchronous
@@ -435,6 +540,19 @@ export default function BrandCampaignDetailPage() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [campaignId]);
+
+  // A receipt's "View this submission" link points at #app-<id>, but the
+  // applicant cards don't exist in the DOM until this fetch finishes — the
+  // browser's native on-load hash scroll has already fired (and found
+  // nothing) by then, so it has to be done manually once loading flips off.
+  useEffect(() => {
+    if (loading) return;
+    const hash = window.location.hash.slice(1);
+    if (!hash) return;
+    const el = document.getElementById(hash);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [loading]);
 
   // Keeps the applicant list's own ids current for the submissions realtime
   // filter below without re-subscribing every time applications changes.
@@ -762,6 +880,8 @@ export default function BrandCampaignDetailPage() {
                 budgetPerWinner={campaign.budget_per_winner}
                 feeRule={feeRule}
                 brandName={campaign.brand?.name || "the brand"}
+                campaignTitle={campaign.title}
+                agreementTemplate={agreementTemplate}
                 creatorProfile={creatorProfiles[app.creator_id]}
                 busyId={busyId}
                 feedbackDrafts={feedbackDrafts}
@@ -801,6 +921,8 @@ export default function BrandCampaignDetailPage() {
                 budgetPerWinner={campaign.budget_per_winner}
                 feeRule={feeRule}
                 brandName={campaign.brand?.name || "the brand"}
+                campaignTitle={campaign.title}
+                agreementTemplate={agreementTemplate}
                 creatorProfile={creatorProfiles[app.creator_id]}
                 busyId={busyId}
                 feedbackDrafts={feedbackDrafts}

@@ -6,6 +6,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { InterestsStatusProvider } from "@/contexts/InterestsStatusContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
+import { ProfileCompletenessProvider } from "@/contexts/ProfileCompletenessContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 
 import "../globals.css";
@@ -23,12 +24,12 @@ const geistMono = Geist_Mono({
 
 const SITE_URL = "https://app.connectiqo.com";
 const SITE_DESCRIPTION =
-  "Book live 1-on-1 video mentorship sessions with expert mentors and creators on Connectiqo. Connect, learn, grow, and earn.";
+  "Connect with creators, discover brand campaigns, showcase your talent, and earn through collaborations. Create. Collaborate. Grow.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Connectiqo — Connect . Create . Earn",
+    default: "Connectiqo — Connect. Create. Collab.",
     template: "%s | Connectiqo",
   },
   description: SITE_DESCRIPTION,
@@ -36,14 +37,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "Connectiqo",
-    title: "Connectiqo — Connect . Create . Earn",
+    title: "Connectiqo — Connect. Create. Collab.",
     description: SITE_DESCRIPTION,
     url: SITE_URL,
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Connectiqo — Connect . Create . Earn",
+    title: "Connectiqo — Connect. Create. Collab.",
     description: SITE_DESCRIPTION,
   },
 };
@@ -84,8 +85,10 @@ export default function RootLayout({
           <AuthProvider>
             <NotificationProvider>
               <InterestsStatusProvider>
-                <AppShell>{children}</AppShell>
-                <FrozenAccountNotice />
+                <ProfileCompletenessProvider>
+                  <AppShell>{children}</AppShell>
+                  <FrozenAccountNotice />
+                </ProfileCompletenessProvider>
               </InterestsStatusProvider>
             </NotificationProvider>
           </AuthProvider>

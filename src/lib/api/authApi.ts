@@ -219,7 +219,9 @@ export const authApi = {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("*")
+        // phone excluded — authenticated has no column-level SELECT grant on
+        // it (protected PII); fetch it via the get_my_phone() RPC instead.
+        .select("id, role, name, email, avatar_url, created_at, is_frozen, fcm_token, username, deleted_at, app_build, app_platform")
         .eq("id", userId)
         .single();
       if (error) throw error;

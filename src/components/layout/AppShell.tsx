@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { DashboardSidebar } from "@/components/home/DashboardSidebar";
 import { InterestsPromptBar } from "@/components/InterestsPromptBar";
 import { AppTopBar } from "@/components/layout/AppTopBar";
+import { ProfileCompletenessPromptBar } from "@/components/ProfileCompletenessPromptBar";
 import { useAuth } from "@/contexts/AuthContext";
 
 /** Routes that keep their own full-bleed layout — no persistent app chrome. */
@@ -59,6 +60,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex flex-1 flex-col">
       <AppTopBar onMenuClick={() => setMobileNavOpen(true)} />
       <InterestsPromptBar />
+      <ProfileCompletenessPromptBar />
       <div className="flex flex-1">
         <DashboardSidebar mobileOpen={mobileNavOpen} onMobileClose={() => setMobileNavOpen(false)} />
         <div className="flex min-w-0 flex-1 flex-col">{children}</div>

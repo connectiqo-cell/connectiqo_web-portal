@@ -91,15 +91,30 @@ export function calcUnlockTotal(
 
 /** What a creator agrees to before their first submission on an application
  * — shown on the upload screen, and reused on the brand's side so they can
- * see exactly what was agreed to, not just that it was. */
+ * see exactly what was agreed to, not just that it was. A full ownership
+ * transfer (not a license): once unlocked, the brand owns the video outright,
+ * forever — not a lawyer-reviewed final text, but the policy this reflects
+ * (full assignment, portfolio-use carve-out, India-governed) was confirmed
+ * deliberately, not a default. */
 export function usageAgreementPoints(brandName: string) {
   return [
-    "This is your own original work, and you hold the rights to all music, footage, and other elements used in it.",
-    `If ${brandName} approves and pays to unlock this video, you grant them the right to use, edit, and publish it across their own marketing channels (social media, website, and paid advertising) for this campaign and its ongoing promotion.`,
-    "You may continue using this video on your own channels/portfolio, unless this campaign's brief says otherwise.",
-    `The campaign payout is full and final compensation — no further payment is owed for ${brandName}'s use of this video.`,
-    "You've read this campaign's specific usage terms above (if the brand provided any) and agree to them.",
+    `Full ownership transfer: once this video is approved and unlocked, you irrevocably assign and transfer to ${brandName} all right, title, and interest in it, including all copyright, worldwide and in perpetuity. ${brandName} becomes its full owner and may use, edit, reproduce, publish, or otherwise exploit it in any manner, for any purpose.`,
+    "Your reserved right: despite that transfer, you may still keep a copy to showcase in your own personal portfolio or reel (e.g. to prospective brands or clients) — but you may not otherwise republish, resell, or commercially exploit it once ownership has transferred.",
+    "Your warranties: you confirm this is your own original work; you hold the rights to all music, footage, and other elements used in it; if any other identifiable person appears in it, you have their consent to be filmed and published; and it does not violate any law or infringe anyone else's rights.",
+    `${brandName} may not use this video for any unlawful, discriminatory, or defamatory purpose, even as its owner.`,
+    `The campaign payout is full and final compensation for this transfer of ownership — no further payment is owed regardless of how, or for how long, ${brandName} uses this video going forward.`,
+    "You indemnify the brand against any claim arising from your breach of the warranties above (for example, a third-party music copyright claim).",
+    "Connectiqo facilitates this agreement and the related payment between you and the brand, but is not a party to this transfer and is not liable for either side's breach of it. Connectiqo keeps a timestamped record of your acceptance, which it can provide if a dispute arises.",
+    `Nothing in this agreement creates an employment, agency, or partnership relationship between you, ${brandName}, or Connectiqo.`,
+    "This agreement is governed by the laws of India, with disputes subject to the exclusive jurisdiction of the courts of Haridwar, Uttarakhand.",
   ];
+}
+
+/** Fills the "{{brand}}" placeholder in clauses fetched from
+ * legal_agreements (the shared source both web and mobile read) — the DB
+ * copy can't bake in a brand name server-side since it varies per campaign. */
+export function fillAgreementPlaceholders(clauses: string[], brandName: string) {
+  return clauses.map((c) => c.replaceAll("{{brand}}", brandName));
 }
 
 /** Brand-entered text, split into its non-blank lines (brands often paste points separated by blank lines). */
