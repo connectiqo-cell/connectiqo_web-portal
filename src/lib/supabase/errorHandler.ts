@@ -53,6 +53,15 @@ export function getSupabaseErrorMessage(error: unknown): string {
   if (code === "23502") return "A required field is missing.";
   if (code === "42P01") return "Database error. Please contact support.";
 
+  // 42501 is Postgres' RLS denial. It reaches users verbatim as "new row
+  // violates row-level security policy for table X", which tells them
+  // nothing. The common real cause is a session still running an older JS
+  // bundle that doesn't send a column a tightened policy now requires
+  // (see the usage-agreement migration), and a reload fixes it.
+  if (code === "42501" || message.includes("row-level security policy")) {
+    return "We couldn't save that. Close and reopen the app to get the latest version, then try again. If it keeps happening, contact support.";
+  }
+
   if (
     message.includes("Network request failed") ||
     message.includes("Failed to fetch") ||
