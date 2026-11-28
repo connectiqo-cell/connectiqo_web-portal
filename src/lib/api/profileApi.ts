@@ -30,6 +30,8 @@ export const profileApi = {
     try {
       const { data, error } = await supabase
         .from("profiles")
+        // phone excluded — authenticated has no column-level SELECT grant on
+        // it (see get_my_phone()); use getMyPhone() below if it's needed.
         .select("id, name, avatar_url, email, role, username")
         .eq("id", userId)
         .single();
@@ -199,6 +201,25 @@ export const profileApi = {
     }
   },
 
+  /** Server-computed score (0-100) kept up to date by DB triggers on
+   * mentor_profiles — see creator_profile_completeness() / the
+   * set_creator_profile_completeness trigger. Not derivable client-side
+   * from MentorProfileFields alone (it also factors in profiles.avatar_url). */
+  getProfileCompleteness: async (mentorId: string): Promise<number> => {
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase
+        .from("mentor_profiles")
+        .select("profile_completeness")
+        .eq("id", mentorId)
+        .single();
+      if (error) throw error;
+      return (data?.profile_completeness as number) ?? 0;
+    } catch (error) {
+      throw new Error(getSupabaseErrorMessage(error));
+    }
+  },
+
   getMentorProfile: async (mentorId: string): Promise<MentorProfileFields> => {
     const supabase = createClient();
     try {
@@ -240,11 +261,13 @@ export const profileApi = {
     name,
     avatarUrl,
     username,
+    phone,
   }: {
     userId: string;
     name?: string;
     avatarUrl?: string;
     username?: string;
+    phone?: string;
   }) => {
     const supabase = createClient();
     try {
@@ -254,9 +277,13 @@ export const profileApi = {
           ...(name && { name }),
           ...(avatarUrl && { avatar_url: avatarUrl }),
           ...(username && { username }),
+          ...(phone !== undefined && { phone: phone || null }),
         })
         .eq("id", userId)
-        .select()
+        // Explicit list, excluding phone — authenticated has no SELECT grant
+        // on that column (see get_my_phone()), so a bare .select() here
+        // would fail whenever phone is part of this update.
+        .select("id, name, avatar_url, username")
         .single();
       if (error) throw error;
       return data;

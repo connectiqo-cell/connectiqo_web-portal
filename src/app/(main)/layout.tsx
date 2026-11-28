@@ -6,6 +6,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { InterestsStatusProvider } from "@/contexts/InterestsStatusContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
+import { ProfileCompletenessProvider } from "@/contexts/ProfileCompletenessContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 
 import "../globals.css";
@@ -84,8 +85,10 @@ export default function RootLayout({
           <AuthProvider>
             <NotificationProvider>
               <InterestsStatusProvider>
-                <AppShell>{children}</AppShell>
-                <FrozenAccountNotice />
+                <ProfileCompletenessProvider>
+                  <AppShell>{children}</AppShell>
+                  <FrozenAccountNotice />
+                </ProfileCompletenessProvider>
               </InterestsStatusProvider>
             </NotificationProvider>
           </AuthProvider>
